@@ -8,7 +8,8 @@
     "scheme": "meerquest",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.meerquest"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,9 +30,16 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash-meerquest.png",
+          "imageWidth": 700,
           "resizeMode": "contain",
           "backgroundColor": "#FFF3D6"
+        }
+      ],
+      [
+        "./plugins/with-responsive-splash-screen.js",
+        {
+          "maxSizeRatio": 0.8
         }
       ]
     ],
