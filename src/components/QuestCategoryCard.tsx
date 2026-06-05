@@ -1,7 +1,16 @@
 import { Link, type Href } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  type ImageSourcePropType,
+  Pressable,
+  StyleSheet,
+  Text,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from 'react-native';
 
-import type { QuestCategory } from '@/src/content/categories';
+import type { QuestCategory, QuestCategoryIllustration } from '@/src/content/categories';
 import type { Quest } from '@/src/features/quests/questProgress';
 import { colors } from '@/src/theme/colors';
 
@@ -11,7 +20,15 @@ interface QuestCategoryCardProps {
   completedCount: number;
   totalCount: number;
   href: Href;
+  style?: StyleProp<ViewStyle>;
 }
+
+const categoryImages: Record<QuestCategoryIllustration, ImageSourcePropType> = {
+  cave: require('../../assets/images/home/category-math-cave.png'),
+  hill: require('../../assets/images/home/category-language-hill.png'),
+  playground: require('../../assets/images/home/category-social-playground.png'),
+  desert: require('../../assets/images/home/category-safety-desert.png'),
+};
 
 export function QuestCategoryCard({
   category,
@@ -19,13 +36,24 @@ export function QuestCategoryCard({
   completedCount,
   totalCount,
   href,
+  style,
 }: QuestCategoryCardProps) {
-  const progressLabel = `${completedCount}/${totalCount}`;
+  const progressPercent = totalCount > 0 ? Math.min(100, (completedCount / totalCount) * 100) : 0;
+  const hasProgress = progressPercent > 0;
 
   return (
     <Link href={href} asChild>
-      <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-        <View style={[styles.badge, { backgroundColor: category.accentColor }]} />
+      <Pressable
+        accessibilityLabel={`${category.title}, ${category.subtitle}, ${
+          nextQuest ? `다음 퀘스트 ${nextQuest.title}` : '모든 퀘스트 완료'
+        }, 진행 ${completedCount}/${totalCount}`}
+        style={({ pressed }) => [styles.card, style, pressed && styles.cardPressed]}
+      >
+        <Image
+          resizeMode="contain"
+          source={categoryImages[category.illustration]}
+          style={styles.illustration}
+        />
         <View style={styles.copy}>
           <Text style={styles.title}>{category.title}</Text>
           <Text style={styles.subtitle}>{category.subtitle}</Text>
@@ -33,8 +61,18 @@ export function QuestCategoryCard({
             {nextQuest ? `다음 퀘스트: ${nextQuest.title}` : '모든 퀘스트를 다시 살펴봐요'}
           </Text>
         </View>
-        <View style={styles.progressPill}>
-          <Text style={styles.progressText}>{progressLabel}</Text>
+        <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                backgroundColor: category.accentColor,
+                width: `${progressPercent}%`,
+              },
+            ]}
+          >
+            {hasProgress ? <Text style={styles.progressStar}>★</Text> : null}
+          </View>
         </View>
       </Pressable>
     </Link>
@@ -44,59 +82,65 @@ export function QuestCategoryCard({
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.white,
-    borderRadius: 8,
-    borderWidth: 3,
-    flexDirection: 'row',
-    gap: 14,
-    minHeight: 116,
-    padding: 16,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    gap: 8,
+    minHeight: 276,
+    paddingBottom: 4,
   },
   cardPressed: {
     transform: [{ scale: 0.99 }],
   },
-  badge: {
-    borderColor: colors.ink,
-    borderRadius: 18,
-    borderWidth: 3,
-    height: 48,
-    width: 48,
+  illustration: {
+    height: 126,
+    width: '100%',
   },
   copy: {
-    flex: 1,
-    gap: 5,
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 92,
+    width: '100%',
   },
   title: {
     color: colors.ink,
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '900',
+    lineHeight: 34,
+    textAlign: 'center',
   },
   subtitle: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: '700',
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 20,
+    textAlign: 'center',
   },
   nextQuest: {
-    color: colors.sky,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  progressPill: {
-    alignItems: 'center',
-    backgroundColor: colors.greenSoft,
-    borderRadius: 8,
-    justifyContent: 'center',
-    minWidth: 58,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  progressText: {
     color: colors.ink,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '900',
+    lineHeight: 19,
+    textAlign: 'center',
+  },
+  progressTrack: {
+    backgroundColor: '#EADDBF',
+    borderRadius: 999,
+    height: 15,
+    marginTop: 2,
+    overflow: 'visible',
+    width: '100%',
+  },
+  progressFill: {
+    alignItems: 'flex-end',
+    borderRadius: 999,
+    height: '100%',
+    justifyContent: 'center',
+  },
+  progressStar: {
+    color: colors.yellow,
+    fontSize: 25,
+    lineHeight: 25,
+    marginRight: -12,
+    textShadowColor: colors.ink,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
 });
