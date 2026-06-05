@@ -3,7 +3,7 @@
     "name": "MeerQuest",
     "slug": "meerquest",
     "version": "0.0.1",
-    "orientation": "default",
+    "orientation": "landscape",
     "icon": "./assets/images/icon.png",
     "scheme": "meerquest",
     "userInterfaceStyle": "light",
