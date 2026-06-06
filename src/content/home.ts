@@ -25,9 +25,10 @@ export interface HomeHeroCtaLayout {
 }
 
 export interface HomeHero {
-  image: 'home-banner';
+  image: 'home-banner' | 'home-adventure-background';
   alt: string;
   aspectRatio: number;
+  resizeMode: 'cover';
   frameBorderWidth: number;
   cta: {
     image: HomeHeroCtaImage;
@@ -85,10 +86,8 @@ export interface HomeLandscapeLayout {
   bottomNavigationMinHeight: number;
   compactHeightBreakpoint: number;
   compactBreakpoint: number;
-  compactHeroColumnRatio: number;
   compactRegionCardAspectRatio: number;
   contentGap: number;
-  heroColumnRatio: number;
   maxContentWidth: number;
   regionCardAspectRatio: number;
   regionColumns: number;
@@ -99,26 +98,40 @@ export interface HomeLandscapeLayout {
   };
 }
 
+export interface HomeViewportLayoutInput {
+  bodyWidth: number;
+  bottomInset: number;
+  height: number;
+  isCompact: boolean;
+}
+
+export interface HomeViewportLayout {
+  heroHeight: number;
+  regionCardHeight: number;
+  regionCardWidth: number;
+}
+
 export const homeHero: HomeHero = {
-  image: 'home-banner',
-  alt: '미어루가 오늘도 같이 탐험하자고 인사하는 홈 퀘스트맵 배너',
-  aspectRatio: 1438 / 736,
+  image: 'home-adventure-background',
+  alt: '미어루가 산길 앞에서 오늘도 같이 탐험하자고 말하는 퀘스트맵 배너',
+  aspectRatio: 1499 / 704,
+  resizeMode: 'cover',
   frameBorderWidth: 0,
   cta: {
     image: 'quest-map-button',
     label: '퀘스트 맵 보기',
     layout: {
       compact: {
-        bottom: -34,
-        height: 118,
-        right: 0,
-        width: 112,
+        bottom: 10,
+        height: 106,
+        right: 14,
+        width: 110,
       },
       regular: {
-        bottom: -36,
-        height: 150,
-        right: 4,
-        width: 136,
+        bottom: 18,
+        height: 148,
+        right: 34,
+        width: 154,
       },
     },
     route: '/quest-map',
@@ -132,19 +145,106 @@ export const homeLandscapeLayout: HomeLandscapeLayout = {
   bottomNavigationMinHeight: 74,
   compactHeightBreakpoint: 500,
   compactBreakpoint: 760,
-  compactHeroColumnRatio: 0.42,
-  compactRegionCardAspectRatio: 2.2,
+  compactRegionCardAspectRatio: 2.05,
   contentGap: 10,
-  heroColumnRatio: 0.54,
   maxContentWidth: 1160,
-  regionCardAspectRatio: 1.55,
-  regionColumns: 2,
+  regionCardAspectRatio: 1.75,
+  regionColumns: 4,
   regionGridGap: 10,
   screenPadding: {
     compact: 12,
     regular: 20,
   },
 };
+
+const homeViewportChrome = {
+  bottomNavigationHeight: {
+    compact: 48,
+    regular: homeLandscapeLayout.bottomNavigationMinHeight,
+  },
+  bottomNavigationMarginMin: 8,
+  compactTopBarHeight: 54,
+  expandedRegionCardAspectRatio: 1.1,
+  heroViewportRatio: {
+    compact: 0.39,
+    regular: 0.39,
+  },
+  regionColumnGap: 8,
+  regularTopBarHeight: 60,
+  sectionHeaderHeight: 32,
+} as const;
+
+export function getHomeViewportLayout({
+  bodyWidth,
+  bottomInset,
+  height,
+  isCompact,
+}: HomeViewportLayoutInput): HomeViewportLayout {
+  const columns = homeLandscapeLayout.regionColumns;
+  const regionCardWidth =
+    (bodyWidth - homeLandscapeLayout.regionGridGap * (columns - 1)) / columns;
+  const regularHeroHeight = Math.min(
+    bodyWidth / homeHero.aspectRatio,
+    height *
+      (isCompact
+        ? homeViewportChrome.heroViewportRatio.compact
+        : homeViewportChrome.heroViewportRatio.regular),
+  );
+  const regularRegionCardHeight =
+    regionCardWidth /
+    (isCompact
+      ? homeLandscapeLayout.compactRegionCardAspectRatio
+      : homeLandscapeLayout.regionCardAspectRatio);
+  const containerVerticalPadding =
+    (isCompact
+      ? homeLandscapeLayout.screenPadding.compact
+      : homeLandscapeLayout.screenPadding.regular) + 10;
+  const fixedVerticalHeight =
+    (isCompact
+      ? homeViewportChrome.compactTopBarHeight
+      : homeViewportChrome.regularTopBarHeight) +
+    containerVerticalPadding +
+    homeLandscapeLayout.bodyGap +
+    homeViewportChrome.sectionHeaderHeight +
+    homeViewportChrome.regionColumnGap +
+    (isCompact
+      ? homeViewportChrome.bottomNavigationHeight.compact
+      : homeViewportChrome.bottomNavigationHeight.regular) +
+    Math.max(bottomInset, homeViewportChrome.bottomNavigationMarginMin);
+  const availableFlexibleHeight = Math.max(0, height - fixedVerticalHeight);
+  const regularFlexibleHeight = regularHeroHeight + regularRegionCardHeight;
+
+  if (availableFlexibleHeight <= regularFlexibleHeight) {
+    const scale =
+      regularFlexibleHeight > 0 ? availableFlexibleHeight / regularFlexibleHeight : 1;
+
+    return {
+      heroHeight: Math.round(regularHeroHeight * scale),
+      regionCardHeight: Math.round(regularRegionCardHeight * scale),
+      regionCardWidth,
+    };
+  }
+
+  const maxHeroHeight = bodyWidth / homeHero.aspectRatio;
+  const maxRegionCardHeight = regionCardWidth / homeViewportChrome.expandedRegionCardAspectRatio;
+  const targetFlexibleHeight = Math.min(
+    availableFlexibleHeight,
+    maxHeroHeight + maxRegionCardHeight,
+  );
+  const extraHeight = targetFlexibleHeight - regularFlexibleHeight;
+  const heroCapacity = Math.max(0, maxHeroHeight - regularHeroHeight);
+  const regionCardCapacity = Math.max(0, maxRegionCardHeight - regularRegionCardHeight);
+  const totalCapacity = heroCapacity + regionCardCapacity;
+  const heroExtra =
+    totalCapacity > 0 ? extraHeight * (heroCapacity / totalCapacity) : extraHeight / 2;
+  const regionCardExtra = extraHeight - heroExtra;
+
+  return {
+    heroHeight: Math.round(regularHeroHeight + heroExtra),
+    regionCardHeight: Math.round(regularRegionCardHeight + regionCardExtra),
+    regionCardWidth,
+  };
+}
 
 export const homeLearningRegions: HomeLearningRegion[] = [
   {

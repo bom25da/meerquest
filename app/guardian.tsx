@@ -2,30 +2,39 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { categories } from '@/src/content/categories';
-import { quests, sampleProgress } from '@/src/content/quests';
+import { quests } from '@/src/content/quests';
 import {
   getHighestCompletedLevel,
   getReviewRecommendation,
 } from '@/src/features/quests/questProgress';
+import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
 import { colors } from '@/src/theme/colors';
 
 export default function GuardianScreen() {
+  const { isLoaded, profileProgress } = useQuestProgress();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>보호자 진행도</Text>
         <Text style={styles.subtitle}>카테고리별 최고 단계와 복습 추천을 확인해요.</Text>
+        {!isLoaded ? <Text style={styles.loadingText}>진행 기록을 불러오고 있어요.</Text> : null}
 
         {categories.map((category) => {
+          const categoryQuests = quests.filter((quest) => quest.categoryId === category.id);
+          const completedCount = categoryQuests.filter(
+            (quest) =>
+              profileProgress.find((item) => item.questId === quest.id)?.status === 'completed',
+          ).length;
           const highestLevel = getHighestCompletedLevel({
             categoryId: category.id,
             quests,
-            progress: sampleProgress,
+            progress: profileProgress,
           });
           const reviewQuest = getReviewRecommendation({
             categoryId: category.id,
             quests,
-            progress: sampleProgress,
+            progress: profileProgress,
           });
 
           return (
@@ -33,7 +42,10 @@ export default function GuardianScreen() {
               <View style={[styles.accent, { backgroundColor: category.accentColor }]} />
               <View style={styles.cardCopy}>
                 <Text style={styles.categoryTitle}>{category.title}</Text>
-                <Text style={styles.metric}>최고 도달 단계: {highestLevel || 1}</Text>
+                <Text style={styles.metric}>
+                  완료한 퀘스트: {completedCount}/{categoryQuests.length}
+                </Text>
+                <Text style={styles.metric}>최고 완료 단계: {highestLevel || 0}</Text>
                 <Text style={styles.review}>
                   복습 추천: {reviewQuest ? reviewQuest.title : '오늘은 추천 복습이 없어요'}
                 </Text>
@@ -69,6 +81,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 10,
+  },
+  loadingText: {
+    color: colors.sky,
+    fontSize: 15,
+    fontWeight: '900',
   },
   card: {
     alignItems: 'center',

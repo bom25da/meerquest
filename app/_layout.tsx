@@ -52,10 +52,10 @@ function RootLayoutNav() {
         headerTitleStyle: { fontWeight: '800' },
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="quest-map" options={{ title: 'Quest Map' }} />
-      <Stack.Screen name="quest-play" options={{ title: 'Quest' }} />
+      <Stack.Screen name="quest-map" options={{ title: '퀘스트 맵' }} />
+      <Stack.Screen name="quest-play" options={{ title: '퀘스트' }} />
       <Stack.Screen name="reward" options={{ headerShown: false }} />
-      <Stack.Screen name="guardian" options={{ title: 'Guardian' }} />
+      <Stack.Screen name="guardian" options={{ title: '보호자' }} />
     </Stack>
   );
 }

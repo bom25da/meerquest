@@ -8,31 +8,33 @@ import {
   homeSectionHeader,
   homeNavigationItems,
   homeNavigationStyle,
+  getHomeViewportLayout,
   todayQuest,
 } from './home';
 
 describe('home screen content', () => {
-  it('uses the home banner asset for the main quest map banner', () => {
+  it('uses the mountain adventure image for the full-width quest map banner', () => {
     expect(homeHero).toEqual({
-      image: 'home-banner',
-      alt: '미어루가 오늘도 같이 탐험하자고 인사하는 홈 퀘스트맵 배너',
-      aspectRatio: 1438 / 736,
+      image: 'home-adventure-background',
+      alt: '미어루가 산길 앞에서 오늘도 같이 탐험하자고 말하는 퀘스트맵 배너',
+      aspectRatio: 1499 / 704,
+      resizeMode: 'cover',
       frameBorderWidth: 0,
       cta: {
         image: 'quest-map-button',
         label: '퀘스트 맵 보기',
         layout: {
           compact: {
-            bottom: -34,
-            height: 118,
-            right: 0,
-            width: 112,
+            bottom: 10,
+            height: 106,
+            right: 14,
+            width: 110,
           },
           regular: {
-            bottom: -36,
-            height: 150,
-            right: 4,
-            width: 136,
+            bottom: 18,
+            height: 148,
+            right: 34,
+            width: 154,
           },
         },
         route: '/quest-map',
@@ -48,19 +50,43 @@ describe('home screen content', () => {
       bottomNavigationMinHeight: 74,
       compactHeightBreakpoint: 500,
       compactBreakpoint: 760,
-      compactHeroColumnRatio: 0.42,
-      compactRegionCardAspectRatio: 2.2,
+      compactRegionCardAspectRatio: 2.05,
       contentGap: 10,
-      heroColumnRatio: 0.54,
       maxContentWidth: 1160,
-      regionCardAspectRatio: 1.55,
-      regionColumns: 2,
+      regionCardAspectRatio: 1.75,
+      regionColumns: 4,
       regionGridGap: 10,
       screenPadding: {
         compact: 12,
         regular: 20,
       },
     });
+  });
+
+  it('expands the home hero and region cards to fill taller tablet screens', () => {
+    const layout = getHomeViewportLayout({
+      bodyWidth: 984,
+      bottomInset: 0,
+      height: 768,
+      isCompact: false,
+    });
+
+    expect(layout.regionCardWidth).toBe(238.5);
+    expect(layout.heroHeight + layout.regionCardHeight).toBe(544);
+    expect(layout.heroHeight).toBeGreaterThan(Math.round(768 * 0.39));
+    expect(layout.regionCardHeight).toBeGreaterThan(136);
+  });
+
+  it('keeps the home hero and region cards inside shorter landscape screens', () => {
+    const layout = getHomeViewportLayout({
+      bodyWidth: 984,
+      bottomInset: 0,
+      height: 576,
+      isCompact: false,
+    });
+
+    expect(layout.heroHeight + layout.regionCardHeight).toBe(352);
+    expect(layout.heroHeight).toBeLessThan(Math.round(576 * 0.39));
   });
 
   it('matches the four main learning regions shown on the home dashboard', () => {

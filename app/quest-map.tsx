@@ -1,18 +1,23 @@
-import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { categories } from '@/src/content/categories';
-import { quests, sampleProgress } from '@/src/content/quests';
+import { quests } from '@/src/content/quests';
 import { getUnlockedQuests } from '@/src/features/quests/questProgress';
+import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
 import { colors } from '@/src/theme/colors';
 
 export default function QuestMapScreen() {
+  const router = useRouter();
+  const { isLoaded, profileProgress } = useQuestProgress();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>퀘스트 맵</Text>
         <Text style={styles.subtitle}>완료한 퀘스트 다음에는 조금 더 깊은 땅굴이 열려요.</Text>
+        {!isLoaded ? <Text style={styles.loadingText}>탐험 기록을 준비하고 있어요.</Text> : null}
 
         {categories.map((category) => {
           const categoryQuests = quests.filter((quest) => quest.categoryId === category.id);
@@ -20,7 +25,7 @@ export default function QuestMapScreen() {
             getUnlockedQuests({
               categoryId: category.id,
               quests,
-              progress: sampleProgress,
+              progress: profileProgress,
             }).map((quest) => quest.id),
           );
 
@@ -31,7 +36,7 @@ export default function QuestMapScreen() {
               </Text>
               <View style={styles.questList}>
                 {categoryQuests.map((quest) => {
-                  const progress = sampleProgress.find((item) => item.questId === quest.id);
+                  const progress = profileProgress.find((item) => item.questId === quest.id);
                   const isCompleted = progress?.status === 'completed';
                   const isUnlocked = unlockedIds.has(quest.id);
 
@@ -52,10 +57,20 @@ export default function QuestMapScreen() {
                           {isCompleted ? '완료' : isUnlocked ? '도전 가능' : '잠김'}
                         </Text>
                       </View>
-                      {isUnlocked ? (
-                        <Link href="/quest-play" style={styles.playLink}>
-                          시작
-                        </Link>
+                      {isUnlocked && isLoaded ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            router.push(`/quest-play?questId=${quest.id}` as Href)
+                          }
+                          style={({ pressed }) => [
+                            styles.playButton,
+                            pressed && styles.playButtonPressed,
+                          ]}>
+                          <Text style={styles.playButtonText}>
+                            {isCompleted ? '다시' : '시작'}
+                          </Text>
+                        </Pressable>
                       ) : null}
                     </View>
                   );
@@ -91,6 +106,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 16,
     fontWeight: '700',
+  },
+  loadingText: {
+    color: colors.sky,
+    fontSize: 15,
+    fontWeight: '900',
   },
   categorySection: {
     gap: 10,
@@ -146,14 +166,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 3,
   },
-  playLink: {
+  playButton: {
     backgroundColor: colors.orange,
     borderRadius: 8,
+    minWidth: 62,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  playButtonPressed: {
+    transform: [{ scale: 0.97 }],
+  },
+  playButtonText: {
     color: colors.white,
     fontSize: 15,
     fontWeight: '900',
-    overflow: 'hidden',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    textAlign: 'center',
   },
 });

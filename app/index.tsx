@@ -21,7 +21,7 @@ import {
   homeSectionHeader,
   homeNavigationItems,
   homeNavigationStyle,
-  todayQuest,
+  getHomeViewportLayout,
 } from '@/src/content/home';
 import type {
   HomeLearningRegion,
@@ -36,6 +36,7 @@ const meerquestWordmark = require('../assets/images/brand/meerquest-wordmark.png
 const meeroCharacter = require('../assets/images/brand/meero-character.png');
 
 const homeHeroImages = {
+  'home-adventure-background': require('../assets/images/home/home-adventure-background.png'),
   'home-banner': require('../assets/images/home/home-banner.png'),
 } as const;
 
@@ -61,8 +62,6 @@ const navigationIcons: Record<HomeNavigationIcon, ImageSourcePropType> = {
   'nav-guardian': require('../assets/images/navigation/nav-guardian.png'),
 };
 
-const regionCardWidth = `${100 / homeLandscapeLayout.regionColumns - 2}%` as `${number}%`;
-
 export default function HomeScreen() {
   const { height, width } = useWindowDimensions();
   const isCompact =
@@ -75,13 +74,12 @@ export default function HomeScreen() {
     ? homeLandscapeLayout.screenPadding.compact
     : homeLandscapeLayout.screenPadding.regular;
   const bodyWidth = containerWidth - containerHorizontalPadding * 2;
-  const heroColumnRatio = isCompact
-    ? homeLandscapeLayout.compactHeroColumnRatio
-    : homeLandscapeLayout.heroColumnRatio;
-  const heroWidth = Math.round(
-    (bodyWidth - homeLandscapeLayout.bodyGap) * heroColumnRatio,
-  );
-  const heroHeight = heroWidth / homeHero.aspectRatio;
+  const { heroHeight, regionCardHeight, regionCardWidth } = getHomeViewportLayout({
+    bodyWidth,
+    bottomInset: insets.bottom,
+    height,
+    isCompact,
+  });
   const heroCtaLayout = isCompact ? homeHero.cta.layout.compact : homeHero.cta.layout.regular;
   const navigateToToolbarRoute = (route: string) => {
     if (route === '/') {
@@ -123,11 +121,11 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.landscapeBody}>
-            <View style={[styles.heroColumn, { width: heroWidth }]}>
+            <View style={styles.heroColumn}>
               <ImageBackground
                 accessibilityLabel={homeHero.alt}
                 imageStyle={styles.heroBannerImage}
-                resizeMode="stretch"
+                resizeMode={homeHero.resizeMode}
                 source={homeHeroImages[homeHero.image]}
                 style={[
                   styles.heroCard,
@@ -149,34 +147,6 @@ export default function HomeScreen() {
                   />
                 </Pressable>
               </ImageBackground>
-
-              <View style={[styles.todayQuest, isCompact && styles.compactTodayQuest]}>
-                <Image
-                  resizeMode="contain"
-                  source={meeroCharacter}
-                  style={[styles.questMascot, isCompact && styles.compactQuestMascot]}
-                />
-                <View style={styles.questCopy}>
-                  <Text style={[styles.questEyebrow, isCompact && styles.compactQuestEyebrow]}>
-                    {todayQuest.title}
-                  </Text>
-                  <Text style={[styles.questTitle, isCompact && styles.compactQuestTitle]}>
-                    {todayQuest.description} {todayQuest.rewardIcon}
-                  </Text>
-                </View>
-                <Pressable
-                  onPress={() => router.push('/quest-play')}
-                  style={({ pressed }) => [
-                    styles.startButton,
-                    isCompact && styles.compactStartButton,
-                    pressed && styles.pressed,
-                  ]}>
-                  <Text
-                    style={[styles.startButtonText, isCompact && styles.compactStartButtonText]}>
-                    시작!
-                  </Text>
-                </Pressable>
-              </View>
             </View>
 
             <View style={styles.regionColumn}>
@@ -194,9 +164,11 @@ export default function HomeScreen() {
                   <RegionCard
                     background={regionBackgrounds[region.background]}
                     key={region.id}
+                    height={regionCardHeight}
                     isCompact={isCompact}
                     onPress={() => !region.locked && router.push('/quest-map')}
                     region={region}
+                    width={regionCardWidth}
                   />
                 ))}
               </View>
@@ -216,14 +188,18 @@ export default function HomeScreen() {
 
 function RegionCard({
   background,
+  height,
   isCompact,
   onPress,
   region,
+  width,
 }: {
   background: ImageSourcePropType;
+  height: number;
   isCompact: boolean;
   onPress: () => void;
   region: HomeLearningRegion;
+  width: number;
 }) {
   return (
     <Pressable
@@ -233,6 +209,7 @@ function RegionCard({
       style={({ pressed }) => [
         styles.regionCard,
         isCompact && styles.compactRegionCard,
+        { height, width },
         pressed && !region.locked && styles.pressed,
       ]}>
       <ImageBackground
@@ -470,7 +447,6 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   compactRegionCard: {
-    aspectRatio: homeLandscapeLayout.compactRegionCardAspectRatio,
     minHeight: 88,
   },
   compactRegionContent: {
@@ -528,6 +504,7 @@ const styles = StyleSheet.create({
   heroColumn: {
     gap: 10,
     minWidth: 0,
+    width: '100%',
   },
   homeIcon: {
     alignItems: 'center',
@@ -569,7 +546,7 @@ const styles = StyleSheet.create({
   },
   landscapeBody: {
     alignItems: 'stretch',
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: homeLandscapeLayout.bodyGap,
   },
   heroBannerImage: {
@@ -923,10 +900,8 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
     borderRadius: homeRegionCardStyle.borderRadius,
     borderWidth: homeRegionCardStyle.borderWidth,
-    aspectRatio: homeLandscapeLayout.regionCardAspectRatio,
     minHeight: 104,
     overflow: 'hidden',
-    width: regionCardWidth,
     ...cardShadow,
   },
   regionBackgroundFill: {
@@ -957,7 +932,7 @@ const styles = StyleSheet.create({
   regionGrid: {
     columnGap: homeLandscapeLayout.regionGridGap,
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     justifyContent: 'space-between',
     rowGap: homeLandscapeLayout.regionGridGap,
   },
@@ -977,9 +952,9 @@ const styles = StyleSheet.create({
     ...textShadow,
   },
   regionColumn: {
-    flex: 1,
     gap: 8,
     minWidth: 0,
+    width: '100%',
   },
   safeArea: {
     backgroundColor: colors.background,
