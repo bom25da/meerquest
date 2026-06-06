@@ -1,8 +1,8 @@
-import { useRouter, type Href } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { categories } from '@/src/content/categories';
+import { getQuestMapCategories, getQuestMapCopy } from '@/src/content/questMap';
 import { quests } from '@/src/content/quests';
 import { getUnlockedQuests } from '@/src/features/quests/questProgress';
 import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
@@ -10,16 +10,19 @@ import { colors } from '@/src/theme/colors';
 
 export default function QuestMapScreen() {
   const router = useRouter();
+  const { categoryId } = useLocalSearchParams<{ categoryId?: string | string[] }>();
   const { isLoaded, profileProgress } = useQuestProgress();
+  const visibleCategories = getQuestMapCategories(categoryId);
+  const copy = getQuestMapCopy(categoryId);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>퀘스트 맵</Text>
-        <Text style={styles.subtitle}>완료한 퀘스트 다음에는 조금 더 깊은 땅굴이 열려요.</Text>
+        <Text style={styles.title}>{copy.title}</Text>
+        <Text style={styles.subtitle}>{copy.subtitle}</Text>
         {!isLoaded ? <Text style={styles.loadingText}>탐험 기록을 준비하고 있어요.</Text> : null}
 
-        {categories.map((category) => {
+        {visibleCategories.map((category) => {
           const categoryQuests = quests.filter((quest) => quest.categoryId === category.id);
           const unlockedIds = new Set(
             getUnlockedQuests({

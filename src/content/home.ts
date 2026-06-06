@@ -15,6 +15,7 @@ export type HomeRegionBackground =
 export type HomeNavigationId = 'home' | 'quest-map' | 'reward' | 'guardian';
 export type HomeNavigationIcon = 'nav-home' | 'nav-quest-map' | 'nav-reward' | 'nav-guardian';
 export type HomeHeroCtaImage = 'quest-map-button';
+export type HomeLearningRegionRoute = `/quest-map?categoryId=${QuestCategoryId}`;
 export type HomeSectionHeaderIcon = 'sprout';
 
 export interface HomeHeroCtaLayout {
@@ -50,6 +51,7 @@ export interface HomeLearningRegion {
   tone: HomeRegionTone;
   art: HomeRegionArt;
   background: HomeRegionBackground;
+  route: HomeLearningRegionRoute;
 }
 
 export interface HomeNavigationItem {
@@ -249,39 +251,43 @@ export function getHomeViewportLayout({
 export const homeLearningRegions: HomeLearningRegion[] = [
   {
     id: 'math',
-    title: '수학',
+    title: '수학동굴',
     stars: 3,
     locked: false,
     tone: 'orange',
     art: 'category-math-cave',
     background: 'category-math-background',
+    route: '/quest-map?categoryId=math',
   },
   {
     id: 'language',
-    title: '언어',
+    title: '언어언덕',
     stars: 2,
     locked: false,
     tone: 'blue',
     art: 'category-language-hill',
     background: 'category-language-background',
+    route: '/quest-map?categoryId=language',
   },
   {
     id: 'social',
-    title: '사회성',
+    title: '마음놀이터',
     stars: 1,
     locked: false,
     tone: 'green',
     art: 'category-social-playground',
     background: 'category-social-background',
+    route: '/quest-map?categoryId=social',
   },
   {
     id: 'safety',
-    title: '안전',
+    title: '안전사막',
     stars: 0,
     locked: true,
     tone: 'yellow',
     art: 'category-safety-desert',
     background: 'category-safety-background',
+    route: '/quest-map?categoryId=safety',
   },
 ];
 

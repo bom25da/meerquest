@@ -91,46 +91,51 @@ describe('home screen content', () => {
 
   it('matches the four main learning regions shown on the home dashboard', () => {
     expect(
-      homeLearningRegions.map(({ id, title, stars, locked, art, background }) => ({
+      homeLearningRegions.map(({ id, title, stars, locked, art, background, route }) => ({
         id,
         title,
         stars,
         locked,
         art,
         background,
+        route,
       })),
     ).toEqual([
       {
         id: 'math',
-        title: '수학',
+        title: '수학동굴',
         stars: 3,
         locked: false,
         art: 'category-math-cave',
         background: 'category-math-background',
+        route: '/quest-map?categoryId=math',
       },
       {
         id: 'language',
-        title: '언어',
+        title: '언어언덕',
         stars: 2,
         locked: false,
         art: 'category-language-hill',
         background: 'category-language-background',
+        route: '/quest-map?categoryId=language',
       },
       {
         id: 'social',
-        title: '사회성',
+        title: '마음놀이터',
         stars: 1,
         locked: false,
         art: 'category-social-playground',
         background: 'category-social-background',
+        route: '/quest-map?categoryId=social',
       },
       {
         id: 'safety',
-        title: '안전',
+        title: '안전사막',
         stars: 0,
         locked: true,
         art: 'category-safety-desert',
         background: 'category-safety-background',
+        route: '/quest-map?categoryId=safety',
       },
     ]);
   });

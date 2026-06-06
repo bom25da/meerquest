@@ -166,7 +166,7 @@ export default function HomeScreen() {
                     key={region.id}
                     height={regionCardHeight}
                     isCompact={isCompact}
-                    onPress={() => !region.locked && router.push('/quest-map')}
+                    onPress={() => !region.locked && router.push(region.route as Href)}
                     region={region}
                     width={regionCardWidth}
                   />
