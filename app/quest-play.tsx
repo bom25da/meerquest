@@ -1,18 +1,38 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText as Text } from '@/src/components/AppText';
 import { MeerkatMascot, type MascotMood } from '@/src/components/MeerkatMascot';
+import { QuestScreenFrame } from '@/src/components/quest/QuestScreenFrame';
 import { categories } from '@/src/content/categories';
+import { getQuestStageRect } from '@/src/content/questStageLayout';
 import { quests } from '@/src/content/quests';
-import { getNextQuest } from '@/src/features/quests/questProgress';
+import {
+  getEarnedStarCount,
+  getNextQuest,
+  type QuestBackgroundAsset,
+} from '@/src/features/quests/questProgress';
 import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
 import { colors } from '@/src/theme/colors';
+
+const appleCountScreen = require('../assets/images/quests/apple-count/apple-count-screen.png');
+const mathCaveBackground = require('../assets/images/quests/math-cave-background.png');
+
+const questBackgroundSources: Record<QuestBackgroundAsset, number> = {
+  'math-cave-background': mathCaveBackground,
+};
 
 export default function QuestPlayScreen() {
   const { questId } = useLocalSearchParams<{ questId?: string }>();
   const router = useRouter();
+  const { height, width } = useWindowDimensions();
   const { isLoaded, profileProgress, recordAttempt } = useQuestProgress();
   const [feedbackMessage, setFeedbackMessage] = useState('미어루가 땅굴에서 빼꼼 나와 기다려요.');
   const [mascotMood, setMascotMood] = useState<MascotMood>('greeting');
@@ -40,6 +60,8 @@ export default function QuestPlayScreen() {
   }, [profileProgress, questId]);
   const category = categories.find((item) => item.id === quest.categoryId);
   const step = quest.steps[0];
+  const questTitle = `${(category?.title ?? '탐험 지역').replace(/\s+/g, '')} ${quest.level}단계`;
+  const earnedStars = getEarnedStarCount({ quests, progress: profileProgress });
 
   const handleChoicePress = async (choiceId: string) => {
     if (!isLoaded || isCompleted) {
@@ -66,6 +88,24 @@ export default function QuestPlayScreen() {
         : `괜찮아, 다시 해보자. ${step.hintText}`,
     );
   };
+
+  if (quest.visualLayout === 'apple-count') {
+    return (
+      <AppleCountQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : appleCountScreen
+        }
+        height={height}
+        isCompleted={isCompleted}
+        onBack={() => router.back()}
+        onHome={() => router.push('/' as Href)}
+        onReward={() => router.push(`/reward?questId=${quest.id}` as Href)}
+        questTitle={questTitle}
+        stars={earnedStars}
+        width={width}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -119,7 +159,59 @@ export default function QuestPlayScreen() {
   );
 }
 
+function AppleCountQuestScreen({
+  backgroundSource,
+  height,
+  isCompleted,
+  onBack,
+  onHome,
+  onReward,
+  questTitle,
+  stars,
+  width,
+}: {
+  backgroundSource: number;
+  height: number;
+  isCompleted: boolean;
+  onBack: () => void;
+  onHome: () => void;
+  onReward: () => void;
+  questTitle: string;
+  stars: number;
+  width: number;
+}) {
+  const handleNext = isCompleted ? onReward : () => undefined;
+
+  return (
+    <QuestScreenFrame
+      backgroundSource={backgroundSource}
+      height={height}
+      onBack={onBack}
+      onHome={onHome}
+      onNext={handleNext}
+      onPrevious={onBack}
+      onReward={onReward}
+      questTitle={questTitle}
+      stars={stars}
+      width={width}>
+      {(stage) => (
+        <View
+          style={[styles.questContentBackdrop, getQuestStageRect(stage, questContentBackdropRect)]}
+        />
+      )}
+    </QuestScreenFrame>
+  );
+}
+
+const questContentBackdropRect = { height: 504, left: 52, top: 124, width: 1261 };
+
 const styles = StyleSheet.create({
+  questContentBackdrop: {
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    borderRadius: 32,
+    overflow: 'hidden',
+    position: 'absolute',
+  },
   safeArea: {
     backgroundColor: colors.background,
     flex: 1,

@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText as Text } from '@/src/components/AppText';
 import { getQuestMapCategories, getQuestMapCopy } from '@/src/content/questMap';
 import { quests } from '@/src/content/quests';
 import { getUnlockedQuests } from '@/src/features/quests/questProgress';

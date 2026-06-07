@@ -10,6 +10,8 @@ export const quests: Quest[] = [
     order: 1,
     introduction: '미어루와 사과를 하나씩 세어봐요.',
     reward: { id: 'math-star-1', title: '사과 별', type: 'star' },
+    backgroundAsset: 'math-cave-background',
+    visualLayout: 'apple-count',
     steps: [
       {
         id: 'math-1-step-1',

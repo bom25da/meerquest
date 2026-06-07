@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { AppText as Text } from '@/src/components/AppText';
 import { colors } from '@/src/theme/colors';
 
 export type MascotMood = 'greeting' | 'idle' | 'hint' | 'thinking' | 'clap' | 'celebrate';

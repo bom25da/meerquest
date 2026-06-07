@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -15,11 +18,12 @@ import {
 describe('home screen content', () => {
   it('uses the mountain adventure image for the full-width quest map banner', () => {
     expect(homeHero).toEqual({
-      image: 'home-adventure-background',
-      alt: '미어루가 산길 앞에서 오늘도 같이 탐험하자고 말하는 퀘스트맵 배너',
-      aspectRatio: 1499 / 704,
+      image: 'home-adventure-background-clean',
+      alt: '미어루가 산길 앞에서 손을 흔드는 퀘스트맵 배너',
+      aspectRatio: 1857 / 847,
       resizeMode: 'cover',
       frameBorderWidth: 0,
+      speechText: '오늘도 같이\n탐험하자!',
       cta: {
         image: 'quest-map-button',
         label: '퀘스트 맵 보기',
@@ -41,6 +45,29 @@ describe('home screen content', () => {
         variant: 'image-button',
       },
     });
+  });
+
+  it('renders the hero speech bubble image and text as overlays instead of baked-in image text', () => {
+    const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
+
+    expect(existsSync(resolve(process.cwd(), 'assets/images/home/hero-speech-bubble.png'))).toBe(
+      true,
+    );
+    expect(homeScreenSource).toContain('hero-speech-bubble.png');
+    expect(homeScreenSource).toContain('{homeHero.speechText}');
+    expect(homeScreenSource).toContain('styles.speechBubble');
+    expect(homeScreenSource).toContain('styles.speechBubbleImage');
+    expect(homeScreenSource).toContain('styles.speechText');
+    expect(homeScreenSource).not.toContain('styles.heroSpeechText');
+    expect(homeScreenSource).not.toContain('styles.speechTail');
+  });
+
+  it('uses a smaller generated speech bubble and bold hero speech text', () => {
+    const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
+
+    expect(homeScreenSource).toContain("width: '17.2%'");
+    expect(homeScreenSource).toContain('aspectRatio: 512 / 353');
+    expect(homeScreenSource).toContain("fontWeight: '900'");
   });
 
   it('defines the landscape-first home layout bounds', () => {

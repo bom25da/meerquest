@@ -1,7 +1,8 @@
 import { Link, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppText as Text } from '@/src/components/AppText';
 import { MeerkatMascot } from '@/src/components/MeerkatMascot';
 import { quests } from '@/src/content/quests';
 import { colors } from '@/src/theme/colors';

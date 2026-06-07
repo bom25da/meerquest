@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_PROFILE_ID,
   getHighestCompletedLevel,
+  getEarnedStarCount,
   getNextQuest,
   getReviewRecommendation,
   getUnlockedQuests,
@@ -161,6 +162,23 @@ describe('quest progression', () => {
     });
 
     expect(highestLevel).toBe(2);
+  });
+
+  it('counts completed star rewards for the current profile', () => {
+    const mixedRewardQuests: Quest[] = [
+      quests[0],
+      { ...quests[1], reward: { ...quests[1].reward, type: 'badge' } },
+      quests[2],
+      quests[3],
+    ];
+    const progress: QuestProgress[] = [
+      { profileId: DEFAULT_PROFILE_ID, questId: 'math-1', status: 'completed', attempts: 1 },
+      { profileId: DEFAULT_PROFILE_ID, questId: 'math-2', status: 'completed', attempts: 1 },
+      { profileId: DEFAULT_PROFILE_ID, questId: 'math-3', status: 'inProgress', attempts: 1 },
+      { profileId: 'other-child', questId: 'language-1', status: 'completed', attempts: 1 },
+    ];
+
+    expect(getEarnedStarCount({ quests: mixedRewardQuests, progress })).toBe(1);
   });
 
   it('recommends review for the unlocked quest with the most attempts', () => {

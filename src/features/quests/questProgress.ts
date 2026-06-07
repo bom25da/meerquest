@@ -3,6 +3,8 @@ import type { QuestCategoryId } from '@/src/content/categories';
 export const DEFAULT_PROFILE_ID = 'default-child';
 
 export type QuestRewardType = 'star' | 'badge' | 'sticker';
+export type QuestVisualLayout = 'apple-count';
+export type QuestBackgroundAsset = 'math-cave-background';
 
 export interface QuestReward {
   id: string;
@@ -34,6 +36,8 @@ export interface Quest {
   introduction: string;
   reward: QuestReward;
   steps: QuestStep[];
+  backgroundAsset?: QuestBackgroundAsset;
+  visualLayout?: QuestVisualLayout;
 }
 
 export type QuestProgressStatus = 'notStarted' | 'inProgress' | 'completed';
@@ -120,6 +124,20 @@ export function getHighestCompletedLevel({
     }
 
     return Math.max(highestLevel, quest.level);
+  }, 0);
+}
+
+export function getEarnedStarCount({
+  profileId = DEFAULT_PROFILE_ID,
+  quests,
+  progress,
+}: Pick<QuestProgressInput, 'profileId' | 'quests' | 'progress'>) {
+  return quests.reduce((count, quest) => {
+    if (quest.reward.type !== 'star') {
+      return count;
+    }
+
+    return isCompleted(quest.id, progress, profileId) ? count + 1 : count;
   }, 0);
 }
 

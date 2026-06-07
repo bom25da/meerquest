@@ -26,4 +26,14 @@ describe('quest content', () => {
       expect(quest.steps[0].successMessage.length).toBeGreaterThan(0);
     }
   });
+
+  it('uses a dedicated visual layout for the first apple counting quest', () => {
+    expect(quests.find((quest) => quest.id === 'math-1')?.visualLayout).toBe('apple-count');
+  });
+
+  it('uses the math cave background for the first math quest', () => {
+    expect(quests.find((quest) => quest.id === 'math-1')?.backgroundAsset).toBe(
+      'math-cave-background',
+    );
+  });
 });

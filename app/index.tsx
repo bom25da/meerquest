@@ -6,13 +6,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText as Text } from '@/src/components/AppText';
 import {
   homeHero,
   homeLandscapeLayout,
@@ -37,12 +37,16 @@ const meeroCharacter = require('../assets/images/brand/meero-character.png');
 
 const homeHeroImages = {
   'home-adventure-background': require('../assets/images/home/home-adventure-background.png'),
+  'home-adventure-background-clean': require('../assets/images/home/home-adventure-background-clean.png'),
+  'home-adventure-background-no-text': require('../assets/images/home/home-adventure-background-no-text.png'),
   'home-banner': require('../assets/images/home/home-banner.png'),
 } as const;
 
 const homeHeroCtaImages = {
   'quest-map-button': require('../assets/images/home/quest-map-button.png'),
 } as const;
+
+const heroSpeechBubble = require('../assets/images/home/hero-speech-bubble.png');
 
 const regionBackgrounds: Record<HomeRegionBackground, ImageSourcePropType> = {
   'category-math-background': require('../assets/images/home/category-math-background.png'),
@@ -131,6 +135,21 @@ export default function HomeScreen() {
                   styles.heroCard,
                   { borderWidth: homeHero.frameBorderWidth, height: heroHeight },
                 ]}>
+                <View
+                  accessibilityLabel={homeHero.speechText.replace(/\n/g, ' ')}
+                  style={[styles.speechBubble, isCompact && styles.compactSpeechBubble]}>
+                  <Image
+                    resizeMode="contain"
+                    source={heroSpeechBubble}
+                    style={styles.speechBubbleImage}
+                  />
+                  <Text
+                    adjustsFontSizeToFit
+                    numberOfLines={2}
+                    style={[styles.speechText, isCompact && styles.compactSpeechText]}>
+                    {homeHero.speechText}
+                  </Text>
+                </View>
                 <Pressable
                   accessibilityLabel={homeHero.cta.label}
                   accessibilityRole="button"
@@ -455,13 +474,13 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   compactSpeechBubble: {
-    right: 18,
-    top: 72,
-    width: 180,
+    left: '26%',
+    top: '22%',
+    width: '17.2%',
   },
   compactSpeechText: {
-    fontSize: 22,
-    lineHeight: 31,
+    fontSize: 19,
+    lineHeight: 26,
   },
   compactStartButton: {
     borderRadius: 23,
@@ -984,33 +1003,33 @@ const styles = StyleSheet.create({
   },
   speechBubble: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 253, 247, 0.97)',
-    borderRadius: 36,
-    minHeight: 102,
+    aspectRatio: 512 / 353,
     justifyContent: 'center',
-    paddingHorizontal: 26,
+    left: '26%',
     position: 'absolute',
-    right: 58,
-    top: 60,
-    width: 252,
-    ...cardShadow,
+    top: '22%',
+    width: '17.2%',
   },
-  speechTail: {
-    backgroundColor: 'rgba(255, 253, 247, 0.97)',
-    borderRadius: 10,
-    bottom: -6,
-    height: 24,
-    left: 4,
+  speechBubbleImage: {
+    bottom: 0,
+    height: '100%',
+    left: 0,
     position: 'absolute',
-    transform: [{ rotate: '-22deg' }],
-    width: 50,
+    right: 0,
+    top: 0,
+    width: '100%',
   },
   speechText: {
     color: colors.ink,
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '900',
-    lineHeight: 34,
+    left: '12%',
+    lineHeight: 29,
+    position: 'absolute',
     textAlign: 'center',
+    top: '24%',
+    width: '76%',
+    zIndex: 1,
   },
   starRating: {
     alignItems: 'center',

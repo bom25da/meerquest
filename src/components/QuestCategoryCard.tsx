@@ -4,12 +4,12 @@ import {
   type ImageSourcePropType,
   Pressable,
   StyleSheet,
-  Text,
   type StyleProp,
   View,
   type ViewStyle,
 } from 'react-native';
 
+import { AppText as Text } from '@/src/components/AppText';
 import type { QuestCategory, QuestCategoryIllustration } from '@/src/content/categories';
 import type { Quest } from '@/src/features/quests/questProgress';
 import { colors } from '@/src/theme/colors';

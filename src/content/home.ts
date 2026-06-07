@@ -26,11 +26,16 @@ export interface HomeHeroCtaLayout {
 }
 
 export interface HomeHero {
-  image: 'home-banner' | 'home-adventure-background';
+  image:
+    | 'home-banner'
+    | 'home-adventure-background'
+    | 'home-adventure-background-clean'
+    | 'home-adventure-background-no-text';
   alt: string;
   aspectRatio: number;
   resizeMode: 'cover';
   frameBorderWidth: number;
+  speechText: string;
   cta: {
     image: HomeHeroCtaImage;
     label: string;
@@ -114,11 +119,12 @@ export interface HomeViewportLayout {
 }
 
 export const homeHero: HomeHero = {
-  image: 'home-adventure-background',
-  alt: '미어루가 산길 앞에서 오늘도 같이 탐험하자고 말하는 퀘스트맵 배너',
-  aspectRatio: 1499 / 704,
+  image: 'home-adventure-background-clean',
+  alt: '미어루가 산길 앞에서 손을 흔드는 퀘스트맵 배너',
+  aspectRatio: 1857 / 847,
   resizeMode: 'cover',
   frameBorderWidth: 0,
+  speechText: '오늘도 같이\n탐험하자!',
   cta: {
     image: 'quest-map-button',
     label: '퀘스트 맵 보기',
