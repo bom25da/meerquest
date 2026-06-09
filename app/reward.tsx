@@ -1,15 +1,23 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, type Href, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/src/components/AppText';
 import { MeerkatMascot } from '@/src/components/MeerkatMascot';
 import { quests } from '@/src/content/quests';
+import { getNextQuestAfterReward } from '@/src/features/quests/questRewardNavigation';
+import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
 import { colors } from '@/src/theme/colors';
 
 export default function RewardScreen() {
   const { questId } = useLocalSearchParams<{ questId?: string }>();
+  const { profileProgress } = useQuestProgress();
   const quest = quests.find((item) => item.id === questId) ?? quests[0];
+  const nextQuest = getNextQuestAfterReward({
+    completedQuestId: quest.id,
+    quests,
+    progress: profileProgress,
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -17,6 +25,9 @@ export default function RewardScreen() {
         <MeerkatMascot mood="celebrate" />
         <Text style={styles.title}>탐험 성공!</Text>
         <Text style={styles.subtitle}>{quest.title} 퀘스트를 완료했어요.</Text>
+        <Text style={styles.nextQuestHint}>
+          {nextQuest ? `다음 탐험: ${nextQuest.title}` : '오늘 열린 퀘스트를 모두 완료했어요.'}
+        </Text>
         <View style={styles.rewardBadge}>
           <Text style={styles.rewardIcon}>
             {quest.reward.type === 'badge' ? '🏆' : quest.reward.type === 'sticker' ? '🌟' : '★'}
@@ -24,10 +35,27 @@ export default function RewardScreen() {
           <Text style={styles.rewardText}>{quest.reward.title}</Text>
         </View>
         <View style={styles.linkRow}>
-          <Link href="/quest-map" style={styles.secondaryLink}>
+          {nextQuest ? (
+            <Link
+              accessibilityLabel={`${nextQuest.title} 다음 퀘스트 시작하기`}
+              accessibilityRole="button"
+              href={`/quest-play?questId=${nextQuest.id}` as Href}
+              style={styles.primaryLink}>
+              다음 퀘스트
+            </Link>
+          ) : null}
+          <Link
+            accessibilityLabel="퀘스트맵으로 이동하기"
+            accessibilityRole="button"
+            href="/quest-map"
+            style={nextQuest ? styles.secondaryLink : styles.primaryLink}>
             퀘스트맵
           </Link>
-          <Link href="/" style={styles.primaryLink}>
+          <Link
+            accessibilityLabel="홈으로 이동하기"
+            accessibilityRole="button"
+            href="/"
+            style={styles.tertiaryLink}>
             홈으로 가기
           </Link>
         </View>
@@ -58,6 +86,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  nextQuestHint: {
+    color: colors.ink,
+    fontSize: 17,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
   rewardBadge: {
     alignItems: 'center',
     backgroundColor: colors.yellow,
@@ -83,8 +117,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   linkRow: {
+    alignItems: 'center',
     flexDirection: 'row',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'center',
     marginTop: 8,
   },
   primaryLink: {
@@ -93,9 +130,11 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 17,
     fontWeight: '900',
+    minWidth: 128,
     overflow: 'hidden',
     paddingHorizontal: 18,
     paddingVertical: 13,
+    textAlign: 'center',
   },
   secondaryLink: {
     backgroundColor: colors.green,
@@ -103,8 +142,22 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 17,
     fontWeight: '900',
+    minWidth: 112,
     overflow: 'hidden',
     paddingHorizontal: 18,
     paddingVertical: 13,
+    textAlign: 'center',
+  },
+  tertiaryLink: {
+    backgroundColor: colors.sky,
+    borderRadius: 8,
+    color: colors.white,
+    fontSize: 17,
+    fontWeight: '900',
+    minWidth: 112,
+    overflow: 'hidden',
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    textAlign: 'center',
   },
 });

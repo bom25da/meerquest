@@ -55,6 +55,14 @@ describe('quest button assets', () => {
     expect(source).not.toContain("assets/images/quests/apple-count/ui-score.png");
   });
 
+  it('can visually highlight available next and reward navigation buttons', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/components/quest/QuestScreenFrame.tsx'), 'utf8');
+
+    expect(source).toContain('highlighted={isNextAvailable && !isRewardAvailable}');
+    expect(source).toContain('highlighted={isRewardAvailable}');
+    expect(source).toContain('styles.assetButtonHighlighted');
+  });
+
   it('keeps the home button perimeter free of light background remnants', () => {
     const homeButton = readPng(questButtonAssetFiles.home);
     const perimeter = 16;

@@ -41,7 +41,9 @@ interface QuestScreenFrameProps {
   onNext: () => void;
   onPrevious: () => void;
   onReward: () => void;
+  isNextAvailable?: boolean;
   onSound?: () => void;
+  isRewardAvailable?: boolean;
   questTitle: string;
   stars: number;
   width: number;
@@ -56,7 +58,9 @@ export function QuestScreenFrame({
   onNext,
   onPrevious,
   onReward,
+  isNextAvailable = true,
   onSound,
+  isRewardAvailable = true,
   questTitle,
   stars,
   width,
@@ -82,9 +86,11 @@ export function QuestScreenFrame({
           <QuestBottomNavigation
             layout={layout}
             onHome={onHome}
+            isNextAvailable={isNextAvailable}
             onNext={onNext}
             onPrevious={onPrevious}
             onReward={onReward}
+            isRewardAvailable={isRewardAvailable}
           />
         </ImageBackground>
       </View>
@@ -163,15 +169,19 @@ function QuestScoreHud({ layout, stars }: { layout: QuestStageFillLayout; stars:
 function QuestBottomNavigation({
   layout,
   onHome,
+  isNextAvailable,
   onNext,
   onPrevious,
   onReward,
+  isRewardAvailable,
 }: {
   layout: QuestStageFillLayout;
   onHome: () => void;
+  isNextAvailable: boolean;
   onNext: () => void;
   onPrevious: () => void;
   onReward: () => void;
+  isRewardAvailable: boolean;
 }) {
   return (
     <>
@@ -191,6 +201,8 @@ function QuestBottomNavigation({
       />
       <QuestNavButton
         accessibilityLabel="다음"
+        disabled={!isNextAvailable}
+        highlighted={isNextAvailable && !isRewardAvailable}
         imageSource={questNextButton}
         layout={layout}
         onPress={onNext}
@@ -198,6 +210,8 @@ function QuestBottomNavigation({
       />
       <QuestNavButton
         accessibilityLabel="별 보상"
+        disabled={!isRewardAvailable}
+        highlighted={isRewardAvailable}
         imageSource={questRewardButton}
         layout={layout}
         onPress={onReward}
@@ -209,12 +223,16 @@ function QuestBottomNavigation({
 
 function QuestNavButton({
   accessibilityLabel,
+  disabled = false,
+  highlighted = false,
   imageSource,
   layout,
   onPress,
   rect,
 }: {
   accessibilityLabel: string;
+  disabled?: boolean;
+  highlighted?: boolean;
   imageSource: ImageSourcePropType;
   layout: QuestStageFillLayout;
   onPress: () => void;
@@ -224,8 +242,15 @@ function QuestNavButton({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={[styles.assetButton, getQuestStageRect(layout, rect)]}>
+      style={[
+        styles.assetButton,
+        getQuestStageRect(layout, rect),
+        disabled && styles.assetButtonDisabled,
+        highlighted && styles.assetButtonHighlighted,
+      ]}>
       <Image resizeMode="contain" source={imageSource} style={styles.assetImage} />
     </Pressable>
   );
@@ -234,6 +259,17 @@ function QuestNavButton({
 const styles = StyleSheet.create({
   assetButton: {
     position: 'absolute',
+  },
+  assetButtonDisabled: {
+    opacity: 0.48,
+  },
+  assetButtonHighlighted: {
+    elevation: 10,
+    shadowColor: '#FFD233',
+    shadowOffset: { height: 0, width: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    transform: [{ scale: 1.08 }],
   },
   assetImage: {
     height: '100%',

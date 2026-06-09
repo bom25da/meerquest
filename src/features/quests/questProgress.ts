@@ -3,7 +3,12 @@ import type { QuestCategoryId } from '@/src/content/categories';
 export const DEFAULT_PROFILE_ID = 'default-child';
 
 export type QuestRewardType = 'star' | 'badge' | 'sticker';
-export type QuestVisualLayout = 'apple-count';
+export type QuestVisualLayout =
+  | 'apple-count'
+  | 'shape-find'
+  | 'pattern-path'
+  | 'size-compare'
+  | 'carrot-addition';
 export type QuestBackgroundAsset = 'math-cave-background';
 
 export interface QuestReward {
