@@ -603,6 +603,79 @@ describe('Meero dig-peek animation', () => {
       panelRect.top + panelRect.height,
     );
   });
+
+  it('uses a language hill animal-sound template with playable dog bark audio', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const animalSoundAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/animal-sound/animal-sound-meero-hill-v1.png',
+    );
+    const dogBarkAssetPath = resolve(
+      process.cwd(),
+      'assets/audio/quests/language-1/language-1-dog-bark-v1.mp3',
+    );
+
+    expect(existsSync(animalSoundAssetPath)).toBe(true);
+    expect(readFileSync(animalSoundAssetPath)[25]).toBe(6);
+    expect(existsSync(dogBarkAssetPath)).toBe(true);
+    const dogBarkAsset = readFileSync(dogBarkAssetPath);
+
+    expect(dogBarkAsset[0]).toBe(0xff);
+    expect(dogBarkAsset[1] & 0xe0).toBe(0xe0);
+    expect(progressSource).toContain("'animal-sound'");
+    expect(progressSource).toContain("'language-hill-background'");
+    expect(questSource).toContain("id: 'language-1'");
+    expect(questSource).toContain('언덕 뒤에서 동물 소리가 들려요. 어떤 동물 소리일까요?');
+    expect(questSource).toContain("soundAsset: 'dog-bark'");
+    expect(questSource).toContain("visualLayout: 'animal-sound'");
+    expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
+    expect(screenSource).toContain("quest.visualLayout === 'animal-sound'");
+    expect(screenSource).toContain('AnimalSoundQuestScreen');
+    expect(screenSource).toContain('animalSoundSceneImage');
+    expect(screenSource).toContain('animal-sound-meero-hill-v1.png');
+    expect(screenSource).toContain('language-1-dog-bark-v1.mp3');
+    expect(screenSource).not.toContain('language-1-dog-bark-v1.wav');
+    expect(screenSource).toContain('questSoundSources');
+    expect(screenSource).toContain('handleSoundPress');
+    expect(screenSource).toContain('onSound={onSound}');
+    expect(screenSource).toContain('styles.animalSoundChoiceCard');
+    expect(screenSource).toContain('styles.animalSoundChoiceLabelText');
+
+    const panelRect = getSourceRect(screenSource, 'questContentBackdropRect');
+    const sceneRect = getSourceRect(screenSource, 'animalSoundSceneImageRect');
+    const promptRect = getSourceRect(screenSource, 'animalSoundPromptRect');
+    const dogChoiceRect = getRecordChoiceRect(screenSource, 'animalSoundChoiceRects', 'dog');
+    const catChoiceRect = getRecordChoiceRect(screenSource, 'animalSoundChoiceRects', 'cat');
+
+    expect(promptRect.width).toBeGreaterThanOrEqual(840);
+    expect(sceneRect.top).toBeGreaterThanOrEqual(promptRect.top + promptRect.height + 6);
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(dogChoiceRect.left - 36);
+    expect(dogChoiceRect.left).toBe(catChoiceRect.left);
+    expect(catChoiceRect.top).toBeGreaterThanOrEqual(dogChoiceRect.top + dogChoiceRect.height + 20);
+    expect(catChoiceRect.top + catChoiceRect.height).toBeLessThanOrEqual(
+      panelRect.top + panelRect.height,
+    );
+  });
+
+  it('does not statically load the native audio module before the sound button is pressed', () => {
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+
+    expect(screenSource).not.toContain("import { useAudioPlayer } from 'expo-audio'");
+    expect(screenSource).not.toContain('useAudioPlayer(stepSoundSource');
+    expect(screenSource).toContain('requireOptionalNativeModule');
+    expect(screenSource).toContain("requireOptionalNativeModule('ExpoAudio')");
+    expect(screenSource).toContain('function isQuestAudioAvailable');
+    expect(screenSource).toContain('if (!isQuestAudioAvailable())');
+    expect(screenSource).toContain("await import('expo-audio')");
+    expect(screenSource).toContain('playOptionalQuestSound');
+    expect(screenSource).toContain('소리 기능은 앱을 새로 설치한 뒤 들을 수 있어요.');
+    expect(screenSource).toContain('catch');
+  });
 });
 
 function getSourceRect(source: string, name: string) {

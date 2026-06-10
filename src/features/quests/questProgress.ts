@@ -8,8 +8,10 @@ export type QuestVisualLayout =
   | 'shape-find'
   | 'pattern-path'
   | 'size-compare'
-  | 'carrot-addition';
-export type QuestBackgroundAsset = 'math-cave-background';
+  | 'carrot-addition'
+  | 'animal-sound';
+export type QuestBackgroundAsset = 'math-cave-background' | 'language-hill-background';
+export type QuestSoundAsset = 'dog-bark';
 
 export interface QuestReward {
   id: string;
@@ -30,6 +32,7 @@ export interface QuestStep {
   correctChoiceId: string;
   hintText: string;
   successMessage: string;
+  soundAsset?: QuestSoundAsset;
 }
 
 export interface Quest {

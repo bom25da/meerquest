@@ -109,4 +109,23 @@ describe('quest content', () => {
       '미어로가 가진 당근 2개에 페나가 준 당근 1개를 더해봐요.',
     );
   });
+
+  it('uses an animal sound story prompt for the first language hill quest', () => {
+    const languageQuest = quests.find((quest) => quest.id === 'language-1');
+
+    expect(languageQuest?.backgroundAsset).toBe('language-hill-background');
+    expect(languageQuest?.visualLayout).toBe('animal-sound');
+    expect(languageQuest?.title).toBe('언덕 뒤 동물 소리');
+    expect(languageQuest?.introduction).toBe('언덕 뒤에서 나는 동물 소리를 들어봐요.');
+    expect(languageQuest?.steps[0].instructionText).toBe(
+      '언덕 뒤에서 동물 소리가 들려요. 어떤 동물 소리일까요?',
+    );
+    expect(languageQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '강아지',
+      '고양이',
+    ]);
+    expect(languageQuest?.steps[0].correctChoiceId).toBe('dog');
+    expect(languageQuest?.steps[0].soundAsset).toBe('dog-bark');
+    expect(languageQuest?.steps[0].hintText).toBe('멍멍 하고 짖는 동물을 떠올려봐요.');
+  });
 });

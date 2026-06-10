@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Image,
@@ -34,6 +35,7 @@ import {
   getEarnedStarCount,
   getNextQuest,
   type QuestBackgroundAsset,
+  type QuestSoundAsset,
   type QuestStep,
 } from '@/src/features/quests/questProgress';
 import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
@@ -41,14 +43,22 @@ import { colors } from '@/src/theme/colors';
 
 const appleCountScreen = require('../assets/images/quests/apple-count/apple-count-screen.png');
 const appleCountApplesImage = require('../assets/images/quests/apple-count/apple-count-meero-apple-tree-v1.png');
+const animalSoundSceneImage = require('../assets/images/quests/animal-sound/animal-sound-meero-hill-v1.png');
 const carrotAdditionSceneImage = require('../assets/images/quests/carrot-addition/carrot-addition-meero-fena-v1.png');
+const dogBarkSound = require('../assets/audio/quests/language-1/language-1-dog-bark-v1.mp3');
+const languageHillBackground = require('../assets/images/home/category-language-background.png');
 const mathCaveBackground = require('../assets/images/quests/math-cave-background.png');
 const shapeFindDoorImage = require('../assets/images/quests/shape-find/shape-find-meero-door-v1.png');
 const patternPathStonesImage = require('../assets/images/quests/pattern-path/pattern-path-meero-crossing-v1.png');
 const sizeCompareHolesImage = require('../assets/images/quests/size-compare/size-compare-meero-holes-v2.png');
 
 const questBackgroundSources: Record<QuestBackgroundAsset, number> = {
+  'language-hill-background': languageHillBackground,
   'math-cave-background': mathCaveBackground,
+};
+
+const questSoundSources: Record<QuestSoundAsset, number> = {
+  'dog-bark': dogBarkSound,
 };
 
 const initialFeedbackMessage = '미어루가 땅굴에서 빼꼼 나와 기다려요.';
@@ -107,6 +117,7 @@ export default function QuestPlayScreen() {
   });
   const isNextAvailable = continueAction !== 'blocked';
   const rewardAvailable = isQuestRewardAvailable(isCompleted);
+  const soundPressHandler = step.soundAsset ? handleSoundPress : undefined;
 
   useEffect(() => {
     setFeedbackMessage(initialFeedbackMessage);
@@ -163,6 +174,18 @@ export default function QuestPlayScreen() {
       router.push(`/reward?questId=${quest.id}` as Href);
     }
   };
+
+  async function handleSoundPress() {
+    if (!step.soundAsset) {
+      return;
+    }
+
+    const didPlaySound = await playOptionalQuestSound(step.soundAsset);
+
+    if (!didPlaySound) {
+      setFeedbackMessage('소리 기능은 앱을 새로 설치한 뒤 들을 수 있어요.');
+    }
+  }
 
   const handleContinue = () => {
     if (continueAction === 'blocked') {
@@ -256,6 +279,36 @@ export default function QuestPlayScreen() {
         sceneAccessibilityLabel="미어로가 당근 2개를 들고 있고 페나가 당근 1개를 건네주는 장면"
         sceneImageRect={carrotAdditionSceneImageRect}
         sceneSource={carrotAdditionSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'animal-sound') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : languageHillBackground
+        }
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
         selectedChoiceId={selectedChoiceId}
         stars={earnedStars}
         step={step}
@@ -612,6 +665,205 @@ function AppleCountQuestScreen({
                 style={[
                   styles.appleCountResultOverlay,
                   getQuestStageRect(stage, appleCountResultOverlayRect),
+                  resultOverlay.tone === 'correct'
+                    ? styles.resultOverlayCorrect
+                    : styles.resultOverlayRetry,
+                ]}>
+                {resultOverlay.tone === 'correct' ? (
+                  <MeeroDigPeekAnimation style={styles.appleCountResultOverlayAnimation} />
+                ) : (
+                  <MeeroThinkAgainAnimation style={styles.appleCountResultOverlayAnimation} />
+                )}
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  style={[
+                    styles.appleCountResultOverlayTitle,
+                    { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
+                  ]}>
+                  {resultOverlay.title}
+                </Text>
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={2}
+                  style={[
+                    styles.appleCountResultOverlayMessage,
+                    { fontSize: 22 * stage.scaleY, lineHeight: 28 * stage.scaleY },
+                  ]}>
+                  {resultOverlay.message}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onResultOverlayPress}
+                  style={({ pressed }) => [
+                    styles.appleCountResultOverlayAction,
+                    pressed && styles.buttonPressed,
+                  ]}>
+                  <Text
+                    adjustsFontSizeToFit
+                    numberOfLines={1}
+                    style={[
+                      styles.appleCountResultOverlayActionText,
+                      { fontSize: 24 * stage.scaleY, lineHeight: 30 * stage.scaleY },
+                    ]}>
+                    {resultOverlay.actionLabel}
+                  </Text>
+                </Pressable>
+              </View>
+            </>
+          ) : null}
+        </>
+      )}
+    </QuestScreenFrame>
+  );
+}
+
+function AnimalSoundQuestScreen({
+  backgroundSource,
+  height,
+  incorrectChoiceIds,
+  isCompleted,
+  isLoaded,
+  isNextAvailable,
+  isRewardAvailable,
+  isStepComplete,
+  onBack,
+  onChoicePress,
+  onContinue,
+  onHome,
+  onReward,
+  onResultOverlayPress,
+  onSound,
+  questTitle,
+  resultOverlay,
+  selectedChoiceId,
+  stars,
+  step,
+  width,
+}: {
+  backgroundSource: number;
+  height: number;
+  incorrectChoiceIds: string[];
+  isCompleted: boolean;
+  isLoaded: boolean;
+  isNextAvailable: boolean;
+  isRewardAvailable: boolean;
+  isStepComplete: boolean;
+  onBack: () => void;
+  onChoicePress: (choiceId: string) => void;
+  onContinue: () => void;
+  onHome: () => void;
+  onReward: () => void;
+  onResultOverlayPress: () => void;
+  onSound?: () => void;
+  questTitle: string;
+  resultOverlay: QuestResultOverlay | null;
+  selectedChoiceId: string | null;
+  stars: number;
+  step: QuestStep;
+  width: number;
+}) {
+  const handleNext = isNextAvailable ? onContinue : () => undefined;
+
+  return (
+    <QuestScreenFrame
+      backgroundSource={backgroundSource}
+      height={height}
+      isNextAvailable={isNextAvailable}
+      isRewardAvailable={isRewardAvailable}
+      onBack={onBack}
+      onHome={onHome}
+      onNext={handleNext}
+      onPrevious={onBack}
+      onReward={onReward}
+      onSound={onSound}
+      questTitle={questTitle}
+      stars={stars}
+      width={width}>
+      {(stage) => (
+        <>
+          <View
+            style={[styles.questContentBackdrop, getQuestStageRect(stage, questContentBackdropRect)]}
+          />
+          <View style={[styles.appleCountPrompt, getQuestStageRect(stage, animalSoundPromptRect)]}>
+            <Text
+              adjustsFontSizeToFit
+              numberOfLines={2}
+              style={[
+                styles.appleCountPromptText,
+                { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
+              ]}>
+              {step.instructionText}
+            </Text>
+          </View>
+          <Image
+            accessibilityLabel="미어로가 언덕 뒤 동물 소리에 귀를 기울이는 장면"
+            accessibilityIgnoresInvertColors
+            resizeMode="contain"
+            source={animalSoundSceneImage}
+            style={[styles.animalSoundSceneImage, getQuestStageRect(stage, animalSoundSceneImageRect)]}
+          />
+          {step.choices.map((choice) => {
+            const choiceRect = animalSoundChoiceRects[choice.id] ?? animalSoundFallbackChoiceRect;
+            const isSelected = selectedChoiceId === choice.id;
+            const isCorrect = choice.id === step.correctChoiceId;
+            const showCorrect = isStepComplete && isCorrect;
+            const showIncorrect = incorrectChoiceIds.includes(choice.id);
+            const isChoiceDisabled = !isLoaded || isStepComplete || isCompleted || showIncorrect;
+
+            return (
+              <Pressable
+                accessibilityLabel={choice.label}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isChoiceDisabled, selected: isSelected }}
+                disabled={isChoiceDisabled}
+                key={choice.id}
+                onPress={() => onChoicePress(choice.id)}
+                style={({ pressed }) => [
+                  styles.animalSoundChoiceCard,
+                  getQuestStageRect(stage, choiceRect),
+                  isSelected && styles.appleCountChoiceSelected,
+                  showCorrect && styles.appleCountChoiceCorrect,
+                  showIncorrect && styles.appleCountChoiceIncorrect,
+                  showIncorrect && styles.appleCountChoiceDisabled,
+                  pressed && !isStepComplete && !showIncorrect && styles.appleCountChoicePressed,
+                ]}>
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  style={[
+                    styles.animalSoundChoiceLabelText,
+                    { fontSize: 42 * stage.scaleY, lineHeight: 50 * stage.scaleY },
+                  ]}>
+                  {choice.label}
+                </Text>
+                {showCorrect ? (
+                  <View style={styles.animalSoundCheckBadge}>
+                    <Text
+                      adjustsFontSizeToFit
+                      numberOfLines={1}
+                      style={[
+                        styles.appleCountCheckText,
+                        { fontSize: 23 * stage.scaleY, lineHeight: 28 * stage.scaleY },
+                      ]}>
+                      정답
+                    </Text>
+                  </View>
+                ) : null}
+              </Pressable>
+            );
+          })}
+          {resultOverlay ? (
+            <>
+              <View
+                style={[styles.appleCountDimOverlay, getQuestStageRect(stage, questContentBackdropRect)]}
+              />
+              <View
+                accessibilityLabel={`${resultOverlay.title} ${resultOverlay.message}`}
+                accessibilityLiveRegion="polite"
+                style={[
+                  styles.appleCountResultOverlay,
+                  getQuestStageRect(stage, animalSoundResultOverlayRect),
                   resultOverlay.tone === 'correct'
                     ? styles.resultOverlayCorrect
                     : styles.resultOverlayRetry,
@@ -1343,6 +1595,14 @@ const carrotAdditionChoiceDots: Record<string, number> = {
   three: 3,
   two: 2,
 };
+const animalSoundPromptRect = { height: 80, left: 233, top: 140, width: 900 };
+const animalSoundSceneImageRect = { height: 306, left: 108, top: 269, width: 700 };
+const animalSoundResultOverlayRect = { height: 365, left: 377, top: 223, width: 612 };
+const animalSoundChoiceRects: Record<string, QuestStageSourceRect> = {
+  dog: { height: 136, left: 850, top: 270, width: 252 },
+  cat: { height: 136, left: 850, top: 437, width: 252 },
+};
+const animalSoundFallbackChoiceRect = { height: 136, left: 850, top: 318, width: 252 };
 const shapeFindPromptRect = { height: 96, left: 233, top: 136, width: 900 };
 const shapeFindDoorImageRect = { height: 360, left: 108, top: 248, width: 640 };
 const shapeFindDoorButtonLabelRects: Record<string, QuestStageSourceRect> = {
@@ -1409,7 +1669,74 @@ function getPatternPathChoiceColors(choiceId: string) {
   return { border: '#B9352A', fill: '#EF4F3D', surface: '#FFEDE8' };
 }
 
+function isQuestAudioAvailable() {
+  try {
+    return requireOptionalNativeModule('ExpoAudio') !== null;
+  } catch {
+    return false;
+  }
+}
+
+async function playOptionalQuestSound(soundAsset: QuestSoundAsset) {
+  if (!isQuestAudioAvailable()) {
+    return false;
+  }
+
+  try {
+    const { createAudioPlayer } = await import('expo-audio');
+    const player = createAudioPlayer(questSoundSources[soundAsset], {
+      keepAudioSessionActive: true,
+      updateInterval: 1000,
+    });
+
+    player.play();
+    setTimeout(() => {
+      player.pause();
+      player.remove?.();
+    }, 1600);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const styles = StyleSheet.create({
+  animalSoundCheckBadge: {
+    alignItems: 'center',
+    backgroundColor: colors.green,
+    borderColor: colors.white,
+    borderRadius: 999,
+    borderWidth: 3,
+    height: '28%',
+    justifyContent: 'center',
+    position: 'absolute',
+    right: '-6%',
+    top: '-14%',
+    width: '22%',
+  },
+  animalSoundChoiceCard: {
+    alignItems: 'center',
+    backgroundColor: '#FFF9EC',
+    borderColor: colors.white,
+    borderRadius: 28,
+    borderWidth: 6,
+    elevation: 8,
+    justifyContent: 'center',
+    position: 'absolute',
+    shadowColor: '#70411F',
+    shadowOffset: { height: 8, width: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+  },
+  animalSoundChoiceLabelText: {
+    color: colors.ink,
+    fontWeight: '900',
+    includeFontPadding: false,
+    textAlign: 'center',
+  },
+  animalSoundSceneImage: {
+    position: 'absolute',
+  },
   appleCountApplesImage: {
     position: 'absolute',
   },
