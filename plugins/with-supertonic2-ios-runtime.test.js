@@ -15,6 +15,126 @@ describe('supertonic2 iOS runtime config', () => {
       'https://github.com/microsoft/onnxruntime-swift-package-manager.git',
     );
     expect(supertonic2IosRuntime.ONNX_RUNTIME_PRODUCT).toBe('onnxruntime');
+    expect(supertonic2IosRuntime.ONNX_RUNTIME_MIN_VERSION).toBe('1.16.0');
+  });
+
+  it('keeps package insertion idempotent', () => {
+    const pbxproj = [
+      '/* Begin XCRemoteSwiftPackageReference section */',
+      '/* End XCRemoteSwiftPackageReference section */',
+      'packageReferences = (',
+      ');',
+    ].join('\n');
+
+    const once = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
+    const twice = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(once);
+
+    expect((twice.match(/onnxruntime-swift-package-manager/g) ?? []).length).toBe(1);
+    expect((twice.match(/XCSwiftPackageProductDependency/g) ?? []).length).toBe(1);
+  });
+
+  it('adds the ONNX package reference and product dependency to pbxproj sections', () => {
+    const pbxproj = [
+      '/* Begin PBXNativeTarget section */',
+      '    13B07F861A680F5B00A75B9A /* MeerQuest */ = {',
+      '      isa = PBXNativeTarget;',
+      '      name = MeerQuest;',
+      '      packageProductDependencies = (',
+      '      );',
+      '    };',
+      '/* End PBXNativeTarget section */',
+      '/* Begin XCRemoteSwiftPackageReference section */',
+      '/* End XCRemoteSwiftPackageReference section */',
+      '/* Begin XCSwiftPackageProductDependency section */',
+      '/* End XCSwiftPackageProductDependency section */',
+      'packageReferences = (',
+      ');',
+    ].join('\n');
+
+    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
+
+    expect(updated).toContain('isa = XCRemoteSwiftPackageReference;');
+    expect(updated).toContain(
+      'repositoryURL = "https://github.com/microsoft/onnxruntime-swift-package-manager.git";',
+    );
+    expect(updated).toContain('minimumVersion = 1.16.0;');
+    expect(updated).toContain('productName = onnxruntime;');
+    expect(updated).toContain('package = ');
+    expect(updated).toContain('isa = XCSwiftPackageProductDependency;');
+    expect(updated).toContain('packageReferences = (');
+    expect(updated).toContain('packageProductDependencies = (');
+  });
+
+  it('can create Swift package sections for Expo prebuild serialization', () => {
+    const pbxproj = [
+      '/* Begin PBXNativeTarget section */',
+      '    13B07F861A680F5B00A75B9A /* MeerQuest */ = {',
+      '      isa = PBXNativeTarget;',
+      '      name = MeerQuest;',
+      '      productName = MeerQuest;',
+      '    };',
+      '/* End PBXNativeTarget section */',
+      '/* Begin PBXProject section */',
+      '    83CBB9F71A601CBA00E9B192 /* Project object */ = {',
+      '      isa = PBXProject;',
+      '      productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;',
+      '    };',
+      '/* End PBXProject section */',
+      '/* Begin XCBuildConfiguration section */',
+      '/* End XCBuildConfiguration section */',
+    ].join('\n');
+
+    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
+      ensureSwiftPackageSections: true,
+    });
+
+    expect(updated).toContain('/* Begin XCRemoteSwiftPackageReference section */');
+    expect(updated).toContain('/* End XCRemoteSwiftPackageReference section */');
+    expect(updated).toContain('/* Begin XCSwiftPackageProductDependency section */');
+    expect(updated).toContain('/* End XCSwiftPackageProductDependency section */');
+  });
+
+  it('can attach the product dependency to a named native target', () => {
+    const pbxproj = [
+      '/* Begin PBXNativeTarget section */',
+      '    8D101DC8E085BC33A59C07215B56B898 /* Supertonic2Runtime */ = {',
+      '      isa = PBXNativeTarget;',
+      '      name = Supertonic2Runtime;',
+      '      productName = Supertonic2Runtime;',
+      '    };',
+      '/* End PBXNativeTarget section */',
+      'packageReferences = (',
+      ');',
+    ].join('\n');
+
+    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
+      targetName: 'Supertonic2Runtime',
+    });
+
+    expect(updated).toContain('name = Supertonic2Runtime;');
+    expect(updated).toContain('packageProductDependencies = (');
+    expect(updated).toContain('5A2D0F760F974E4E94D00002 /* onnxruntime */');
+  });
+
+  it('can leave the product dependency unattached for pod-owned linking', () => {
+    const pbxproj = [
+      '/* Begin PBXNativeTarget section */',
+      '    13B07F861A680F5B00A75B9A /* MeerQuest */ = {',
+      '      isa = PBXNativeTarget;',
+      '      name = MeerQuest;',
+      '      productName = MeerQuest;',
+      '    };',
+      '/* End PBXNativeTarget section */',
+      'packageReferences = (',
+      ');',
+    ].join('\n');
+
+    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
+      targetName: null,
+    });
+
+    expect(updated).toContain('isa = XCSwiftPackageProductDependency;');
+    expect(updated).not.toContain('packageProductDependencies = (');
   });
 
   it('defines the native iOS module autolinking contract', () => {
@@ -29,9 +149,11 @@ describe('supertonic2 iOS runtime config', () => {
     const podspec = fs.readFileSync(podspecPath, 'utf8');
     expect(podspec).toContain("s.name           = 'Supertonic2Runtime'");
     expect(podspec).toContain("s.version        = package['version']");
+    expect(podspec).toContain("s.source         = { :git => 'https://github.com/bom25da/meerquest.git' }");
     expect(podspec).toContain(":ios => '16.4'");
     expect(podspec).toContain("s.swift_version  = '5.9'");
     expect(podspec).toContain("s.dependency 'ExpoModulesCore'");
+    expect(podspec).toContain("s.dependency 'onnxruntime-objc', '1.16.0'");
     expect(podspec).toContain('s.source_files = "ios/**/*.{swift,h,m,mm}"');
     expect(moduleConfig.ios.podspecPath).toBe('./Supertonic2Runtime.podspec');
     expect(moduleConfig.ios.swiftModuleName).toBe('Supertonic2Runtime');

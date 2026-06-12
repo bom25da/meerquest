@@ -1,19 +1,21 @@
 import ExpoModulesCore
 
 public class Supertonic2RuntimeModule: Module {
+  private let service = Supertonic2RuntimeService()
+
   public func definition() -> ModuleDefinition {
     Name("Supertonic2Runtime")
 
     AsyncFunction("getModelStatus") { (rootUri: String, manifest: [String: Any]) -> [String: Any] in
-      return ["state": "missing", "reason": "native-status-not-implemented"]
+      return try service.status(rootUri: rootUri, manifest: manifest)
     }
 
     AsyncFunction("prepareTts") { (rootUri: String) in
-      throw Supertonic2RuntimeError("Supertonic 2 runtime preparation is not implemented yet.")
+      try service.prepare(rootUri: rootUri)
     }
 
     AsyncFunction("synthesizeToFile") { (text: String, options: [String: Any]) -> [String: Any] in
-      throw Supertonic2RuntimeError("Supertonic 2 synthesis is not implemented yet.")
+      return try service.synthesize(text: text, options: options)
     }
   }
 }
