@@ -78,6 +78,7 @@ describe('home screen content', () => {
     expect(homeScreenSource).toContain(
       "import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';",
     );
+    expect(homeScreenSource).toContain('useFocusEffect');
     expect(homeScreenSource).toContain('supertonic2SpeechService.speakText(homeEntrySpeechText');
     expect(homeScreenSource).toContain("lang: 'ko'");
     expect(homeScreenSource).toContain("voice: 'F1'");

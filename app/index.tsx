@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import {
   Image,
@@ -88,12 +88,14 @@ export default function HomeScreen() {
     isCompact,
   });
   const heroCtaLayout = isCompact ? homeHero.cta.layout.compact : homeHero.cta.layout.regular;
-  useEffect(() => {
-    void supertonic2SpeechService.speakText(homeEntrySpeechText, {
-      lang: 'ko',
-      voice: 'F1',
-    });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      void supertonic2SpeechService.speakText(homeEntrySpeechText, {
+        lang: 'ko',
+        voice: 'F1',
+      });
+    }, []),
+  );
 
   const navigateToToolbarRoute = (route: string) => {
     if (route === '/') {

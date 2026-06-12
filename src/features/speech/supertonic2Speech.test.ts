@@ -34,6 +34,33 @@ describe('supertonic2 speech service', () => {
     expect(play).toHaveBeenCalledTimes(1);
   });
 
+  it('configures iOS audio mode before playback so speech can play in silent mode', async () => {
+    const configureAudio = vi.fn(async () => undefined);
+    const play = vi.fn();
+    const synthesizeToFile = vi.fn(async () => ({
+      uri: 'file:///미어루.wav',
+      durationSeconds: 0.1,
+    }));
+    const service = createSupertonic2SpeechService({
+      runtime: {
+        isSupported: () => true,
+        synthesizeToFile,
+      },
+      createPlayer: vi.fn(() => ({ play, remove: vi.fn() })),
+      configureAudio,
+    });
+
+    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
+
+    expect(configureAudio).toHaveBeenCalledOnce();
+    expect(configureAudio.mock.invocationCallOrder[0]).toBeLessThan(
+      synthesizeToFile.mock.invocationCallOrder[0],
+    );
+    expect(configureAudio.mock.invocationCallOrder[0]).toBeLessThan(
+      play.mock.invocationCallOrder[0],
+    );
+  });
+
   it('waits for cleanup before starting the next request', async () => {
     vi.useFakeTimers();
     const playOrder: string[] = [];

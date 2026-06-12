@@ -17,14 +17,18 @@ interface SpeechServicePorts {
   runtime?: RuntimePort;
   createPlayer?: (uri: string) => Player;
   deleteFile?: (uri: string) => Promise<void>;
+  configureAudio?: () => Promise<void>;
 }
 
 export function createSupertonic2SpeechService({
+  configureAudio,
   runtime,
   createPlayer,
   deleteFile,
 }: SpeechServicePorts = {}) {
   let queue = Promise.resolve();
+  const configurePlayback =
+    configureAudio ?? (createPlayer ? noopConfigureAudio : configureSpeechPlaybackAudio);
   const cleanupFile = deleteFile ?? deleteTemporarySpeechFile;
 
   return {
@@ -40,6 +44,7 @@ export function createSupertonic2SpeechService({
         let generatedUri: string | undefined;
 
         try {
+          await configurePlayback();
           const result = await activeRuntime.synthesizeToFile(text, options);
           generatedUri = result.uri;
           player = createPlayer ? createPlayer(result.uri) : await createExpoAudioPlayer(result.uri);
@@ -91,6 +96,13 @@ async function createExpoAudioPlayer(uri: string) {
   const { createAudioPlayer } = await import('expo-audio');
   return createAudioPlayer({ uri }, { keepAudioSessionActive: true, updateInterval: 1000 });
 }
+
+async function configureSpeechPlaybackAudio() {
+  const { setAudioModeAsync } = await import('expo-audio');
+  await setAudioModeAsync({ playsInSilentMode: true });
+}
+
+async function noopConfigureAudio() {}
 
 async function deleteTemporarySpeechFile(uri: string) {
   const FileSystem = await import('expo-file-system/legacy');
