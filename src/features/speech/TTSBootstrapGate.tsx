@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
+import { ModelDownloadScreen } from '@/src/components/speech/ModelDownloadScreen';
+
 import type { Supertonic2DownloadProgress } from './supertonic2ModelStore';
 
 export type TtsBootstrapPhase =
@@ -28,9 +30,6 @@ export type TtsBootstrapEvent =
   | { type: 'preparing' }
   | { type: 'ready' }
   | { type: 'failed'; errorMessage: string };
-
-type ModelDownloadScreenComponent =
-  typeof import('@/src/components/speech/ModelDownloadScreen').ModelDownloadScreen;
 
 export function reduceTtsBootstrapState(
   _state: TtsBootstrapState,
@@ -79,7 +78,6 @@ export function TTSBootstrapGate({ children }: { children: ReactNode }) {
     phase: 'checking',
     canEnterApp: false,
   });
-  const [DownloadScreen, setDownloadScreen] = useState<ModelDownloadScreenComponent | null>(null);
 
   const dispatch = useCallback((event: TtsBootstrapEvent) => {
     setState((current) => reduceTtsBootstrapState(current, event));
@@ -133,20 +131,6 @@ export function TTSBootstrapGate({ children }: { children: ReactNode }) {
   }, [dispatch]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    void import('@/src/components/speech/ModelDownloadScreen').then(({ ModelDownloadScreen }) => {
-      if (isMounted) {
-        setDownloadScreen(() => ModelDownloadScreen);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
 
@@ -154,12 +138,8 @@ export function TTSBootstrapGate({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!DownloadScreen) {
-    return null;
-  }
-
   return (
-    <DownloadScreen
+    <ModelDownloadScreen
       message={getBootstrapMessage(state)}
       onRetry={state.phase === 'failed' ? bootstrap : undefined}
       percent={getDownloadPercent(state.phase === 'downloading' ? state.progress : undefined)}
