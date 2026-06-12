@@ -70,6 +70,10 @@ export interface TtsBootstrapRuntimeDependencies {
   loadModelDependencies(): Promise<TtsBootstrapModelDependencies>;
   nativeRuntime: {
     isSupported(): boolean;
+    getModelStatus(
+      rootUri: string,
+      manifest: Supertonic2ModelManifest,
+    ): Promise<Supertonic2ModelStatus>;
     prepareTts(rootUri: string): Promise<void>;
   };
 }
@@ -221,6 +225,15 @@ export async function runTtsBootstrap({
     if (!rootUri) {
       throw new Error('model-root-unavailable');
     }
+
+    dispatchIfActive({ type: 'verifying' });
+    const nativeStatus = await nativeRuntime.getModelStatus(rootUri, manifest);
+    if (!isActive()) return;
+
+    if (nativeStatus.state !== 'ready') {
+      throw new Error(nativeStatus.reason ?? 'native-model-verification-failed');
+    }
+    rootUri = nativeStatus.rootUri ?? rootUri;
 
     dispatchIfActive({ type: 'preparing' });
     await nativeRuntime.prepareTts(rootUri);

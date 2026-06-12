@@ -26,16 +26,31 @@ final class Supertonic2RuntimeService {
       let url = root.appendingPathComponent(file.path)
 
       guard FileManager.default.fileExists(atPath: url.path) else {
-        return ["state": "missing", "reason": "file-missing", "revision": revision]
+        return [
+          "state": "missing",
+          "reason": "file-missing",
+          "revision": revision,
+          "rootUri": root.absoluteString,
+        ]
       }
 
       let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
       if let size = attributes[.size] as? NSNumber, size.intValue != file.bytes {
-        return ["state": "invalid", "reason": "size-mismatch", "revision": revision]
+        return [
+          "state": "invalid",
+          "reason": "size-mismatch",
+          "revision": revision,
+          "rootUri": root.absoluteString,
+        ]
       }
 
       if try sha256(url: url) != file.sha256 {
-        return ["state": "invalid", "reason": "sha256-mismatch", "revision": revision]
+        return [
+          "state": "invalid",
+          "reason": "sha256-mismatch",
+          "revision": revision,
+          "rootUri": root.absoluteString,
+        ]
       }
     }
 
@@ -46,8 +61,10 @@ final class Supertonic2RuntimeService {
     let root = try fileURL(from: rootUri)
     let onnxDir = root.appendingPathComponent("onnx", isDirectory: true).path
     let runtimeEnv = try ORTEnv(loggingLevel: .warning)
+    let loadedTextToSpeech = try loadTextToSpeech(onnxDir, false, runtimeEnv)
+
     env = runtimeEnv
-    textToSpeech = try loadTextToSpeech(onnxDir, false, runtimeEnv)
+    textToSpeech = loadedTextToSpeech
     rootURL = root
   }
 
@@ -58,9 +75,15 @@ final class Supertonic2RuntimeService {
 
     let lang = options["lang"] as? String ?? "ko"
     let voice = options["voice"] as? String ?? "F1"
-    let speed = numericOption(options["speed"], defaultValue: 1.05)
-    let steps = intOption(options["steps"], defaultValue: 4)
+    let speed = try numericOption(options["speed"], name: "speed", defaultValue: 1.05)
+    let steps = try intOption(options["steps"], name: "steps", defaultValue: 4)
+    try validateSynthesisOptions(lang: lang, voice: voice, speed: speed, steps: steps)
+
     let voiceURL = rootURL.appendingPathComponent("voice_styles/\(voice).json")
+    guard FileManager.default.fileExists(atPath: voiceURL.path) else {
+      throw Supertonic2RuntimeError("Supertonic 2 voice style is missing: \(voice).")
+    }
+
     let style = try loadVoiceStyle([voiceURL.path], verbose: false)
     let result = try textToSpeech.call(
       text,
@@ -136,7 +159,29 @@ private func manifestByteCount(from value: Any?) throws -> Int {
   throw Supertonic2RuntimeError("Supertonic 2 manifest file byte count is malformed.")
 }
 
-private func numericOption(_ value: Any?, defaultValue: Double) -> Double {
+private func validateSynthesisOptions(lang: String, voice: String, speed: Double, steps: Int) throws {
+  guard isValidLang(lang) else {
+    throw Supertonic2RuntimeError("Unsupported Supertonic 2 language: \(lang).")
+  }
+
+  guard voice == "F1" else {
+    throw Supertonic2RuntimeError("Unsupported Supertonic 2 voice: \(voice).")
+  }
+
+  guard speed.isFinite, speed > 0, speed <= 4.0 else {
+    throw Supertonic2RuntimeError("Supertonic 2 speed must be finite and greater than 0.")
+  }
+
+  guard steps > 0, steps <= 100 else {
+    throw Supertonic2RuntimeError("Supertonic 2 steps must be greater than 0.")
+  }
+}
+
+private func numericOption(_ value: Any?, name: String, defaultValue: Double) throws -> Double {
+  guard let value else {
+    return defaultValue
+  }
+
   if let value = value as? Double {
     return value
   }
@@ -145,17 +190,26 @@ private func numericOption(_ value: Any?, defaultValue: Double) -> Double {
     return value.doubleValue
   }
 
-  return defaultValue
+  throw Supertonic2RuntimeError("Supertonic 2 \(name) option must be numeric.")
 }
 
-private func intOption(_ value: Any?, defaultValue: Int) -> Int {
+private func intOption(_ value: Any?, name: String, defaultValue: Int) throws -> Int {
+  guard let value else {
+    return defaultValue
+  }
+
   if let value = value as? Int {
     return value
   }
 
   if let value = value as? NSNumber {
+    let doubleValue = value.doubleValue
+    guard doubleValue.isFinite, doubleValue.rounded(.towardZero) == doubleValue else {
+      throw Supertonic2RuntimeError("Supertonic 2 \(name) option must be an integer.")
+    }
+
     return value.intValue
   }
 
-  return defaultValue
+  throw Supertonic2RuntimeError("Supertonic 2 \(name) option must be numeric.")
 }

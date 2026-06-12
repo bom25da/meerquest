@@ -48,7 +48,7 @@ export function createSupertonic2NativeRuntime({
         !isSupertonic2RuntimeSupported(platformOS, nativeModule) ||
         typeof nativeModule?.getModelStatus !== 'function'
       ) {
-        return runtimeUnavailableStatus;
+        return { ...runtimeUnavailableStatus, rootUri };
       }
 
       return nativeModule.getModelStatus(rootUri, manifest);

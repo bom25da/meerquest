@@ -39,7 +39,11 @@ const completeProgress: Supertonic2DownloadProgress = {
 function createBootstrapRunnerHarness({
   downloadModel,
   getModelRootUri,
+  nativeStatuses = [
+    { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+  ],
   isSupported,
+  getModelStatus,
   prepareTts,
   statuses = [
     { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
@@ -47,13 +51,20 @@ function createBootstrapRunnerHarness({
 }: {
   downloadModel?: TtsBootstrapModelDependencies['modelStore']['downloadModel'];
   getModelRootUri?: TtsBootstrapModelDependencies['modelStore']['getModelRootUri'];
+  nativeStatuses?: Supertonic2ModelStatus[];
   isSupported?: TtsBootstrapRuntimeDependencies['nativeRuntime']['isSupported'];
+  getModelStatus?: (
+    rootUri: string,
+    manifest: Supertonic2ModelManifest,
+  ) => Promise<Supertonic2ModelStatus>;
   prepareTts?: TtsBootstrapRuntimeDependencies['nativeRuntime']['prepareTts'];
   statuses?: Supertonic2ModelStatus[];
 } = {}) {
   const dispatch = vi.fn();
   const statusQueue = [...statuses];
   const lastStatus = statuses[statuses.length - 1];
+  const nativeStatusQueue = [...nativeStatuses];
+  const lastNativeStatus = nativeStatuses[nativeStatuses.length - 1];
   const modelStore = {
     downloadModel: vi.fn(downloadModel ?? (async () => undefined)),
     getModelRootUri: vi.fn(
@@ -64,6 +75,9 @@ function createBootstrapRunnerHarness({
   } satisfies TtsBootstrapModelDependencies['modelStore'];
   const nativeRuntime = {
     isSupported: vi.fn(isSupported ?? (() => true)),
+    getModelStatus: vi.fn(
+      getModelStatus ?? (async () => nativeStatusQueue.shift() ?? lastNativeStatus),
+    ),
     prepareTts: vi.fn(prepareTts ?? (async () => undefined)),
   } satisfies TtsBootstrapRuntimeDependencies['nativeRuntime'];
   const loadModelDependencies = vi.fn(async () => ({ manifest, modelStore }));
@@ -216,8 +230,48 @@ describe('TTS bootstrap runner', () => {
     });
 
     expect(modelStore.downloadModel).not.toHaveBeenCalled();
+    expect(nativeRuntime.getModelStatus).toHaveBeenCalledWith(
+      'file:///docs/supertonic2/rev',
+      manifest,
+    );
     expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
-    expect(getDispatchedEvents(dispatch)).toEqual([{ type: 'preparing' }, { type: 'ready' }]);
+    expect(nativeRuntime.getModelStatus.mock.invocationCallOrder[0]).toBeLessThan(
+      nativeRuntime.prepareTts.mock.invocationCallOrder[0],
+    );
+    expect(getDispatchedEvents(dispatch)).toEqual([
+      { type: 'verifying' },
+      { type: 'preparing' },
+      { type: 'ready' },
+    ]);
+  });
+
+  it('dispatches failed and does not prepare when native status is invalid', async () => {
+    const { dispatch, loadDependencies, nativeRuntime } = createBootstrapRunnerHarness({
+      nativeStatuses: [
+        {
+          state: 'invalid',
+          reason: 'sha256-mismatch',
+          revision: manifest.revision,
+          rootUri: 'file:///docs/supertonic2/rev',
+        },
+      ],
+    });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    expect(nativeRuntime.getModelStatus).toHaveBeenCalledWith(
+      'file:///docs/supertonic2/rev',
+      manifest,
+    );
+    expect(nativeRuntime.prepareTts).not.toHaveBeenCalled();
+    expect(getDispatchedEvents(dispatch)).toEqual([
+      { type: 'verifying' },
+      { type: 'failed', errorMessage: 'sha256-mismatch' },
+    ]);
   });
 
   it('downloads, verifies, prepares, and dispatches phases in order for a missing model', async () => {
@@ -239,9 +293,20 @@ describe('TTS bootstrap runner', () => {
 
     expect(modelStore.downloadModel).toHaveBeenCalledOnce();
     expect(modelStore.getStatus).toHaveBeenCalledTimes(2);
+    expect(nativeRuntime.getModelStatus).toHaveBeenCalledWith(
+      'file:///docs/supertonic2/rev',
+      manifest,
+    );
     expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(modelStore.getStatus.mock.invocationCallOrder[1]).toBeLessThan(
+      nativeRuntime.getModelStatus.mock.invocationCallOrder[0],
+    );
+    expect(nativeRuntime.getModelStatus.mock.invocationCallOrder[0]).toBeLessThan(
+      nativeRuntime.prepareTts.mock.invocationCallOrder[0],
+    );
     expect(getDispatchedEvents(dispatch)).toEqual([
       { type: 'download-progress', progress: completeProgress },
+      { type: 'verifying' },
       { type: 'verifying' },
       { type: 'preparing' },
       { type: 'ready' },
@@ -323,6 +388,6 @@ describe('TTS bootstrap runner', () => {
       loadDependencies,
     });
 
-    expect(getDispatchedEvents(dispatch)).toEqual([{ type: 'preparing' }]);
+    expect(getDispatchedEvents(dispatch)).toEqual([{ type: 'verifying' }, { type: 'preparing' }]);
   });
 });

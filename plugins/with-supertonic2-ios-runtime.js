@@ -24,6 +24,7 @@ function addOnnxRuntimeSwiftPackage(pbxproj, options = {}) {
     packageReferenceId = ONNX_RUNTIME_PACKAGE_REFERENCE_ID;
     updated = insertPackageReferenceObject(updated, packageReferenceId, ensureSwiftPackageSections);
   }
+  updated = setPackageReferenceExactVersion(updated, packageReferenceId);
 
   let productDependencyId = findObjectId(updated, (object) =>
     object.includes('isa = XCSwiftPackageProductDependency;') &&
@@ -68,13 +69,26 @@ function insertPackageReferenceObject(pbxproj, packageReferenceId, ensureSection
     '\t\t\tisa = XCRemoteSwiftPackageReference;',
     `\t\t\trepositoryURL = "${ONNX_RUNTIME_SPM_URL}";`,
     '\t\t\trequirement = {',
-    '\t\t\t\tkind = upToNextMajorVersion;',
-    `\t\t\t\tminimumVersion = ${ONNX_RUNTIME_MIN_VERSION};`,
+    '\t\t\t\tkind = exactVersion;',
+    `\t\t\t\tversion = ${ONNX_RUNTIME_MIN_VERSION};`,
     '\t\t\t};',
     '\t\t};',
   ].join('\n');
 
   return insertObjectBlock(pbxproj, 'XCRemoteSwiftPackageReference', objectBlock, ensureSection);
+}
+
+function setPackageReferenceExactVersion(pbxproj, packageReferenceId) {
+  const objectRegex = new RegExp(
+    `(\\s*${escapeRegExp(packageReferenceId)} (?:\\/\\* [^*]+ \\*\\/ )?= \\{\\n[\\s\\S]*?\\n\\s*\\};)`,
+  );
+
+  return pbxproj.replace(objectRegex, (objectBlock) =>
+    objectBlock.replace(
+      /(\n\s*requirement = \{\n)[\s\S]*?(\n\s*\};)/,
+      `$1\t\t\t\tkind = exactVersion;\n\t\t\t\tversion = ${ONNX_RUNTIME_MIN_VERSION};$2`,
+    ),
+  );
 }
 
 function insertProductDependencyObject(

@@ -68,7 +68,10 @@ describe('supertonic2 iOS runtime config', () => {
     expect(updated).toContain(
       'repositoryURL = "https://github.com/microsoft/onnxruntime-swift-package-manager.git";',
     );
-    expect(updated).toContain('minimumVersion = 1.16.0;');
+    expect(updated).toContain('kind = exactVersion;');
+    expect(updated).toContain('version = 1.16.0;');
+    expect(updated).not.toContain('minimumVersion = 1.16.0;');
+    expect(updated).not.toContain('upToNextMajorVersion');
     expect(updated).toContain('productName = onnxruntime;');
     expect(updated).toContain('package = ');
     expect(updated).toContain('isa = XCSwiftPackageProductDependency;');

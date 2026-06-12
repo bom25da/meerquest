@@ -91,6 +91,7 @@ describe('supertonic2 native runtime wrapper', () => {
     await expect(runtime.getModelStatus('file:///docs/supertonic2/rev', {})).resolves.toEqual({
       state: 'missing',
       reason: 'runtime-unavailable',
+      rootUri: 'file:///docs/supertonic2/rev',
     });
   });
 
@@ -103,6 +104,7 @@ describe('supertonic2 native runtime wrapper', () => {
     await expect(runtime.getModelStatus('file:///docs/supertonic2/rev', {})).resolves.toEqual({
       state: 'missing',
       reason: 'runtime-unavailable',
+      rootUri: 'file:///docs/supertonic2/rev',
     });
   });
 
