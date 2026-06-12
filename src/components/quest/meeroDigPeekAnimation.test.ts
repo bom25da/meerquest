@@ -941,6 +941,17 @@ describe('Meero dig-peek animation', () => {
     expect(screenSource).toContain('소리 기능은 앱을 새로 설치한 뒤 들을 수 있어요.');
     expect(screenSource).toContain('catch');
   });
+
+  it('wires the sound handler to every illustrated quest layout', () => {
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const soundHandlerConnections = screenSource.match(/onSound=\{soundPressHandler\}/g) ?? [];
+
+    expect(soundHandlerConnections).toHaveLength(12);
+    expect(screenSource).toContain('supertonic2SpeechService.speakText(step.instructionText');
+    expect(screenSource).toContain("lang: 'ko'");
+    expect(screenSource).toContain("voice: 'F1'");
+    expect(screenSource).toContain('미어루 목소리를 준비한 뒤 들을 수 있어요.');
+  });
 });
 
 function getSourceRect(source: string, name: string) {

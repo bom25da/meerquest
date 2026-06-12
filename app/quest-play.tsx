@@ -258,6 +258,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         selectedChoiceId={selectedChoiceId}
@@ -290,6 +291,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         promptRect={carrotAdditionPromptRect}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
@@ -355,6 +357,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         sceneAccessibilityLabel="미어로가 바나나를 먹고 있는 장면"
@@ -389,6 +392,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         sceneAccessibilityLabel="미어로가 씨앗을 심고 물을 주는 2컷 만화"
@@ -423,6 +427,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         sceneAccessibilityLabel="미어로가 활짝 웃는 표정을 짓는 장면"
@@ -457,6 +462,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         sceneAccessibilityLabel="페나가 미어로에게 선물을 건네는 장면"
@@ -491,6 +497,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         sceneAccessibilityLabel="페나가 미어로에게 장난감을 빌려주는 장면"
@@ -525,6 +532,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         sceneAccessibilityLabel="미어로가 페나의 짐을 들어주는 장면"
@@ -557,6 +565,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         selectedChoiceId={selectedChoiceId}
@@ -586,6 +595,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         selectedChoiceId={selectedChoiceId}
@@ -615,6 +625,7 @@ export default function QuestPlayScreen() {
         onHome={() => router.push('/' as Href)}
         onReward={handleRewardPress}
         onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
         selectedChoiceId={selectedChoiceId}
@@ -737,6 +748,7 @@ function AppleCountQuestScreen({
   onHome,
   onReward,
   onResultOverlayPress,
+  onSound,
   promptRect = appleCountPromptRect,
   questTitle,
   resultOverlay,
@@ -765,6 +777,7 @@ function AppleCountQuestScreen({
   onHome: () => void;
   onReward: () => void;
   onResultOverlayPress: () => void;
+  onSound?: () => void;
   promptRect?: QuestStageSourceRect;
   questTitle: string;
   resultOverlay: QuestResultOverlay | null;
@@ -788,6 +801,7 @@ function AppleCountQuestScreen({
       onNext={handleNext}
       onPrevious={onBack}
       onReward={onReward}
+      onSound={onSound}
       isRewardAvailable={isRewardAvailable}
       questTitle={questTitle}
       stars={stars}
@@ -1163,6 +1177,7 @@ function ShapeFindQuestScreen({
   onHome,
   onReward,
   onResultOverlayPress,
+  onSound,
   questTitle,
   resultOverlay,
   selectedChoiceId,
@@ -1184,6 +1199,7 @@ function ShapeFindQuestScreen({
   onHome: () => void;
   onReward: () => void;
   onResultOverlayPress: () => void;
+  onSound?: () => void;
   questTitle: string;
   resultOverlay: QuestResultOverlay | null;
   selectedChoiceId: string | null;
@@ -1204,6 +1220,7 @@ function ShapeFindQuestScreen({
       onNext={handleNext}
       onPrevious={onBack}
       onReward={onReward}
+      onSound={onSound}
       questTitle={questTitle}
       stars={stars}
       width={width}>
@@ -1383,6 +1400,7 @@ function PatternPathQuestScreen({
   onHome,
   onReward,
   onResultOverlayPress,
+  onSound,
   questTitle,
   resultOverlay,
   selectedChoiceId,
@@ -1404,6 +1422,7 @@ function PatternPathQuestScreen({
   onHome: () => void;
   onReward: () => void;
   onResultOverlayPress: () => void;
+  onSound?: () => void;
   questTitle: string;
   resultOverlay: QuestResultOverlay | null;
   selectedChoiceId: string | null;
@@ -1424,6 +1443,7 @@ function PatternPathQuestScreen({
       onNext={handleNext}
       onPrevious={onBack}
       onReward={onReward}
+      onSound={onSound}
       questTitle={questTitle}
       stars={stars}
       width={width}>
@@ -1591,6 +1611,7 @@ function SizeCompareQuestScreen({
   onHome,
   onReward,
   onResultOverlayPress,
+  onSound,
   questTitle,
   resultOverlay,
   selectedChoiceId,
@@ -1612,6 +1633,7 @@ function SizeCompareQuestScreen({
   onHome: () => void;
   onReward: () => void;
   onResultOverlayPress: () => void;
+  onSound?: () => void;
   questTitle: string;
   resultOverlay: QuestResultOverlay | null;
   selectedChoiceId: string | null;
@@ -1632,6 +1654,7 @@ function SizeCompareQuestScreen({
       onNext={handleNext}
       onPrevious={onBack}
       onReward={onReward}
+      onSound={onSound}
       questTitle={questTitle}
       stars={stars}
       width={width}>

@@ -39,7 +39,7 @@ export function createSupertonic2SpeechService({
           : await createExpoAudioPlayer(result.uri);
 
         player.play();
-        cleanupPlayer(player, createPlayer ? 0 : getCleanupDelayMs(result.durationSeconds));
+        cleanupPlayer(player, getCleanupDelayMs(result.durationSeconds));
       });
 
       await queue;
