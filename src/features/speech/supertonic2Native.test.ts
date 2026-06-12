@@ -21,8 +21,13 @@ describe('supertonic2 native runtime wrapper', () => {
   });
 
   it('passes model root and synthesis options to native', async () => {
+    const nativeStatus = {
+      state: 'ready',
+      revision: 'abc',
+      rootUri: 'file:///docs/supertonic2/rev',
+    } as const;
     const nativeModule = {
-      getModelStatus: vi.fn(async () => ({ state: 'ready', revision: 'abc' })),
+      getModelStatus: vi.fn(async () => nativeStatus),
       prepareTts: vi.fn(async () => undefined),
       synthesizeToFile: vi.fn(async () => ({ uri: 'file:///speech.wav', durationSeconds: 1.2 })),
     };
@@ -42,5 +47,73 @@ describe('supertonic2 native runtime wrapper', () => {
       steps: 4,
     });
     expect(result).toEqual({ uri: 'file:///speech.wav', durationSeconds: 1.2 });
+  });
+
+  it('passes model root and manifest to native status', async () => {
+    const nativeStatus = {
+      state: 'ready',
+      revision: 'abc',
+      rootUri: 'file:///docs/supertonic2/rev',
+    } as const;
+    const manifest = { revision: 'abc', files: [] };
+    const nativeModule = {
+      getModelStatus: vi.fn(async () => nativeStatus),
+      prepareTts: vi.fn(async () => undefined),
+      synthesizeToFile: vi.fn(async () => ({ uri: 'file:///speech.wav', durationSeconds: 1.2 })),
+    };
+    const runtime = createSupertonic2NativeRuntime({
+      nativeModule,
+      platformOS: 'ios',
+    });
+
+    const result = await runtime.getModelStatus('file:///docs/supertonic2/rev', manifest);
+
+    expect(nativeModule.getModelStatus).toHaveBeenCalledWith(
+      'file:///docs/supertonic2/rev',
+      manifest,
+    );
+    expect(result).toBe(nativeStatus);
+  });
+
+  it('returns unavailable status when model status is unsupported', async () => {
+    const runtime = createSupertonic2NativeRuntime({
+      nativeModule: {
+        getModelStatus: vi.fn(async () => ({
+          state: 'ready',
+          revision: 'abc',
+          rootUri: 'file:///docs/supertonic2/rev',
+        }) as const),
+        prepareTts: vi.fn(async () => undefined),
+      },
+      platformOS: 'android',
+    });
+
+    await expect(runtime.getModelStatus('file:///docs/supertonic2/rev', {})).resolves.toEqual({
+      state: 'missing',
+      reason: 'runtime-unavailable',
+    });
+  });
+
+  it('returns unavailable status when native model status is missing', async () => {
+    const runtime = createSupertonic2NativeRuntime({
+      nativeModule: { prepareTts: vi.fn(async () => undefined) },
+      platformOS: 'ios',
+    });
+
+    await expect(runtime.getModelStatus('file:///docs/supertonic2/rev', {})).resolves.toEqual({
+      state: 'missing',
+      reason: 'runtime-unavailable',
+    });
+  });
+
+  it('throws unavailable error when native synthesis is missing', async () => {
+    const runtime = createSupertonic2NativeRuntime({
+      nativeModule: { prepareTts: vi.fn(async () => undefined) },
+      platformOS: 'ios',
+    });
+
+    await expect(runtime.synthesizeToFile('안녕')).rejects.toThrow(
+      'Supertonic 2 native runtime is unavailable on this platform.',
+    );
   });
 });

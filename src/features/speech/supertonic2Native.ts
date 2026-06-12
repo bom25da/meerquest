@@ -1,14 +1,23 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
 
+import type { Supertonic2ModelStatus } from './supertonic2ModelStore';
+
 type NativeModuleLike = {
-  getModelStatus?: (rootUri: string, manifest: unknown) => Promise<unknown>;
+  getModelStatus?: (rootUri: string, manifest: unknown) => Promise<Supertonic2ModelStatus>;
   prepareTts?: (rootUri: string) => Promise<void>;
   synthesizeToFile?: (
     text: string,
     options: { lang: 'ko' | 'en'; voice: 'F1'; speed: number; steps: number },
   ) => Promise<{ uri: string; durationSeconds: number }>;
 };
+
+const runtimeUnavailableStatus: Supertonic2ModelStatus = {
+  state: 'missing',
+  reason: 'runtime-unavailable',
+};
+
+const runtimeUnavailableMessage = 'Supertonic 2 native runtime is unavailable on this platform.';
 
 export interface Supertonic2SynthesisOptions {
   lang?: 'ko' | 'en';
@@ -35,27 +44,36 @@ export function createSupertonic2NativeRuntime({
     isSupported: () => isSupertonic2RuntimeSupported(platformOS, nativeModule),
 
     async getModelStatus(rootUri: string, manifest: unknown) {
-      if (!isSupertonic2RuntimeSupported(platformOS, nativeModule)) {
-        return { state: 'missing', reason: 'runtime-unavailable' };
+      if (
+        !isSupertonic2RuntimeSupported(platformOS, nativeModule) ||
+        typeof nativeModule?.getModelStatus !== 'function'
+      ) {
+        return runtimeUnavailableStatus;
       }
 
-      return nativeModule!.getModelStatus!(rootUri, manifest);
+      return nativeModule.getModelStatus(rootUri, manifest);
     },
 
     async prepareTts(rootUri: string) {
-      if (!isSupertonic2RuntimeSupported(platformOS, nativeModule)) {
-        throw new Error('Supertonic 2 native runtime is unavailable on this platform.');
+      if (
+        !isSupertonic2RuntimeSupported(platformOS, nativeModule) ||
+        typeof nativeModule?.prepareTts !== 'function'
+      ) {
+        throw new Error(runtimeUnavailableMessage);
       }
 
-      await nativeModule!.prepareTts!(rootUri);
+      await nativeModule.prepareTts(rootUri);
     },
 
     async synthesizeToFile(text: string, options: Supertonic2SynthesisOptions = {}) {
-      if (!isSupertonic2RuntimeSupported(platformOS, nativeModule)) {
-        throw new Error('Supertonic 2 native runtime is unavailable on this platform.');
+      if (
+        !isSupertonic2RuntimeSupported(platformOS, nativeModule) ||
+        typeof nativeModule?.synthesizeToFile !== 'function'
+      ) {
+        throw new Error(runtimeUnavailableMessage);
       }
 
-      return nativeModule!.synthesizeToFile!(text, {
+      return nativeModule.synthesizeToFile(text, {
         lang: options.lang ?? 'ko',
         voice: options.voice ?? 'F1',
         speed: options.speed ?? 1.05,
