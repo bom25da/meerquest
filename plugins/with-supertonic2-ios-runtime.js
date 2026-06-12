@@ -9,6 +9,7 @@ const ONNX_RUNTIME_PACKAGE_REFERENCE_ID = '5A2D0F760F974E4E94D00001';
 const ONNX_RUNTIME_PRODUCT_DEPENDENCY_ID = '5A2D0F760F974E4E94D00002';
 const PACKAGE_REFERENCE_COMMENT = 'onnxruntime package';
 const PRODUCT_DEPENDENCY_COMMENT = ONNX_RUNTIME_PRODUCT;
+const ONNX_RUNTIME_OBJC_LINKAGE_MARKER = 'supertonic2-onnxruntime-objc-linkage';
 
 function addOnnxRuntimeSwiftPackage(pbxproj, options = {}) {
   const ensureSwiftPackageSections = options.ensureSwiftPackageSections === true;
@@ -219,22 +220,66 @@ function getPbxprojPath(platformProjectRoot, projectName = 'MeerQuest') {
   return path.join(platformProjectRoot, xcodeProject, 'project.pbxproj');
 }
 
+function addOnnxRuntimeObjcPodLinkageExclusion(podfile, targetName = 'MeerQuest') {
+  if (podfile.includes(`@generated begin ${ONNX_RUNTIME_OBJC_LINKAGE_MARKER}`)) {
+    return podfile;
+  }
+
+  const podsTargetName = `Pods-${targetName}`;
+  const block = [
+    `    # @generated begin ${ONNX_RUNTIME_OBJC_LINKAGE_MARKER} - expo prebuild`,
+    `    Dir.glob(File.join(Pod::Config.instance.installation_root, 'Pods', 'Target Support Files', ${rubySingleQuoted(podsTargetName)}, ${rubySingleQuoted(`${podsTargetName}.*.xcconfig`)})).each do |xcconfig_path|`,
+    '      contents = File.read(xcconfig_path)',
+    '      updated = contents.gsub(\' -l"onnxruntime-objc"\', \'\')',
+    '      File.write(xcconfig_path, updated) if updated != contents',
+    '    end',
+    `    # @generated end ${ONNX_RUNTIME_OBJC_LINKAGE_MARKER}`,
+  ].join('\n');
+  const postInstallRegex = /(  post_install do \|installer\|[\s\S]*?)(\n  end)/;
+
+  if (!postInstallRegex.test(podfile)) {
+    throw new Error('Unable to find the Expo post_install block in ios/Podfile');
+  }
+
+  return podfile.replace(postInstallRegex, `$1\n${block}$2`);
+}
+
+function rubySingleQuoted(value) {
+  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+function getOnnxRuntimeSwiftPackagePatchOptions(modRequest = {}) {
+  return {
+    ensureSwiftPackageSections: true,
+    targetName: modRequest.projectName ?? 'MeerQuest',
+  };
+}
+
 function withSupertonic2IosRuntime(config) {
   return withDangerousMod(config, [
     'ios',
     async (modConfig) => {
+      const patchOptions = getOnnxRuntimeSwiftPackagePatchOptions(modConfig.modRequest);
       const pbxprojPath = getPbxprojPath(
         modConfig.modRequest.platformProjectRoot,
         modConfig.modRequest.projectName,
       );
       const pbxproj = await fs.promises.readFile(pbxprojPath, 'utf8');
-      const updatedPbxproj = addOnnxRuntimeSwiftPackage(pbxproj, {
-        ensureSwiftPackageSections: true,
-        targetName: null,
-      });
+      const updatedPbxproj = addOnnxRuntimeSwiftPackage(pbxproj, patchOptions);
 
       if (updatedPbxproj !== pbxproj) {
         await fs.promises.writeFile(pbxprojPath, updatedPbxproj);
+      }
+
+      const podfilePath = path.join(modConfig.modRequest.platformProjectRoot, 'Podfile');
+      const podfile = await fs.promises.readFile(podfilePath, 'utf8');
+      const updatedPodfile = addOnnxRuntimeObjcPodLinkageExclusion(
+        podfile,
+        patchOptions.targetName,
+      );
+
+      if (updatedPodfile !== podfile) {
+        await fs.promises.writeFile(podfilePath, updatedPodfile);
       }
 
       return modConfig;
@@ -244,6 +289,8 @@ function withSupertonic2IosRuntime(config) {
 
 module.exports = withSupertonic2IosRuntime;
 module.exports.addOnnxRuntimeSwiftPackage = addOnnxRuntimeSwiftPackage;
+module.exports.addOnnxRuntimeObjcPodLinkageExclusion = addOnnxRuntimeObjcPodLinkageExclusion;
+module.exports.getOnnxRuntimeSwiftPackagePatchOptions = getOnnxRuntimeSwiftPackagePatchOptions;
 module.exports.ONNX_RUNTIME_SPM_URL = ONNX_RUNTIME_SPM_URL;
 module.exports.ONNX_RUNTIME_PRODUCT = ONNX_RUNTIME_PRODUCT;
 module.exports.ONNX_RUNTIME_MIN_VERSION = ONNX_RUNTIME_MIN_VERSION;

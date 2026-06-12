@@ -62,5 +62,12 @@ target 'MeerQuest' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+    # @generated begin supertonic2-onnxruntime-objc-linkage - expo prebuild
+    Dir.glob(File.join(Pod::Config.instance.installation_root, 'Pods', 'Target Support Files', 'Pods-MeerQuest', 'Pods-MeerQuest.*.xcconfig')).each do |xcconfig_path|
+      contents = File.read(xcconfig_path)
+      updated = contents.gsub(' -l"onnxruntime-objc"', '')
+      File.write(xcconfig_path, updated) if updated != contents
+    end
+    # @generated end supertonic2-onnxruntime-objc-linkage
   end
 end

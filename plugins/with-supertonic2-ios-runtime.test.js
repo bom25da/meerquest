@@ -20,6 +20,13 @@ describe('supertonic2 iOS runtime config', () => {
 
   it('keeps package insertion idempotent', () => {
     const pbxproj = [
+      '/* Begin PBXNativeTarget section */',
+      '    13B07F861A680F5B00A75B9A /* MeerQuest */ = {',
+      '      isa = PBXNativeTarget;',
+      '      name = MeerQuest;',
+      '      productName = MeerQuest;',
+      '    };',
+      '/* End PBXNativeTarget section */',
       '/* Begin XCRemoteSwiftPackageReference section */',
       '/* End XCRemoteSwiftPackageReference section */',
       'packageReferences = (',
@@ -30,7 +37,11 @@ describe('supertonic2 iOS runtime config', () => {
     const twice = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(once);
 
     expect((twice.match(/onnxruntime-swift-package-manager/g) ?? []).length).toBe(1);
-    expect((twice.match(/XCSwiftPackageProductDependency/g) ?? []).length).toBe(1);
+    expect((twice.match(/isa = XCSwiftPackageProductDependency;/g) ?? []).length).toBe(1);
+    expect((twice.match(/packageProductDependencies = \(/g) ?? []).length).toBe(1);
+    expect((twice.match(/5A2D0F760F974E4E94D00002 \/\* onnxruntime \*\//g) ?? []).length).toBe(
+      2,
+    );
   });
 
   it('adds the ONNX package reference and product dependency to pbxproj sections', () => {
@@ -92,6 +103,49 @@ describe('supertonic2 iOS runtime config', () => {
     expect(updated).toContain('/* End XCRemoteSwiftPackageReference section */');
     expect(updated).toContain('/* Begin XCSwiftPackageProductDependency section */');
     expect(updated).toContain('/* End XCSwiftPackageProductDependency section */');
+    expect(updated).toContain('packageProductDependencies = (');
+    expect(updated).toContain('5A2D0F760F974E4E94D00002 /* onnxruntime */');
+  });
+
+  it('uses the mod request project name for default prebuild attachment', () => {
+    const options = supertonic2IosRuntime.getOnnxRuntimeSwiftPackagePatchOptions({
+      projectName: 'MeerQuest',
+    });
+
+    expect(options).toEqual({
+      ensureSwiftPackageSections: true,
+      targetName: 'MeerQuest',
+    });
+  });
+
+  it('adds an idempotent post-install hook to keep the CocoaPods fallback compile-only', () => {
+    const podfile = [
+      "target 'MeerQuest' do",
+      '  post_install do |installer|',
+      '    react_native_post_install(',
+      '      installer,',
+      '      config[:reactNativePath],',
+      '    )',
+      '  end',
+      'end',
+    ].join('\n');
+
+    const once = supertonic2IosRuntime.addOnnxRuntimeObjcPodLinkageExclusion(
+      podfile,
+      'MeerQuest',
+    );
+    const twice = supertonic2IosRuntime.addOnnxRuntimeObjcPodLinkageExclusion(
+      once,
+      'MeerQuest',
+    );
+
+    expect(twice).toContain("Target Support Files', 'Pods-MeerQuest'");
+    expect(twice).toContain('Pods-MeerQuest.*.xcconfig');
+    expect(twice).toContain('gsub(\' -l"onnxruntime-objc"\', \'\')');
+    expect((twice.match(/supertonic2-onnxruntime-objc-linkage/g) ?? []).length).toBe(2);
+    expect(twice.indexOf('react_native_post_install')).toBeLessThan(
+      twice.indexOf('supertonic2-onnxruntime-objc-linkage'),
+    );
   });
 
   it('can attach the product dependency to a named native target', () => {
