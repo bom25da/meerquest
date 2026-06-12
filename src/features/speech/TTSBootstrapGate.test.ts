@@ -11,9 +11,76 @@ import {
   getBootstrapMessage,
   getDownloadPercent,
   reduceTtsBootstrapState,
+  runTtsBootstrap,
+  type TtsBootstrapModelDependencies,
+  type TtsBootstrapRuntimeDependencies,
   type TtsBootstrapEvent,
   type TtsBootstrapState,
 } from './TTSBootstrapGate';
+import type { Supertonic2ModelManifest } from './supertonic2Manifest';
+import type {
+  Supertonic2DownloadProgress,
+  Supertonic2ModelStatus,
+} from './supertonic2ModelStore';
+
+const manifest: Supertonic2ModelManifest = {
+  modelId: 'Supertone/supertonic-2',
+  revision: '75e6727618a02f323c720cba9478152d4bc16ca4',
+  files: [],
+};
+
+const completeProgress: Supertonic2DownloadProgress = {
+  downloadedBytes: 100,
+  totalBytes: 100,
+  fileIndex: 7,
+  fileCount: 7,
+};
+
+function createBootstrapRunnerHarness({
+  downloadModel,
+  getModelRootUri,
+  isSupported,
+  prepareTts,
+  statuses = [
+    { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+  ],
+}: {
+  downloadModel?: TtsBootstrapModelDependencies['modelStore']['downloadModel'];
+  getModelRootUri?: TtsBootstrapModelDependencies['modelStore']['getModelRootUri'];
+  isSupported?: TtsBootstrapRuntimeDependencies['nativeRuntime']['isSupported'];
+  prepareTts?: TtsBootstrapRuntimeDependencies['nativeRuntime']['prepareTts'];
+  statuses?: Supertonic2ModelStatus[];
+} = {}) {
+  const dispatch = vi.fn();
+  const statusQueue = [...statuses];
+  const lastStatus = statuses[statuses.length - 1];
+  const modelStore = {
+    downloadModel: vi.fn(downloadModel ?? (async () => undefined)),
+    getModelRootUri: vi.fn(
+      getModelRootUri ??
+        ((_manifest: Supertonic2ModelManifest) => 'file:///docs/supertonic2/rev'),
+    ),
+    getStatus: vi.fn(async () => statusQueue.shift() ?? lastStatus),
+  } satisfies TtsBootstrapModelDependencies['modelStore'];
+  const nativeRuntime = {
+    isSupported: vi.fn(isSupported ?? (() => true)),
+    prepareTts: vi.fn(prepareTts ?? (async () => undefined)),
+  } satisfies TtsBootstrapRuntimeDependencies['nativeRuntime'];
+  const loadModelDependencies = vi.fn(async () => ({ manifest, modelStore }));
+  const loadDependencies = vi.fn(
+    async () =>
+      ({
+        loadModelDependencies,
+        nativeRuntime,
+      }) satisfies TtsBootstrapRuntimeDependencies,
+  );
+
+  return { dispatch, loadDependencies, loadModelDependencies, modelStore, nativeRuntime };
+}
+
+function getDispatchedEvents(dispatch: ReturnType<typeof vi.fn>) {
+  return dispatch.mock.calls.map(([event]) => event as TtsBootstrapEvent);
+}
 
 describe('TTS bootstrap gate state', () => {
   it('blocks the app while downloading', () => {
@@ -49,6 +116,27 @@ describe('TTS bootstrap gate state', () => {
     );
     expect(next.canEnterApp).toBe(false);
     expect(getBootstrapMessage(next)).toBe('목소리 보물을 다시 준비해볼게요.');
+  });
+
+  it('preserves download progress through verification and preparation', () => {
+    const downloading = reduceTtsBootstrapState(
+      { phase: 'checking', canEnterApp: false },
+      { type: 'download-progress', progress: completeProgress },
+    );
+    const verifying = reduceTtsBootstrapState(downloading, { type: 'verifying' });
+    const preparing = reduceTtsBootstrapState(verifying, { type: 'preparing' });
+
+    expect(verifying).toEqual({
+      phase: 'verifying',
+      canEnterApp: false,
+      progress: completeProgress,
+    });
+    expect(preparing).toEqual({
+      phase: 'preparing',
+      canEnterApp: false,
+      progress: completeProgress,
+    });
+    expect(getDownloadPercent(preparing.progress)).toBe(100);
   });
 
   it('keeps every non-ready phase blocked', () => {
@@ -97,5 +185,144 @@ describe('TTS bootstrap gate state', () => {
     );
     expect(source).not.toContain('setDownloadScreen');
     expect(source).not.toContain('return null;');
+  });
+});
+
+describe('TTS bootstrap runner', () => {
+  it('bypasses model work when the native runtime is unsupported', async () => {
+    const { dispatch, loadDependencies, loadModelDependencies, modelStore, nativeRuntime } =
+      createBootstrapRunnerHarness({ isSupported: vi.fn(() => false) });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    expect(nativeRuntime.isSupported).toHaveBeenCalledOnce();
+    expect(loadModelDependencies).not.toHaveBeenCalled();
+    expect(modelStore.getStatus).not.toHaveBeenCalled();
+    expect(modelStore.downloadModel).not.toHaveBeenCalled();
+    expect(getDispatchedEvents(dispatch)).toEqual([{ type: 'ready' }]);
+  });
+
+  it('prepares an already-ready local model and dispatches ready', async () => {
+    const { dispatch, loadDependencies, modelStore, nativeRuntime } = createBootstrapRunnerHarness();
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    expect(modelStore.downloadModel).not.toHaveBeenCalled();
+    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(getDispatchedEvents(dispatch)).toEqual([{ type: 'preparing' }, { type: 'ready' }]);
+  });
+
+  it('downloads, verifies, prepares, and dispatches phases in order for a missing model', async () => {
+    const { dispatch, loadDependencies, modelStore, nativeRuntime } = createBootstrapRunnerHarness({
+      downloadModel: async (_manifestArg, onProgress) => {
+        onProgress(completeProgress);
+      },
+      statuses: [
+        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+      ],
+    });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    expect(modelStore.downloadModel).toHaveBeenCalledOnce();
+    expect(modelStore.getStatus).toHaveBeenCalledTimes(2);
+    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(getDispatchedEvents(dispatch)).toEqual([
+      { type: 'download-progress', progress: completeProgress },
+      { type: 'verifying' },
+      { type: 'preparing' },
+      { type: 'ready' },
+    ]);
+  });
+
+  it('dispatches failed and remains blocked when verification fails', async () => {
+    const { dispatch, loadDependencies } = createBootstrapRunnerHarness({
+      downloadModel: async (_manifestArg, onProgress) => {
+        onProgress(completeProgress);
+      },
+      statuses: [
+        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        {
+          state: 'invalid',
+          reason: 'size-mismatch',
+          revision: manifest.revision,
+          rootUri: 'file:///docs/supertonic2/rev',
+        },
+      ],
+    });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    const finalState = getDispatchedEvents(dispatch).reduce<TtsBootstrapState>(
+      reduceTtsBootstrapState,
+      { phase: 'checking', canEnterApp: false },
+    );
+
+    expect(getDispatchedEvents(dispatch)).toEqual([
+      { type: 'download-progress', progress: completeProgress },
+      { type: 'verifying' },
+      { type: 'failed', errorMessage: 'size-mismatch' },
+    ]);
+    expect(finalState).toMatchObject({
+      phase: 'failed',
+      canEnterApp: false,
+      errorMessage: 'size-mismatch',
+    });
+  });
+
+  it('ignores stale progress and errors after a run becomes inactive', async () => {
+    let active = true;
+    const { dispatch, loadDependencies } = createBootstrapRunnerHarness({
+      downloadModel: async (_manifestArg, onProgress) => {
+        active = false;
+        onProgress(completeProgress);
+        throw new Error('network');
+      },
+      statuses: [
+        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+      ],
+    });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => active,
+      loadDependencies,
+    });
+
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('ignores stale completion after a run becomes inactive', async () => {
+    let active = true;
+    const { dispatch, loadDependencies } = createBootstrapRunnerHarness({
+      prepareTts: vi.fn(async () => {
+        active = false;
+      }),
+    });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => active,
+      loadDependencies,
+    });
+
+    expect(getDispatchedEvents(dispatch)).toEqual([{ type: 'preparing' }]);
   });
 });

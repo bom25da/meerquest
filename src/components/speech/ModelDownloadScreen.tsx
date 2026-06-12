@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   progressFill: {
-    backgroundColor: colors.green,
+    backgroundColor: colors.sky,
     height: '100%',
   },
   percentText: {
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   retryText: {
-    color: colors.white,
+    color: colors.ink,
     fontSize: 18,
     fontWeight: '900',
     textAlign: 'center',

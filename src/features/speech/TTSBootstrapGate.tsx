@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { ModelDownloadScreen } from '@/src/components/speech/ModelDownloadScreen';
 
-import type { Supertonic2DownloadProgress } from './supertonic2ModelStore';
+import type { Supertonic2ModelManifest } from './supertonic2Manifest';
+import type {
+  Supertonic2DownloadProgress,
+  Supertonic2ModelStatus,
+} from './supertonic2ModelStore';
 
 export type TtsBootstrapPhase =
   | 'checking'
@@ -18,10 +22,29 @@ type TtsDownloadingBootstrapState = {
   progress?: Supertonic2DownloadProgress;
 };
 
+type TtsVerifyingBootstrapState = {
+  phase: 'verifying';
+  canEnterApp: false;
+  progress?: Supertonic2DownloadProgress;
+};
+
+type TtsPreparingBootstrapState = {
+  phase: 'preparing';
+  canEnterApp: false;
+  progress?: Supertonic2DownloadProgress;
+};
+
 export type TtsBootstrapState =
-  | { phase: 'checking' | 'verifying' | 'preparing'; canEnterApp: false }
+  | { phase: 'checking'; canEnterApp: false }
+  | TtsVerifyingBootstrapState
+  | TtsPreparingBootstrapState
   | TtsDownloadingBootstrapState
-  | { phase: 'failed'; canEnterApp: false; errorMessage: string }
+  | {
+      phase: 'failed';
+      canEnterApp: false;
+      errorMessage: string;
+      progress?: Supertonic2DownloadProgress;
+    }
   | { phase: 'ready'; canEnterApp: true };
 
 export type TtsBootstrapEvent =
@@ -31,10 +54,52 @@ export type TtsBootstrapEvent =
   | { type: 'ready' }
   | { type: 'failed'; errorMessage: string };
 
+export interface TtsBootstrapModelDependencies {
+  manifest: Supertonic2ModelManifest;
+  modelStore: {
+    downloadModel(
+      manifest: Supertonic2ModelManifest,
+      onProgress: (progress: Supertonic2DownloadProgress) => void,
+    ): Promise<void>;
+    getModelRootUri(manifest: Supertonic2ModelManifest): string | null;
+    getStatus(manifest: Supertonic2ModelManifest): Promise<Supertonic2ModelStatus>;
+  };
+}
+
+export interface TtsBootstrapRuntimeDependencies {
+  loadModelDependencies(): Promise<TtsBootstrapModelDependencies>;
+  nativeRuntime: {
+    isSupported(): boolean;
+    prepareTts(rootUri: string): Promise<void>;
+  };
+}
+
+interface RunTtsBootstrapOptions {
+  dispatch(event: TtsBootstrapEvent): void;
+  isActive(): boolean;
+  loadDependencies(): Promise<TtsBootstrapRuntimeDependencies>;
+}
+
+function getBootstrapProgress(state: TtsBootstrapState) {
+  return 'progress' in state ? state.progress : undefined;
+}
+
+function preserveProgress(progress?: Supertonic2DownloadProgress) {
+  return progress ? { progress } : {};
+}
+
 export function reduceTtsBootstrapState(
   _state: TtsBootstrapState,
   event: Extract<TtsBootstrapEvent, { type: 'download-progress' }>,
 ): TtsDownloadingBootstrapState;
+export function reduceTtsBootstrapState(
+  _state: TtsBootstrapState,
+  event: Extract<TtsBootstrapEvent, { type: 'verifying' }>,
+): Extract<TtsBootstrapState, { phase: 'verifying' }>;
+export function reduceTtsBootstrapState(
+  _state: TtsBootstrapState,
+  event: Extract<TtsBootstrapEvent, { type: 'preparing' }>,
+): Extract<TtsBootstrapState, { phase: 'preparing' }>;
 export function reduceTtsBootstrapState(
   _state: TtsBootstrapState,
   event: Extract<TtsBootstrapEvent, { type: 'ready' }>,
@@ -50,10 +115,27 @@ export function reduceTtsBootstrapState(
   if (event.type === 'download-progress') {
     return { phase: 'downloading', canEnterApp: false, progress: event.progress };
   }
-  if (event.type === 'verifying') return { phase: 'verifying', canEnterApp: false };
-  if (event.type === 'preparing') return { phase: 'preparing', canEnterApp: false };
+  if (event.type === 'verifying') {
+    return {
+      phase: 'verifying',
+      canEnterApp: false,
+      ...preserveProgress(getBootstrapProgress(_state)),
+    };
+  }
+  if (event.type === 'preparing') {
+    return {
+      phase: 'preparing',
+      canEnterApp: false,
+      ...preserveProgress(getBootstrapProgress(_state)),
+    };
+  }
   if (event.type === 'ready') return { phase: 'ready', canEnterApp: true };
-  return { phase: 'failed', canEnterApp: false, errorMessage: event.errorMessage };
+  return {
+    phase: 'failed',
+    canEnterApp: false,
+    errorMessage: event.errorMessage,
+    ...preserveProgress(getBootstrapProgress(_state)),
+  };
 }
 
 export function getDownloadPercent(progress?: Supertonic2DownloadProgress) {
@@ -73,65 +155,115 @@ export function getBootstrapMessage(state: TtsBootstrapState) {
   return '준비됐어요.';
 }
 
-export function TTSBootstrapGate({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<TtsBootstrapState>({
-    phase: 'checking',
-    canEnterApp: false,
-  });
+export async function loadTtsBootstrapDependencies(): Promise<TtsBootstrapRuntimeDependencies> {
+  const { supertonic2NativeRuntime } = await import('./supertonic2Native');
 
-  const dispatch = useCallback((event: TtsBootstrapEvent) => {
-    setState((current) => reduceTtsBootstrapState(current, event));
-  }, []);
-
-  const bootstrap = useCallback(async () => {
-    setState({ phase: 'checking', canEnterApp: false });
-
-    try {
-      const { supertonic2NativeRuntime } = await import('./supertonic2Native');
-
-      if (!supertonic2NativeRuntime.isSupported()) {
-        dispatch({ type: 'ready' });
-        return;
-      }
-
+  return {
+    nativeRuntime: supertonic2NativeRuntime,
+    loadModelDependencies: async () => {
       const [{ supertonic2ModelManifest }, { supertonic2ModelStore }] = await Promise.all([
         import('./supertonic2Manifest'),
         import('./supertonic2ModelStore'),
       ]);
 
-      const localStatus = await supertonic2ModelStore.getStatus(supertonic2ModelManifest);
-      let rootUri =
-        localStatus.rootUri ?? supertonic2ModelStore.getModelRootUri(supertonic2ModelManifest);
+      return {
+        manifest: supertonic2ModelManifest,
+        modelStore: supertonic2ModelStore,
+      };
+    },
+  };
+}
 
-      if (localStatus.state !== 'ready') {
-        await supertonic2ModelStore.downloadModel(supertonic2ModelManifest, (progress) =>
-          dispatch({ type: 'download-progress', progress }),
-        );
-        dispatch({ type: 'verifying' });
-        const checkedStatus = await supertonic2ModelStore.getStatus(supertonic2ModelManifest);
-        if (checkedStatus.state !== 'ready') {
-          throw new Error(checkedStatus.reason ?? 'model-verification-failed');
-        }
-        rootUri = checkedStatus.rootUri;
-      }
-
-      if (!rootUri) {
-        throw new Error('model-root-unavailable');
-      }
-
-      dispatch({ type: 'preparing' });
-      await supertonic2NativeRuntime.prepareTts(rootUri);
-      dispatch({ type: 'ready' });
-    } catch (error) {
-      dispatch({
-        type: 'failed',
-        errorMessage: error instanceof Error ? error.message : 'unknown',
-      });
+export async function runTtsBootstrap({
+  dispatch,
+  isActive,
+  loadDependencies,
+}: RunTtsBootstrapOptions) {
+  const dispatchIfActive = (event: TtsBootstrapEvent) => {
+    if (isActive()) {
+      dispatch(event);
     }
+  };
+
+  try {
+    const { loadModelDependencies, nativeRuntime } = await loadDependencies();
+    if (!isActive()) return;
+
+    if (!nativeRuntime.isSupported()) {
+      dispatchIfActive({ type: 'ready' });
+      return;
+    }
+
+    const { manifest, modelStore } = await loadModelDependencies();
+    if (!isActive()) return;
+
+    const localStatus = await modelStore.getStatus(manifest);
+    if (!isActive()) return;
+
+    let rootUri = localStatus.rootUri ?? modelStore.getModelRootUri(manifest);
+
+    if (localStatus.state !== 'ready') {
+      await modelStore.downloadModel(manifest, (progress) =>
+        dispatchIfActive({ type: 'download-progress', progress }),
+      );
+      if (!isActive()) return;
+
+      dispatchIfActive({ type: 'verifying' });
+      const checkedStatus = await modelStore.getStatus(manifest);
+      if (!isActive()) return;
+
+      if (checkedStatus.state !== 'ready') {
+        throw new Error(checkedStatus.reason ?? 'model-verification-failed');
+      }
+      rootUri = checkedStatus.rootUri;
+    }
+
+    if (!rootUri) {
+      throw new Error('model-root-unavailable');
+    }
+
+    dispatchIfActive({ type: 'preparing' });
+    await nativeRuntime.prepareTts(rootUri);
+    dispatchIfActive({ type: 'ready' });
+  } catch (error) {
+    if (!isActive()) return;
+
+    dispatch({
+      type: 'failed',
+      errorMessage: error instanceof Error ? error.message : 'unknown',
+    });
+  }
+}
+
+export function TTSBootstrapGate({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<TtsBootstrapState>({
+    phase: 'checking',
+    canEnterApp: false,
+  });
+  const bootstrapRunIdRef = useRef(0);
+
+  const dispatch = useCallback((event: TtsBootstrapEvent) => {
+    setState((current) => reduceTtsBootstrapState(current, event));
+  }, []);
+
+  const bootstrap = useCallback(() => {
+    const runId = bootstrapRunIdRef.current + 1;
+    bootstrapRunIdRef.current = runId;
+    setState({ phase: 'checking', canEnterApp: false });
+
+    void runTtsBootstrap({
+      dispatch,
+      isActive: () => bootstrapRunIdRef.current === runId,
+      loadDependencies: loadTtsBootstrapDependencies,
+    });
   }, [dispatch]);
 
   useEffect(() => {
-    void bootstrap();
+    bootstrap();
+
+    return () => {
+      bootstrapRunIdRef.current += 1;
+    };
   }, [bootstrap]);
 
   if (state.canEnterApp) {
@@ -142,7 +274,7 @@ export function TTSBootstrapGate({ children }: { children: ReactNode }) {
     <ModelDownloadScreen
       message={getBootstrapMessage(state)}
       onRetry={state.phase === 'failed' ? bootstrap : undefined}
-      percent={getDownloadPercent(state.phase === 'downloading' ? state.progress : undefined)}
+      percent={getDownloadPercent(getBootstrapProgress(state))}
       phase={state.phase}
     />
   );
