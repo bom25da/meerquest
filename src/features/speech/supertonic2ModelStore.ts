@@ -23,6 +23,10 @@ interface DownloadProgressEvent {
   totalBytesExpectedToWrite: number;
 }
 
+interface DownloadResult {
+  status: number;
+}
+
 export interface Supertonic2FileSystemPort {
   documentDirectory: string | null;
   getInfoAsync(uri: string): Promise<FileInfo>;
@@ -38,11 +42,11 @@ const defaultFileSystemPort: Supertonic2FileSystemPort = {
   documentDirectory: FileSystem.documentDirectory,
   getInfoAsync: FileSystem.getInfoAsync,
   makeDirectoryAsync: FileSystem.makeDirectoryAsync,
-  downloadAsync: (url, destination, onProgress) =>
-    new Promise((resolve, reject) => {
-      const download = FileSystem.createDownloadResumable(url, destination, {}, onProgress);
-      download.downloadAsync().then(() => resolve()).catch(reject);
-    }),
+  downloadAsync: async (url, destination, onProgress) => {
+    const download = FileSystem.createDownloadResumable(url, destination, {}, onProgress);
+    const result = await download.downloadAsync();
+    assertSuccessfulDownloadResult(result);
+  },
 };
 
 export function getDownloadedRelativePath(
@@ -73,6 +77,38 @@ function getCurrentFileDownloadedBytes(
   }
 
   return Math.min(event.totalBytesWritten, file.bytes);
+}
+
+function assertSuccessfulDownloadResult(result: DownloadResult | null | undefined) {
+  if (!result) {
+    throw new Error('Supertonic 2 model download did not complete.');
+  }
+
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`Supertonic 2 model download failed with HTTP status ${result.status}.`);
+  }
+}
+
+function getFileSizeDescription(size: number | undefined) {
+  return typeof size === 'number' ? `${size} bytes` : 'unknown size';
+}
+
+async function assertDownloadedFile(
+  port: Supertonic2FileSystemPort,
+  destination: string,
+  file: Supertonic2ManifestFile,
+) {
+  const info = await port.getInfoAsync(destination);
+
+  if (!info.exists) {
+    throw new Error(`Supertonic 2 downloaded file is missing: ${file.path}.`);
+  }
+
+  if (info.size !== file.bytes) {
+    throw new Error(
+      `Supertonic 2 downloaded file size mismatch for ${file.path}: expected ${file.bytes} bytes, got ${getFileSizeDescription(info.size)}.`,
+    );
+  }
 }
 
 export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
@@ -121,6 +157,13 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
             fileIndex: index + 1,
             fileCount: manifest.files.length,
           });
+        });
+        await assertDownloadedFile(port, destination, file);
+        onProgress({
+          downloadedBytes: completedBytes + file.bytes,
+          totalBytes,
+          fileIndex: index + 1,
+          fileCount: manifest.files.length,
         });
         completedBytes += file.bytes;
       }
