@@ -41,6 +41,6 @@ describe('supertonic2 native runtime wrapper', () => {
       speed: 1.05,
       steps: 4,
     });
-    expect(result.uri).toBe('file:///speech.wav');
+    expect(result).toEqual({ uri: 'file:///speech.wav', durationSeconds: 1.2 });
   });
 });
