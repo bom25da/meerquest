@@ -1,0 +1,48 @@
+{
+  "modelId": "Supertone/supertonic-2",
+  "revision": "75e6727618a02f323c720cba9478152d4bc16ca4",
+  "files": [
+    {
+      "path": "onnx/tts.json",
+      "bytes": 8699,
+      "sha256": "ee531d9af9b80438a2ed703e22155ee6c83b12595ab22fd3bb6de94c7502fe96",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json"
+    },
+    {
+      "path": "onnx/unicode_indexer.json",
+      "bytes": 262196,
+      "sha256": "b7662a73a0703f43b97c0f2e089f8e8325e26f5d841aca393b5a54c509c92df1",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/unicode_indexer.json"
+    },
+    {
+      "path": "onnx/duration_predictor.onnx",
+      "bytes": 1521526,
+      "sha256": "6d556b3691165c364be91dc0bd894656b5949f5acd2750d8ec2f954010845011",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/duration_predictor.onnx"
+    },
+    {
+      "path": "onnx/text_encoder.onnx",
+      "bytes": 27431318,
+      "sha256": "dd5f535ed629f7df86071043e15f541ce1b2ab7f1bdbce4c7892b307bca79fa3",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/text_encoder.onnx"
+    },
+    {
+      "path": "onnx/vector_estimator.onnx",
+      "bytes": 132471364,
+      "sha256": "105e9d66fd8756876b210a6b4aa03fc393b1eaca3a8dadcc8d9a3bc785c86a35",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/vector_estimator.onnx"
+    },
+    {
+      "path": "onnx/vocoder.onnx",
+      "bytes": 101405066,
+      "sha256": "19bd51f47a186069c752403518a40f7ea4c647455056d2511f7249691ecddf7c",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/vocoder.onnx"
+    },
+    {
+      "path": "voice_styles/F1.json",
+      "bytes": 420050,
+      "sha256": "6106950ebeb8a5da29ea22075f605db659cd07dbc288a68292543d9129aa250f",
+      "url": "https://huggingface.co/Supertone/supertonic-2/resolve/75e6727618a02f323c720cba9478152d4bc16ca4/voice_styles/F1.json"
+    }
+  ]
+}
