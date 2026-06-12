@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import { TTSBootstrapGate } from '@/src/features/speech/TTSBootstrapGate';
 import { colors } from '@/src/theme/colors';
 import { applyKkukkukkFontDefaults, fontFamilies } from '@/src/theme/fonts';
 
@@ -41,7 +42,11 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <TTSBootstrapGate>
+      <RootLayoutNav />
+    </TTSBootstrapGate>
+  );
 }
 
 function RootLayoutNav() {
