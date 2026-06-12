@@ -12,6 +12,7 @@ import {
   homeNavigationItems,
   homeNavigationStyle,
   getHomeViewportLayout,
+  homeEntrySpeechText,
   todayQuest,
 } from './home';
 
@@ -68,6 +69,18 @@ describe('home screen content', () => {
     expect(homeScreenSource).toContain("width: '17.2%'");
     expect(homeScreenSource).toContain('aspectRatio: 512 / 353');
     expect(homeScreenSource).toContain("fontWeight: '900'");
+  });
+
+  it('speaks the home entry greeting through Supertonic 2 when the home screen mounts', () => {
+    const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
+
+    expect(homeEntrySpeechText).toBe('오늘 같이 탐험해보자');
+    expect(homeScreenSource).toContain(
+      "import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';",
+    );
+    expect(homeScreenSource).toContain('supertonic2SpeechService.speakText(homeEntrySpeechText');
+    expect(homeScreenSource).toContain("lang: 'ko'");
+    expect(homeScreenSource).toContain("voice: 'F1'");
   });
 
   it('defines the landscape-first home layout bounds', () => {

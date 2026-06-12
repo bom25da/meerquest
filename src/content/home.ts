@@ -118,6 +118,8 @@ export interface HomeViewportLayout {
   regionCardWidth: number;
 }
 
+export const homeEntrySpeechText = '오늘 같이 탐험해보자';
+
 export const homeHero: HomeHero = {
   image: 'home-adventure-background-clean',
   alt: '미어루가 산길 앞에서 손을 흔드는 퀘스트맵 배너',

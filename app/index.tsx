@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import {
@@ -22,6 +23,7 @@ import {
   homeNavigationItems,
   homeNavigationStyle,
   getHomeViewportLayout,
+  homeEntrySpeechText,
 } from '@/src/content/home';
 import type {
   HomeLearningRegion,
@@ -31,6 +33,7 @@ import type {
   HomeSectionHeaderIcon,
 } from '@/src/content/home';
 import { colors } from '@/src/theme/colors';
+import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';
 
 const meerquestWordmark = require('../assets/images/brand/meerquest-wordmark.png');
 const meeroCharacter = require('../assets/images/brand/meero-character.png');
@@ -85,6 +88,13 @@ export default function HomeScreen() {
     isCompact,
   });
   const heroCtaLayout = isCompact ? homeHero.cta.layout.compact : homeHero.cta.layout.regular;
+  useEffect(() => {
+    void supertonic2SpeechService.speakText(homeEntrySpeechText, {
+      lang: 'ko',
+      voice: 'F1',
+    });
+  }, []);
+
   const navigateToToolbarRoute = (route: string) => {
     if (route === '/') {
       return;
