@@ -18,47 +18,56 @@ interface SpeechServicePorts {
   createPlayer?: (uri: string) => Player;
 }
 
-let queue = Promise.resolve();
-
 export function createSupertonic2SpeechService({
   runtime,
   createPlayer,
 }: SpeechServicePorts = {}) {
+  let queue = Promise.resolve();
+
   return {
     async speakText(text: string, options: Supertonic2SynthesisOptions = {}) {
-      const activeRuntime = runtime ?? (await getDefaultRuntime());
+      const activeRuntime = await resolveRuntime(runtime);
 
       if (!activeRuntime.isSupported()) {
         return { status: 'unavailable' as const };
       }
 
-      queue = queue.then(async () => {
-        const result = await activeRuntime.synthesizeToFile(text, options);
-        const player = createPlayer
-          ? createPlayer(result.uri)
-          : await createExpoAudioPlayer(result.uri);
+      const playback = queue.then(async () => {
+        let player: Player | undefined;
 
-        player.play();
-        cleanupPlayer(player, getCleanupDelayMs(result.durationSeconds));
+        try {
+          const result = await activeRuntime.synthesizeToFile(text, options);
+          player = createPlayer ? createPlayer(result.uri) : await createExpoAudioPlayer(result.uri);
+
+          player.play();
+
+          return {
+            cleanupDelayMs: getCleanupDelayMs(result.durationSeconds),
+            player,
+            status: 'played' as const,
+          };
+        } catch {
+          removePlayer(player);
+          return { status: 'unavailable' as const };
+        }
       });
+      queue = playback
+        .then(async (result) => {
+          if (result.status === 'played') {
+            await cleanupPlayer(result.player, result.cleanupDelayMs);
+          }
+        })
+        .catch(() => undefined);
 
-      await queue;
-      return { status: 'played' as const };
+      const result = await playback;
+      return { status: result.status };
     },
   };
 }
 
-function cleanupPlayer(player: Player, delayMs: number) {
-  if (!player.remove) {
-    return;
-  }
-
-  if (delayMs <= 0) {
-    player.remove();
-    return;
-  }
-
-  setTimeout(() => player.remove?.(), delayMs);
+async function cleanupPlayer(player: Player, delayMs: number) {
+  await wait(delayMs);
+  removePlayer(player);
 }
 
 function getCleanupDelayMs(durationSeconds: number) {
@@ -73,6 +82,41 @@ async function createExpoAudioPlayer(uri: string) {
 async function getDefaultRuntime() {
   const { supertonic2NativeRuntime } = await import('./supertonic2Native');
   return supertonic2NativeRuntime;
+}
+
+async function resolveRuntime(runtime?: RuntimePort) {
+  if (runtime) {
+    return runtime;
+  }
+
+  try {
+    return await getDefaultRuntime();
+  } catch {
+    return {
+      isSupported: () => false,
+      synthesizeToFile: async () => {
+        throw new Error('Supertonic 2 runtime is unavailable.');
+      },
+    };
+  }
+}
+
+function removePlayer(player?: Player) {
+  try {
+    player?.remove?.();
+  } catch {
+    // Playback cleanup should never prevent future speech requests.
+  }
+}
+
+function wait(delayMs: number) {
+  if (delayMs <= 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
 }
 
 export const supertonic2SpeechService = createSupertonic2SpeechService();

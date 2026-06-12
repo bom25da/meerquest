@@ -16,7 +16,7 @@ describe('supertonic2 speech service', () => {
     await expect(service.speakText('안녕')).resolves.toEqual({ status: 'unavailable' });
   });
 
-  it('synthesizes and plays one request at a time', async () => {
+  it('synthesizes and starts playback', async () => {
     const play = vi.fn();
     const remove = vi.fn();
     const service = createSupertonic2SpeechService({
@@ -32,6 +32,41 @@ describe('supertonic2 speech service', () => {
 
     await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
     expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for cleanup before starting the next request', async () => {
+    vi.useFakeTimers();
+    const playOrder: string[] = [];
+    const synthesizeToFile = vi.fn(async (text: string) => ({
+      uri: `file:///${text}.wav`,
+      durationSeconds: 1,
+    }));
+    const service = createSupertonic2SpeechService({
+      runtime: {
+        isSupported: () => true,
+        synthesizeToFile,
+      },
+      createPlayer: (uri) => ({
+        play: () => playOrder.push(uri),
+        remove: vi.fn(),
+      }),
+    });
+
+    const first = service.speakText('첫번째');
+    await expect(first).resolves.toEqual({ status: 'played' });
+
+    const second = service.speakText('두번째');
+    await Promise.resolve();
+    expect(synthesizeToFile).toHaveBeenCalledTimes(1);
+    expect(playOrder).toEqual(['file:///첫번째.wav']);
+
+    await vi.advanceTimersByTimeAsync(1499);
+    expect(synthesizeToFile).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(second).resolves.toEqual({ status: 'played' });
+    expect(synthesizeToFile).toHaveBeenCalledTimes(2);
+    expect(playOrder).toEqual(['file:///첫번째.wav', 'file:///두번째.wav']);
   });
 
   it('keeps the player until the synthesis cleanup delay elapses', async () => {
@@ -57,5 +92,31 @@ describe('supertonic2 speech service', () => {
 
     await vi.advanceTimersByTimeAsync(1);
     expect(remove).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns unavailable for a failed request and lets later requests try again', async () => {
+    vi.useFakeTimers();
+    const synthesizeToFile = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('synthesis failed'))
+      .mockResolvedValueOnce({
+        uri: 'file:///recovered.wav',
+        durationSeconds: 0.1,
+      });
+    const play = vi.fn();
+    const service = createSupertonic2SpeechService({
+      runtime: {
+        isSupported: () => true,
+        synthesizeToFile,
+      },
+      createPlayer: vi.fn(() => ({ play, remove: vi.fn() })),
+    });
+
+    await expect(service.speakText('실패')).resolves.toEqual({ status: 'unavailable' });
+
+    const recovered = service.speakText('다시');
+    await expect(recovered).resolves.toEqual({ status: 'played' });
+    expect(synthesizeToFile).toHaveBeenCalledTimes(2);
+    expect(play).toHaveBeenCalledTimes(1);
   });
 });
