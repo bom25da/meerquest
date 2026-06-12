@@ -42,7 +42,8 @@
           "maxSizeRatio": 0.8
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "./plugins/with-supertonic2-ios-runtime.js"
     ],
     "experiments": {
       "typedRoutes": true
