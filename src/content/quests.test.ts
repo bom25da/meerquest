@@ -128,4 +128,117 @@ describe('quest content', () => {
     expect(languageQuest?.steps[0].soundAsset).toBe('dog-bark');
     expect(languageQuest?.steps[0].hintText).toBe('멍멍 하고 짖는 동물을 떠올려봐요.');
   });
+
+  it('uses a banana eating story prompt for the second language hill quest', () => {
+    const languageQuest = quests.find((quest) => quest.id === 'language-2');
+
+    expect(languageQuest?.backgroundAsset).toBe('language-hill-background');
+    expect(languageQuest?.visualLayout).toBe('food-name');
+    expect(languageQuest?.title).toBe('무엇을 먹고 있을까요');
+    expect(languageQuest?.introduction).toBe('미어로가 먹고 있는 것을 살펴봐요.');
+    expect(languageQuest?.steps[0].instructionText).toBe(
+      '미어로가 배가고파서 무언가를 먹고있어요. 무엇을 먹고 있을까요?',
+    );
+    expect(languageQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '바나나',
+      '빵',
+      '사과',
+    ]);
+    expect(languageQuest?.steps[0].correctChoiceId).toBe('banana');
+    expect(languageQuest?.steps[0].hintText).toBe('노랗고 길쭉한 과일을 먹고 있어요.');
+  });
+
+  it('uses a seed planting two-panel story for the third language hill quest', () => {
+    const languageQuest = quests.find((quest) => quest.id === 'language-3');
+
+    expect(languageQuest?.backgroundAsset).toBe('language-hill-background');
+    expect(languageQuest?.visualLayout).toBe('story-sequence');
+    expect(languageQuest?.title).toBe('씨앗 이야기');
+    expect(languageQuest?.introduction).toBe('두 그림을 보고 미어로가 한 일을 골라요.');
+    expect(languageQuest?.steps[0].instructionText).toBe(
+      '미어로가 씨앗을 심고 무엇을 하고 있나요?',
+    );
+    expect(languageQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '물을 줘요',
+      '잠을 자요',
+      '달려요',
+    ]);
+    expect(languageQuest?.steps[0].correctChoiceId).toBe('water');
+    expect(languageQuest?.steps[0].hintText).toBe('두 번째 그림에서 물뿌리개를 살펴봐요.');
+  });
+
+  it('uses a happy Meero expression prompt for the fourth language hill quest', () => {
+    const languageQuest = quests.find((quest) => quest.id === 'language-4');
+
+    expect(languageQuest?.backgroundAsset).toBe('language-hill-background');
+    expect(languageQuest?.visualLayout).toBe('emotion-face');
+    expect(languageQuest?.title).toBe('감정을 말해요');
+    expect(languageQuest?.introduction).toBe('표정을 보고 감정을 말로 표현해요.');
+    expect(languageQuest?.steps[0].instructionText).toBe(
+      '활짝 웃는 얼굴은 어떤 기분일까요?',
+    );
+    expect(languageQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '기뻐요',
+      '화나요',
+      '졸려요',
+    ]);
+    expect(languageQuest?.steps[0].correctChoiceId).toBe('happy');
+    expect(languageQuest?.steps[0].hintText).toBe('입꼬리가 올라가고 눈이 반짝여요.');
+  });
+
+  it('uses a Fena gift-giving story for the fifth language hill quest', () => {
+    const languageQuest = quests.find((quest) => quest.id === 'language-5');
+
+    expect(languageQuest?.backgroundAsset).toBe('language-hill-background');
+    expect(languageQuest?.visualLayout).toBe('gift-thanks');
+    expect(languageQuest?.title).toBe('도전 말 찾기');
+    expect(languageQuest?.introduction).toBe('상황에 어울리는 말을 스스로 골라요.');
+    expect(languageQuest?.steps[0].instructionText).toBe(
+      '친구가 선물을 주면 어떤 말을 하면 좋을까요?',
+    );
+    expect(languageQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '고마워',
+      '싫어',
+      '잘 가',
+    ]);
+    expect(languageQuest?.steps[0].correctChoiceId).toBe('thanks');
+    expect(languageQuest?.steps[0].hintText).toBe('좋은 마음을 받았을 때 쓰는 말을 떠올려요.');
+  });
+
+  it('uses a Fena toy-sharing story for the first social playground quest', () => {
+    const socialQuest = quests.find((quest) => quest.id === 'social-1');
+
+    expect(socialQuest?.backgroundAsset).toBe('social-playground-background');
+    expect(socialQuest?.visualLayout).toBe('toy-share');
+    expect(socialQuest?.title).toBe('친구가 빌리고 싶대');
+    expect(socialQuest?.introduction).toBe('친구와 장난감을 나누는 방법을 배워요.');
+    expect(socialQuest?.steps[0].instructionText).toBe(
+      '친구가 장난감을 빌리고 싶대요. 어떻게 말하면 좋을까요?',
+    );
+    expect(socialQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '같이 쓰자',
+      '밀쳐요',
+    ]);
+    expect(socialQuest?.steps[0].correctChoiceId).toBe('share');
+    expect(socialQuest?.steps[0].hintText).toBe('친구와 함께 즐겁게 노는 말을 찾아요.');
+  });
+
+  it('uses a Meero helping Fena story for the second social playground quest', () => {
+    const socialQuest = quests.find((quest) => quest.id === 'social-2');
+
+    expect(socialQuest?.backgroundAsset).toBe('social-playground-background');
+    expect(socialQuest?.visualLayout).toBe('help-thanks');
+    expect(socialQuest?.title).toBe('고마워를 말해요');
+    expect(socialQuest?.introduction).toBe('도움을 받았을 때 하는 말을 배워요.');
+    expect(socialQuest?.steps[0].instructionText).toBe(
+      '미어로가 페나의 짐을 들어줬어요. 페나는 어떤 말을 하면 좋을까요?',
+    );
+    expect(socialQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '고마워',
+      '화났어',
+      '숨을래',
+    ]);
+    expect(socialQuest?.steps[0].correctChoiceId).toBe('thanks');
+    expect(socialQuest?.steps[0].hintText).toBe('도움을 받았을 때 따뜻하게 하는 말이에요.');
+  });
 });

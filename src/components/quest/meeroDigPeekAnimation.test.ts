@@ -662,6 +662,271 @@ describe('Meero dig-peek animation', () => {
     );
   });
 
+  it('uses a language hill food-name template with Meero eating banana art', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const bananaAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/food-name/food-name-meero-banana-v1.png',
+    );
+
+    expect(existsSync(bananaAssetPath)).toBe(true);
+    expect(readFileSync(bananaAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'food-name'");
+    expect(questSource).toContain("id: 'language-2'");
+    expect(questSource).toContain(
+      '미어로가 배가고파서 무언가를 먹고있어요. 무엇을 먹고 있을까요?',
+    );
+    expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
+    expect(questSource).toContain("visualLayout: 'food-name'");
+    expect(questSource).toContain("{ id: 'banana', label: '바나나' }");
+    expect(questSource).toContain("correctChoiceId: 'banana'");
+    expect(screenSource).toContain("quest.visualLayout === 'food-name'");
+    expect(screenSource).toContain('bananaFoodSceneImage');
+    expect(screenSource).toContain('food-name-meero-banana-v1.png');
+    expect(screenSource).toContain('미어로가 바나나를 먹고 있는 장면');
+    expect(screenSource).toContain('sceneSource={bananaFoodSceneImage}');
+    expect(screenSource).toContain('sceneAccessibilityLabel="미어로가 바나나를 먹고 있는 장면"');
+
+    const bananaChoiceRect = getRecordChoiceRect(screenSource, 'foodNameChoiceRects', 'banana');
+    const breadChoiceRect = getRecordChoiceRect(screenSource, 'foodNameChoiceRects', 'bread');
+    const appleChoiceRect = getRecordChoiceRect(screenSource, 'foodNameChoiceRects', 'apple');
+
+    expect(breadChoiceRect.top).toBeGreaterThanOrEqual(
+      bananaChoiceRect.top + bananaChoiceRect.height + 16,
+    );
+    expect(appleChoiceRect.top).toBeGreaterThanOrEqual(
+      breadChoiceRect.top + breadChoiceRect.height + 16,
+    );
+
+    const animalSoundScreenBody = getFunctionBody(screenSource, 'AnimalSoundQuestScreen');
+    expect(animalSoundScreenBody).toContain(
+      'const choiceRect = choiceRects[choice.id] ?? fallbackChoiceRect;',
+    );
+    expect(animalSoundScreenBody).not.toContain(
+      'const choiceRect = animalSoundChoiceRects[choice.id] ?? animalSoundFallbackChoiceRect;',
+    );
+  });
+
+  it('uses a language hill story-sequence template with Meero seed comic art', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const storyAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/story-sequence/story-sequence-meero-seed-v3.png',
+    );
+
+    expect(existsSync(storyAssetPath)).toBe(true);
+    expect(readFileSync(storyAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'story-sequence'");
+    expect(questSource).toContain("id: 'language-3'");
+    expect(questSource).toContain('미어로가 씨앗을 심고 무엇을 하고 있나요?');
+    expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
+    expect(questSource).toContain("visualLayout: 'story-sequence'");
+    expect(questSource).toContain("{ id: 'water', label: '물을 줘요' }");
+    expect(questSource).toContain("{ id: 'sleep', label: '잠을 자요' }");
+    expect(questSource).toContain("{ id: 'run', label: '달려요' }");
+    expect(questSource).toContain("correctChoiceId: 'water'");
+    expect(screenSource).toContain("quest.visualLayout === 'story-sequence'");
+    expect(screenSource).toContain('seedStorySceneImage');
+    expect(screenSource).toContain('story-sequence-meero-seed-v3.png');
+    expect(screenSource).toContain('sceneSource={seedStorySceneImage}');
+    expect(screenSource).toContain('sceneAccessibilityLabel="미어로가 씨앗을 심고 물을 주는 2컷 만화"');
+
+    const sceneRect = getSourceRect(screenSource, 'storySequenceSceneImageRect');
+    const waterChoiceRect = getRecordChoiceRect(screenSource, 'storySequenceChoiceRects', 'water');
+    const sleepChoiceRect = getRecordChoiceRect(screenSource, 'storySequenceChoiceRects', 'sleep');
+    const runChoiceRect = getRecordChoiceRect(screenSource, 'storySequenceChoiceRects', 'run');
+
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(waterChoiceRect.left - 36);
+    expect(sleepChoiceRect.top).toBeGreaterThanOrEqual(
+      waterChoiceRect.top + waterChoiceRect.height + 16,
+    );
+    expect(runChoiceRect.top).toBeGreaterThanOrEqual(
+      sleepChoiceRect.top + sleepChoiceRect.height + 16,
+    );
+  });
+
+  it('uses a language hill emotion-face template with happy Meero art', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const emotionAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/emotion-face/emotion-face-meero-happy-v1.png',
+    );
+
+    expect(existsSync(emotionAssetPath)).toBe(true);
+    expect(readFileSync(emotionAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'emotion-face'");
+    expect(questSource).toContain("id: 'language-4'");
+    expect(questSource).toContain('활짝 웃는 얼굴은 어떤 기분일까요?');
+    expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
+    expect(questSource).toContain("visualLayout: 'emotion-face'");
+    expect(questSource).toContain("{ id: 'happy', label: '기뻐요' }");
+    expect(questSource).toContain("{ id: 'angry', label: '화나요' }");
+    expect(questSource).toContain("{ id: 'sleepy', label: '졸려요' }");
+    expect(questSource).toContain("correctChoiceId: 'happy'");
+    expect(screenSource).toContain("quest.visualLayout === 'emotion-face'");
+    expect(screenSource).toContain('happyMeeroEmotionImage');
+    expect(screenSource).toContain('emotion-face-meero-happy-v1.png');
+    expect(screenSource).toContain('sceneSource={happyMeeroEmotionImage}');
+    expect(screenSource).toContain('sceneAccessibilityLabel="미어로가 활짝 웃는 표정을 짓는 장면"');
+
+    const sceneRect = getSourceRect(screenSource, 'emotionFaceSceneImageRect');
+    const happyChoiceRect = getRecordChoiceRect(screenSource, 'emotionFaceChoiceRects', 'happy');
+    const angryChoiceRect = getRecordChoiceRect(screenSource, 'emotionFaceChoiceRects', 'angry');
+    const sleepyChoiceRect = getRecordChoiceRect(screenSource, 'emotionFaceChoiceRects', 'sleepy');
+
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(happyChoiceRect.left - 36);
+    expect(angryChoiceRect.top).toBeGreaterThanOrEqual(
+      happyChoiceRect.top + happyChoiceRect.height + 16,
+    );
+    expect(sleepyChoiceRect.top).toBeGreaterThanOrEqual(
+      angryChoiceRect.top + angryChoiceRect.height + 16,
+    );
+  });
+
+  it('uses a language hill gift-thanks template with Fena giving Meero a gift', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const giftAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/gift-thanks/gift-thanks-meero-fena-v1.png',
+    );
+
+    expect(existsSync(giftAssetPath)).toBe(true);
+    expect(readFileSync(giftAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'gift-thanks'");
+    expect(questSource).toContain("id: 'language-5'");
+    expect(questSource).toContain('친구가 선물을 주면 어떤 말을 하면 좋을까요?');
+    expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
+    expect(questSource).toContain("visualLayout: 'gift-thanks'");
+    expect(questSource).toContain("{ id: 'thanks', label: '고마워' }");
+    expect(questSource).toContain("{ id: 'no', label: '싫어' }");
+    expect(questSource).toContain("{ id: 'bye', label: '잘 가' }");
+    expect(questSource).toContain("correctChoiceId: 'thanks'");
+    expect(screenSource).toContain("quest.visualLayout === 'gift-thanks'");
+    expect(screenSource).toContain('giftThanksSceneImage');
+    expect(screenSource).toContain('gift-thanks-meero-fena-v1.png');
+    expect(screenSource).toContain('sceneSource={giftThanksSceneImage}');
+    expect(screenSource).toContain('sceneAccessibilityLabel="페나가 미어로에게 선물을 건네는 장면"');
+
+    const sceneRect = getSourceRect(screenSource, 'giftThanksSceneImageRect');
+    const thanksChoiceRect = getRecordChoiceRect(screenSource, 'giftThanksChoiceRects', 'thanks');
+    const noChoiceRect = getRecordChoiceRect(screenSource, 'giftThanksChoiceRects', 'no');
+    const byeChoiceRect = getRecordChoiceRect(screenSource, 'giftThanksChoiceRects', 'bye');
+
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(thanksChoiceRect.left - 36);
+    expect(noChoiceRect.top).toBeGreaterThanOrEqual(
+      thanksChoiceRect.top + thanksChoiceRect.height + 16,
+    );
+    expect(byeChoiceRect.top).toBeGreaterThanOrEqual(
+      noChoiceRect.top + noChoiceRect.height + 16,
+    );
+  });
+
+  it('uses a social playground toy-share template with Fena lending Meero a toy', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const toyAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/toy-share/toy-share-meero-fena-v1.png',
+    );
+
+    expect(existsSync(toyAssetPath)).toBe(true);
+    expect(readFileSync(toyAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'toy-share'");
+    expect(progressSource).toContain("'social-playground-background'");
+    expect(questSource).toContain("id: 'social-1'");
+    expect(questSource).toContain('친구가 장난감을 빌리고 싶대요. 어떻게 말하면 좋을까요?');
+    expect(questSource).toContain("backgroundAsset: 'social-playground-background'");
+    expect(questSource).toContain("visualLayout: 'toy-share'");
+    expect(questSource).toContain("{ id: 'share', label: '같이 쓰자' }");
+    expect(questSource).toContain("{ id: 'push', label: '밀쳐요' }");
+    expect(questSource).toContain("correctChoiceId: 'share'");
+    expect(screenSource).toContain("quest.visualLayout === 'toy-share'");
+    expect(screenSource).toContain('socialPlaygroundBackground');
+    expect(screenSource).toContain('toyShareSceneImage');
+    expect(screenSource).toContain('toy-share-meero-fena-v1.png');
+    expect(screenSource).toContain('sceneSource={toyShareSceneImage}');
+    expect(screenSource).toContain('sceneAccessibilityLabel="페나가 미어로에게 장난감을 빌려주는 장면"');
+
+    const sceneRect = getSourceRect(screenSource, 'toyShareSceneImageRect');
+    const shareChoiceRect = getRecordChoiceRect(screenSource, 'toyShareChoiceRects', 'share');
+    const pushChoiceRect = getRecordChoiceRect(screenSource, 'toyShareChoiceRects', 'push');
+
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(shareChoiceRect.left - 36);
+    expect(pushChoiceRect.top).toBeGreaterThanOrEqual(
+      shareChoiceRect.top + shareChoiceRect.height + 20,
+    );
+  });
+
+  it('uses a social playground help-thanks template with Meero carrying Fena luggage', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const helpAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/help-thanks/help-thanks-meero-fena-v3.png',
+    );
+
+    expect(existsSync(helpAssetPath)).toBe(true);
+    expect(readFileSync(helpAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'help-thanks'");
+    expect(progressSource).toContain("'social-playground-background'");
+    expect(questSource).toContain("id: 'social-2'");
+    expect(questSource).toContain(
+      '미어로가 페나의 짐을 들어줬어요. 페나는 어떤 말을 하면 좋을까요?',
+    );
+    expect(questSource).toContain("backgroundAsset: 'social-playground-background'");
+    expect(questSource).toContain("visualLayout: 'help-thanks'");
+    expect(questSource).toContain("{ id: 'thanks', label: '고마워' }");
+    expect(questSource).toContain("{ id: 'angry', label: '화났어' }");
+    expect(questSource).toContain("{ id: 'hide', label: '숨을래' }");
+    expect(questSource).toContain("correctChoiceId: 'thanks'");
+    expect(screenSource).toContain("quest.visualLayout === 'help-thanks'");
+    expect(screenSource).toContain('helpThanksSceneImage');
+    expect(screenSource).toContain('help-thanks-meero-fena-v3.png');
+    expect(screenSource).toContain('sceneSource={helpThanksSceneImage}');
+    expect(screenSource).toContain('sceneAccessibilityLabel="미어로가 페나의 짐을 들어주는 장면"');
+
+    const sceneRect = getSourceRect(screenSource, 'helpThanksSceneImageRect');
+    const thanksChoiceRect = getRecordChoiceRect(screenSource, 'helpThanksChoiceRects', 'thanks');
+    const angryChoiceRect = getRecordChoiceRect(screenSource, 'helpThanksChoiceRects', 'angry');
+    const hideChoiceRect = getRecordChoiceRect(screenSource, 'helpThanksChoiceRects', 'hide');
+
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(thanksChoiceRect.left - 36);
+    expect(angryChoiceRect.top).toBeGreaterThanOrEqual(
+      thanksChoiceRect.top + thanksChoiceRect.height + 16,
+    );
+    expect(hideChoiceRect.top).toBeGreaterThanOrEqual(
+      angryChoiceRect.top + angryChoiceRect.height + 16,
+    );
+  });
+
   it('does not statically load the native audio module before the sound button is pressed', () => {
     const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
 
@@ -730,6 +995,43 @@ function getRecordChoiceRect(source: string, recordName: string, choiceId: strin
   }
 
   return getChoiceRect(source.slice(start, end), choiceId);
+}
+
+function getFunctionBody(source: string, functionName: string) {
+  const declarationStart = source.indexOf(`function ${functionName}`);
+
+  if (declarationStart === -1) {
+    throw new Error(`Missing ${functionName}`);
+  }
+
+  const bodyMarker = '\n}) {';
+  const bodyMarkerStart = source.indexOf(bodyMarker, declarationStart);
+
+  if (bodyMarkerStart === -1) {
+    throw new Error(`Missing ${functionName} body`);
+  }
+
+  const bodyStart = bodyMarkerStart + bodyMarker.length - 1;
+
+  let depth = 0;
+
+  for (let index = bodyStart; index < source.length; index += 1) {
+    const character = source[index];
+
+    if (character === '{') {
+      depth += 1;
+    }
+
+    if (character === '}') {
+      depth -= 1;
+
+      if (depth === 0) {
+        return source.slice(bodyStart + 1, index);
+      }
+    }
+  }
+
+  throw new Error(`Unclosed ${functionName} body`);
 }
 
 function getAnimationFrameAssets(source: string, animationName: string) {

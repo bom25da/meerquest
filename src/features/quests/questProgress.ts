@@ -9,8 +9,17 @@ export type QuestVisualLayout =
   | 'pattern-path'
   | 'size-compare'
   | 'carrot-addition'
-  | 'animal-sound';
-export type QuestBackgroundAsset = 'math-cave-background' | 'language-hill-background';
+  | 'animal-sound'
+  | 'food-name'
+  | 'story-sequence'
+  | 'emotion-face'
+  | 'gift-thanks'
+  | 'toy-share'
+  | 'help-thanks';
+export type QuestBackgroundAsset =
+  | 'math-cave-background'
+  | 'language-hill-background'
+  | 'social-playground-background';
 export type QuestSoundAsset = 'dog-bark';
 
 export interface QuestReward {

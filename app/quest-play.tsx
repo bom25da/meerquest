@@ -44,10 +44,17 @@ import { colors } from '@/src/theme/colors';
 const appleCountScreen = require('../assets/images/quests/apple-count/apple-count-screen.png');
 const appleCountApplesImage = require('../assets/images/quests/apple-count/apple-count-meero-apple-tree-v1.png');
 const animalSoundSceneImage = require('../assets/images/quests/animal-sound/animal-sound-meero-hill-v1.png');
+const bananaFoodSceneImage = require('../assets/images/quests/food-name/food-name-meero-banana-v1.png');
 const carrotAdditionSceneImage = require('../assets/images/quests/carrot-addition/carrot-addition-meero-fena-v1.png');
+const giftThanksSceneImage = require('../assets/images/quests/gift-thanks/gift-thanks-meero-fena-v1.png');
+const helpThanksSceneImage = require('../assets/images/quests/help-thanks/help-thanks-meero-fena-v3.png');
+const happyMeeroEmotionImage = require('../assets/images/quests/emotion-face/emotion-face-meero-happy-v1.png');
+const seedStorySceneImage = require('../assets/images/quests/story-sequence/story-sequence-meero-seed-v3.png');
+const toyShareSceneImage = require('../assets/images/quests/toy-share/toy-share-meero-fena-v1.png');
 const dogBarkSound = require('../assets/audio/quests/language-1/language-1-dog-bark-v1.mp3');
 const languageHillBackground = require('../assets/images/home/category-language-background.png');
 const mathCaveBackground = require('../assets/images/quests/math-cave-background.png');
+const socialPlaygroundBackground = require('../assets/images/home/category-social-background.png');
 const shapeFindDoorImage = require('../assets/images/quests/shape-find/shape-find-meero-door-v1.png');
 const patternPathStonesImage = require('../assets/images/quests/pattern-path/pattern-path-meero-crossing-v1.png');
 const sizeCompareHolesImage = require('../assets/images/quests/size-compare/size-compare-meero-holes-v2.png');
@@ -55,6 +62,7 @@ const sizeCompareHolesImage = require('../assets/images/quests/size-compare/size
 const questBackgroundSources: Record<QuestBackgroundAsset, number> = {
   'language-hill-background': languageHillBackground,
   'math-cave-background': mathCaveBackground,
+  'social-playground-background': socialPlaygroundBackground,
 };
 
 const questSoundSources: Record<QuestSoundAsset, number> = {
@@ -309,6 +317,210 @@ export default function QuestPlayScreen() {
         onSound={soundPressHandler}
         questTitle={questTitle}
         resultOverlay={resultOverlay}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'food-name') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : languageHillBackground
+        }
+        choiceRects={foodNameChoiceRects}
+        fallbackChoiceRect={foodNameFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 바나나를 먹고 있는 장면"
+        sceneImageRect={foodNameSceneImageRect}
+        sceneSource={bananaFoodSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'story-sequence') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : languageHillBackground
+        }
+        choiceRects={storySequenceChoiceRects}
+        fallbackChoiceRect={storySequenceFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 씨앗을 심고 물을 주는 2컷 만화"
+        sceneImageRect={storySequenceSceneImageRect}
+        sceneSource={seedStorySceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'emotion-face') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : languageHillBackground
+        }
+        choiceRects={emotionFaceChoiceRects}
+        fallbackChoiceRect={emotionFaceFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 활짝 웃는 표정을 짓는 장면"
+        sceneImageRect={emotionFaceSceneImageRect}
+        sceneSource={happyMeeroEmotionImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'gift-thanks') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : languageHillBackground
+        }
+        choiceRects={giftThanksChoiceRects}
+        fallbackChoiceRect={giftThanksFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="페나가 미어로에게 선물을 건네는 장면"
+        sceneImageRect={giftThanksSceneImageRect}
+        sceneSource={giftThanksSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'toy-share') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : socialPlaygroundBackground
+        }
+        choiceRects={toyShareChoiceRects}
+        fallbackChoiceRect={toyShareFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="페나가 미어로에게 장난감을 빌려주는 장면"
+        sceneImageRect={toyShareSceneImageRect}
+        sceneSource={toyShareSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'help-thanks') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : socialPlaygroundBackground
+        }
+        choiceRects={helpThanksChoiceRects}
+        fallbackChoiceRect={helpThanksFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 페나의 짐을 들어주는 장면"
+        sceneImageRect={helpThanksSceneImageRect}
+        sceneSource={helpThanksSceneImage}
         selectedChoiceId={selectedChoiceId}
         stars={earnedStars}
         step={step}
@@ -720,6 +932,8 @@ function AppleCountQuestScreen({
 
 function AnimalSoundQuestScreen({
   backgroundSource,
+  choiceRects = animalSoundChoiceRects,
+  fallbackChoiceRect = animalSoundFallbackChoiceRect,
   height,
   incorrectChoiceIds,
   isCompleted,
@@ -736,12 +950,17 @@ function AnimalSoundQuestScreen({
   onSound,
   questTitle,
   resultOverlay,
+  sceneAccessibilityLabel = '미어로가 언덕 뒤 동물 소리에 귀를 기울이는 장면',
+  sceneImageRect = animalSoundSceneImageRect,
+  sceneSource = animalSoundSceneImage,
   selectedChoiceId,
   stars,
   step,
   width,
 }: {
   backgroundSource: number;
+  choiceRects?: Record<string, QuestStageSourceRect>;
+  fallbackChoiceRect?: QuestStageSourceRect;
   height: number;
   incorrectChoiceIds: string[];
   isCompleted: boolean;
@@ -758,6 +977,9 @@ function AnimalSoundQuestScreen({
   onSound?: () => void;
   questTitle: string;
   resultOverlay: QuestResultOverlay | null;
+  sceneAccessibilityLabel?: string;
+  sceneImageRect?: QuestStageSourceRect;
+  sceneSource?: number;
   selectedChoiceId: string | null;
   stars: number;
   step: QuestStep;
@@ -797,14 +1019,14 @@ function AnimalSoundQuestScreen({
             </Text>
           </View>
           <Image
-            accessibilityLabel="미어로가 언덕 뒤 동물 소리에 귀를 기울이는 장면"
+            accessibilityLabel={sceneAccessibilityLabel}
             accessibilityIgnoresInvertColors
             resizeMode="contain"
-            source={animalSoundSceneImage}
-            style={[styles.animalSoundSceneImage, getQuestStageRect(stage, animalSoundSceneImageRect)]}
+            source={sceneSource}
+            style={[styles.animalSoundSceneImage, getQuestStageRect(stage, sceneImageRect)]}
           />
           {step.choices.map((choice) => {
-            const choiceRect = animalSoundChoiceRects[choice.id] ?? animalSoundFallbackChoiceRect;
+            const choiceRect = choiceRects[choice.id] ?? fallbackChoiceRect;
             const isSelected = selectedChoiceId === choice.id;
             const isCorrect = choice.id === step.correctChoiceId;
             const showCorrect = isStepComplete && isCorrect;
@@ -1603,6 +1825,47 @@ const animalSoundChoiceRects: Record<string, QuestStageSourceRect> = {
   cat: { height: 136, left: 850, top: 437, width: 252 },
 };
 const animalSoundFallbackChoiceRect = { height: 136, left: 850, top: 318, width: 252 };
+const foodNameSceneImageRect = { height: 388, left: 168, top: 230, width: 560 };
+const foodNameChoiceRects: Record<string, QuestStageSourceRect> = {
+  banana: { height: 112, left: 850, top: 244, width: 252 },
+  bread: { height: 112, left: 850, top: 376, width: 252 },
+  apple: { height: 112, left: 850, top: 508, width: 252 },
+};
+const foodNameFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const storySequenceSceneImageRect = { height: 344, left: 104, top: 254, width: 688 };
+const storySequenceChoiceRects: Record<string, QuestStageSourceRect> = {
+  water: { height: 112, left: 850, top: 244, width: 252 },
+  sleep: { height: 112, left: 850, top: 376, width: 252 },
+  run: { height: 112, left: 850, top: 508, width: 252 },
+};
+const storySequenceFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const emotionFaceSceneImageRect = { height: 392, left: 140, top: 226, width: 604 };
+const emotionFaceChoiceRects: Record<string, QuestStageSourceRect> = {
+  happy: { height: 112, left: 850, top: 244, width: 252 },
+  angry: { height: 112, left: 850, top: 376, width: 252 },
+  sleepy: { height: 112, left: 850, top: 508, width: 252 },
+};
+const emotionFaceFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const giftThanksSceneImageRect = { height: 402, left: 98, top: 224, width: 684 };
+const giftThanksChoiceRects: Record<string, QuestStageSourceRect> = {
+  thanks: { height: 112, left: 850, top: 244, width: 252 },
+  no: { height: 112, left: 850, top: 376, width: 252 },
+  bye: { height: 112, left: 850, top: 508, width: 252 },
+};
+const giftThanksFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const toyShareSceneImageRect = { height: 392, left: 104, top: 230, width: 690 };
+const toyShareChoiceRects: Record<string, QuestStageSourceRect> = {
+  share: { height: 136, left: 850, top: 270, width: 252 },
+  push: { height: 136, left: 850, top: 437, width: 252 },
+};
+const toyShareFallbackChoiceRect = { height: 136, left: 850, top: 318, width: 252 };
+const helpThanksSceneImageRect = { height: 402, left: 116, top: 224, width: 660 };
+const helpThanksChoiceRects: Record<string, QuestStageSourceRect> = {
+  thanks: { height: 112, left: 850, top: 244, width: 252 },
+  angry: { height: 112, left: 850, top: 376, width: 252 },
+  hide: { height: 112, left: 850, top: 508, width: 252 },
+};
+const helpThanksFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
 const shapeFindPromptRect = { height: 96, left: 233, top: 136, width: 900 };
 const shapeFindDoorImageRect = { height: 360, left: 108, top: 248, width: 640 };
 const shapeFindDoorButtonLabelRects: Record<string, QuestStageSourceRect> = {

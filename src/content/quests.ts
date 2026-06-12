@@ -158,47 +158,51 @@ export const quests: Quest[] = [
   {
     id: 'language-2',
     categoryId: 'language',
-    title: '그림 단어를 골라요',
+    title: '무엇을 먹고 있을까요',
     level: 2,
     order: 2,
-    introduction: '그림을 보고 알맞은 단어를 찾아요.',
+    introduction: '미어로가 먹고 있는 것을 살펴봐요.',
     reward: { id: 'language-star-2', title: '그림 단어 별', type: 'star' },
+    backgroundAsset: 'language-hill-background',
+    visualLayout: 'food-name',
     steps: [
       {
         id: 'language-2-step-1',
         type: 'choice',
-        instructionText: '빨간 과일 그림에 어울리는 단어는 무엇인가요?',
+        instructionText: '미어로가 배가고파서 무언가를 먹고있어요. 무엇을 먹고 있을까요?',
         choices: [
+          { id: 'banana', label: '바나나' },
+          { id: 'bread', label: '빵' },
           { id: 'apple', label: '사과' },
-          { id: 'shoe', label: '신발' },
-          { id: 'cloud', label: '구름' },
         ],
-        correctChoiceId: 'apple',
-        hintText: '아삭아삭 먹는 빨간 과일이에요.',
-        successMessage: '그림과 단어를 잘 찾았어!',
+        correctChoiceId: 'banana',
+        hintText: '노랗고 길쭉한 과일을 먹고 있어요.',
+        successMessage: '맞아, 미어로가 바나나를 먹고 있어!',
       },
     ],
   },
   {
     id: 'language-3',
     categoryId: 'language',
-    title: '이야기 순서 맞추기',
+    title: '씨앗 이야기',
     level: 3,
     order: 3,
-    introduction: '짧은 이야기를 듣고 다음 장면을 골라요.',
+    introduction: '두 그림을 보고 미어로가 한 일을 골라요.',
     reward: { id: 'language-badge-3', title: '이야기 배지', type: 'badge' },
+    backgroundAsset: 'language-hill-background',
+    visualLayout: 'story-sequence',
     steps: [
       {
         id: 'language-3-step-1',
         type: 'choice',
-        instructionText: '씨앗을 심은 다음에는 무엇을 할까요?',
+        instructionText: '미어로가 씨앗을 심고 무엇을 하고 있나요?',
         choices: [
           { id: 'water', label: '물을 줘요' },
           { id: 'sleep', label: '잠을 자요' },
           { id: 'run', label: '달려요' },
         ],
         correctChoiceId: 'water',
-        hintText: '식물이 자라려면 무엇이 필요할까요?',
+        hintText: '두 번째 그림에서 물뿌리개를 살펴봐요.',
         successMessage: '이야기 순서를 잘 이어줬어!',
       },
     ],
@@ -211,6 +215,8 @@ export const quests: Quest[] = [
     order: 4,
     introduction: '표정을 보고 감정을 말로 표현해요.',
     reward: { id: 'language-sticker-4', title: '감정 말풍선 스티커', type: 'sticker' },
+    backgroundAsset: 'language-hill-background',
+    visualLayout: 'emotion-face',
     steps: [
       {
         id: 'language-4-step-1',
@@ -235,6 +241,8 @@ export const quests: Quest[] = [
     order: 5,
     introduction: '상황에 어울리는 말을 스스로 골라요.',
     reward: { id: 'language-badge-5', title: '언어 언덕 배지', type: 'badge' },
+    backgroundAsset: 'language-hill-background',
+    visualLayout: 'gift-thanks',
     steps: [
       {
         id: 'language-5-step-1',
@@ -259,6 +267,8 @@ export const quests: Quest[] = [
     order: 1,
     introduction: '친구와 장난감을 나누는 방법을 배워요.',
     reward: { id: 'social-star-1', title: '나눔 별', type: 'star' },
+    backgroundAsset: 'social-playground-background',
+    visualLayout: 'toy-share',
     steps: [
       {
         id: 'social-1-step-1',
@@ -282,11 +292,13 @@ export const quests: Quest[] = [
     order: 2,
     introduction: '도움을 받았을 때 하는 말을 배워요.',
     reward: { id: 'social-star-2', title: '감사 별', type: 'star' },
+    backgroundAsset: 'social-playground-background',
+    visualLayout: 'help-thanks',
     steps: [
       {
         id: 'social-2-step-1',
         type: 'choice',
-        instructionText: '친구가 도와줬어요. 어떤 말을 하면 좋을까요?',
+        instructionText: '미어로가 페나의 짐을 들어줬어요. 페나는 어떤 말을 하면 좋을까요?',
         choices: [
           { id: 'thanks', label: '고마워' },
           { id: 'angry', label: '화났어' },
