@@ -35,7 +35,9 @@
     "web": "expo start --web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "voice:setup": "python3 -m pip install -r tools/supertonic2_requirements.txt",
+    "voice:supertonic2": "python3 tools/supertonic2_tts.py"
   },
   "private": true
 }
