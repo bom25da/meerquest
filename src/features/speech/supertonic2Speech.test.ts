@@ -73,6 +73,7 @@ describe('supertonic2 speech service', () => {
     vi.useFakeTimers();
     const play = vi.fn();
     const remove = vi.fn();
+    const deleteFile = vi.fn(async () => undefined);
     const service = createSupertonic2SpeechService({
       runtime: {
         isSupported: () => true,
@@ -82,16 +83,40 @@ describe('supertonic2 speech service', () => {
         })),
       },
       createPlayer: vi.fn(() => ({ play, remove })),
+      deleteFile,
     });
 
     await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
     expect(remove).not.toHaveBeenCalled();
+    expect(deleteFile).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(1249);
     expect(remove).not.toHaveBeenCalled();
+    expect(deleteFile).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(1);
     expect(remove).toHaveBeenCalledTimes(1);
+    expect(deleteFile).toHaveBeenCalledWith('file:///미어루.wav');
+  });
+
+  it('deletes a synthesized file if playback setup fails', async () => {
+    const deleteFile = vi.fn(async () => undefined);
+    const service = createSupertonic2SpeechService({
+      runtime: {
+        isSupported: () => true,
+        synthesizeToFile: vi.fn(async () => ({
+          uri: 'file:///failed.wav',
+          durationSeconds: 0.1,
+        })),
+      },
+      createPlayer: vi.fn(() => {
+        throw new Error('player failed');
+      }),
+      deleteFile,
+    });
+
+    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'unavailable' });
+    expect(deleteFile).toHaveBeenCalledWith('file:///failed.wav');
   });
 
   it('returns unavailable for a failed request and lets later requests try again', async () => {

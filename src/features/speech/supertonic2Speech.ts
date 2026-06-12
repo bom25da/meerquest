@@ -16,13 +16,16 @@ interface Player {
 interface SpeechServicePorts {
   runtime?: RuntimePort;
   createPlayer?: (uri: string) => Player;
+  deleteFile?: (uri: string) => Promise<void>;
 }
 
 export function createSupertonic2SpeechService({
   runtime,
   createPlayer,
+  deleteFile,
 }: SpeechServicePorts = {}) {
   let queue = Promise.resolve();
+  const cleanupFile = deleteFile ?? deleteTemporarySpeechFile;
 
   return {
     async speakText(text: string, options: Supertonic2SynthesisOptions = {}) {
@@ -34,27 +37,31 @@ export function createSupertonic2SpeechService({
 
       const playback = queue.then(async () => {
         let player: Player | undefined;
+        let generatedUri: string | undefined;
 
         try {
           const result = await activeRuntime.synthesizeToFile(text, options);
+          generatedUri = result.uri;
           player = createPlayer ? createPlayer(result.uri) : await createExpoAudioPlayer(result.uri);
 
           player.play();
 
           return {
             cleanupDelayMs: getCleanupDelayMs(result.durationSeconds),
+            generatedUri: result.uri,
             player,
             status: 'played' as const,
           };
         } catch {
           removePlayer(player);
+          await cleanupGeneratedFile(cleanupFile, generatedUri);
           return { status: 'unavailable' as const };
         }
       });
       queue = playback
         .then(async (result) => {
           if (result.status === 'played') {
-            await cleanupPlayer(result.player, result.cleanupDelayMs);
+            await cleanupPlayer(result.player, result.generatedUri, result.cleanupDelayMs, cleanupFile);
           }
         })
         .catch(() => undefined);
@@ -65,9 +72,15 @@ export function createSupertonic2SpeechService({
   };
 }
 
-async function cleanupPlayer(player: Player, delayMs: number) {
+async function cleanupPlayer(
+  player: Player,
+  generatedUri: string,
+  delayMs: number,
+  deleteFile: (uri: string) => Promise<void>,
+) {
   await wait(delayMs);
   removePlayer(player);
+  await cleanupGeneratedFile(deleteFile, generatedUri);
 }
 
 function getCleanupDelayMs(durationSeconds: number) {
@@ -77,6 +90,11 @@ function getCleanupDelayMs(durationSeconds: number) {
 async function createExpoAudioPlayer(uri: string) {
   const { createAudioPlayer } = await import('expo-audio');
   return createAudioPlayer({ uri }, { keepAudioSessionActive: true, updateInterval: 1000 });
+}
+
+async function deleteTemporarySpeechFile(uri: string) {
+  const FileSystem = await import('expo-file-system/legacy');
+  await FileSystem.deleteAsync(uri, { idempotent: true });
 }
 
 async function getDefaultRuntime() {
@@ -106,6 +124,19 @@ function removePlayer(player?: Player) {
     player?.remove?.();
   } catch {
     // Playback cleanup should never prevent future speech requests.
+  }
+}
+
+async function cleanupGeneratedFile(
+  deleteFile: (uri: string) => Promise<void>,
+  generatedUri?: string,
+) {
+  if (!generatedUri) return;
+
+  try {
+    await deleteFile(generatedUri);
+  } catch {
+    // Temporary file cleanup should never poison the speech queue.
   }
 }
 

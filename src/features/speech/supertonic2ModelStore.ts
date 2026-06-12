@@ -28,7 +28,8 @@ interface DownloadResult {
 }
 
 export interface Supertonic2FileSystemPort {
-  documentDirectory: string | null;
+  storageDirectory: string | null;
+  deleteAsync(uri: string, options?: { idempotent?: boolean }): Promise<void>;
   getInfoAsync(uri: string): Promise<FileInfo>;
   makeDirectoryAsync(uri: string, options?: { intermediates?: boolean }): Promise<void>;
   downloadAsync(
@@ -39,7 +40,8 @@ export interface Supertonic2FileSystemPort {
 }
 
 const defaultFileSystemPort: Supertonic2FileSystemPort = {
-  documentDirectory: FileSystem.documentDirectory,
+  storageDirectory: FileSystem.cacheDirectory ?? FileSystem.documentDirectory,
+  deleteAsync: FileSystem.deleteAsync,
   getInfoAsync: FileSystem.getInfoAsync,
   makeDirectoryAsync: FileSystem.makeDirectoryAsync,
   downloadAsync: async (url, destination, onProgress) => {
@@ -61,8 +63,8 @@ function joinUri(base: string, relativePath: string) {
 }
 
 function getModelRootUri(port: Supertonic2FileSystemPort, manifest: Supertonic2ModelManifest) {
-  if (!port.documentDirectory) return null;
-  return joinUri(port.documentDirectory, `supertonic2/${manifest.revision}`);
+  if (!port.storageDirectory) return null;
+  return joinUri(port.storageDirectory, `supertonic2/${manifest.revision}`);
 }
 
 function getCurrentFileDownloadedBytes(
@@ -123,7 +125,7 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
 
       for (const file of manifest.files) {
         const info = await port.getInfoAsync(
-          joinUri(port.documentDirectory!, getDownloadedRelativePath(manifest, file)),
+          joinUri(port.storageDirectory!, getDownloadedRelativePath(manifest, file)),
         );
         if (!info.exists) return { state: 'missing', revision: manifest.revision, rootUri };
         if (typeof info.size === 'number' && info.size !== file.bytes) {
@@ -138,7 +140,7 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
       manifest: Supertonic2ModelManifest,
       onProgress: (progress: Supertonic2DownloadProgress) => void,
     ) {
-      if (!port.documentDirectory) {
+      if (!port.storageDirectory) {
         throw new Error('Supertonic 2 model storage is unavailable.');
       }
 
@@ -147,7 +149,7 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
 
       for (const [index, file] of manifest.files.entries()) {
         const relativePath = getDownloadedRelativePath(manifest, file);
-        const destination = joinUri(port.documentDirectory, relativePath);
+        const destination = joinUri(port.storageDirectory, relativePath);
         const parent = destination.slice(0, destination.lastIndexOf('/'));
         await port.makeDirectoryAsync(parent, { intermediates: true });
         await port.downloadAsync(file.url, destination, (event) => {
@@ -167,6 +169,13 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
         });
         completedBytes += file.bytes;
       }
+    },
+
+    async deleteModel(manifest: Supertonic2ModelManifest) {
+      const rootUri = getModelRootUri(port, manifest);
+      if (!rootUri) return;
+
+      await port.deleteAsync(rootUri, { idempotent: true });
     },
   };
 }

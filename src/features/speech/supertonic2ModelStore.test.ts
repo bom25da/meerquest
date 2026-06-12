@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Supertonic2ModelManifest } from './supertonic2Manifest';
 
 const fileSystemMock = vi.hoisted(() => ({
+  cacheDirectory: 'file:///cache/',
   createDownloadResumable: vi.fn(),
+  deleteAsync: vi.fn(),
   documentDirectory: 'file:///docs/',
   getInfoAsync: vi.fn(),
   makeDirectoryAsync: vi.fn(),
@@ -68,7 +70,8 @@ describe('supertonic2 model store', () => {
 
   it('reports missing when the document directory is unavailable', async () => {
     const store = createSupertonic2ModelStore({
-      documentDirectory: null,
+      storageDirectory: null,
+      deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(),
       makeDirectoryAsync: vi.fn(),
       downloadAsync: vi.fn(),
@@ -84,7 +87,8 @@ describe('supertonic2 model store', () => {
     const progress: number[] = [];
     const downloaded: string[] = [];
     const store = createSupertonic2ModelStore({
-      documentDirectory: 'file:///docs/',
+      storageDirectory: 'file:///docs/',
+      deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async (uri: string) => ({
         exists: true,
         size: uri.endsWith('voice_styles/F1.json') ? voiceStyleFile.bytes : ttsFile.bytes,
@@ -132,7 +136,8 @@ describe('supertonic2 model store', () => {
 
   it('throws when a downloaded file is missing after download', async () => {
     const store = createSupertonic2ModelStore({
-      documentDirectory: 'file:///docs/',
+      storageDirectory: 'file:///docs/',
+      deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async () => ({ exists: false })),
       makeDirectoryAsync: vi.fn(async () => undefined),
       downloadAsync: vi.fn(async () => undefined),
@@ -145,7 +150,8 @@ describe('supertonic2 model store', () => {
 
   it('throws when a downloaded file size differs from the manifest', async () => {
     const store = createSupertonic2ModelStore({
-      documentDirectory: 'file:///docs/',
+      storageDirectory: 'file:///docs/',
+      deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async () => ({ exists: true, size: 9 })),
       makeDirectoryAsync: vi.fn(async () => undefined),
       downloadAsync: vi.fn(async () => undefined),
@@ -159,7 +165,8 @@ describe('supertonic2 model store', () => {
   it('reports final progress after each file when native progress is not emitted', async () => {
     const progress: number[] = [];
     const store = createSupertonic2ModelStore({
-      documentDirectory: 'file:///docs/',
+      storageDirectory: 'file:///docs/',
+      deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async (uri: string) => ({
         exists: true,
         size: uri.endsWith('voice_styles/F1.json') ? voiceStyleFile.bytes : ttsFile.bytes,
@@ -171,5 +178,23 @@ describe('supertonic2 model store', () => {
     await store.downloadModel(manifest, (event) => progress.push(event.downloadedBytes));
 
     expect(progress).toEqual([10, 30]);
+  });
+
+  it('deletes the revisioned model directory idempotently for repair downloads', async () => {
+    const deleteAsync = vi.fn(async () => undefined);
+    const store = createSupertonic2ModelStore({
+      storageDirectory: 'file:///docs/',
+      deleteAsync,
+      getInfoAsync: vi.fn(),
+      makeDirectoryAsync: vi.fn(),
+      downloadAsync: vi.fn(),
+    });
+
+    await store.deleteModel(manifest);
+
+    expect(deleteAsync).toHaveBeenCalledWith(
+      'file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4',
+      { idempotent: true },
+    );
   });
 });

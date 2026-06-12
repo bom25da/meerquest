@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 import { ModelDownloadScreen } from '@/src/components/speech/ModelDownloadScreen';
 
@@ -57,6 +58,7 @@ export type TtsBootstrapEvent =
 export interface TtsBootstrapModelDependencies {
   manifest: Supertonic2ModelManifest;
   modelStore: {
+    deleteModel(manifest: Supertonic2ModelManifest): Promise<void>;
     downloadModel(
       manifest: Supertonic2ModelManifest,
       onProgress: (progress: Supertonic2DownloadProgress) => void,
@@ -76,6 +78,7 @@ export interface TtsBootstrapRuntimeDependencies {
     ): Promise<Supertonic2ModelStatus>;
     prepareTts(rootUri: string): Promise<void>;
   };
+  shouldBlockUnsupportedRuntime?: boolean;
 }
 
 interface RunTtsBootstrapOptions {
@@ -164,6 +167,7 @@ export async function loadTtsBootstrapDependencies(): Promise<TtsBootstrapRuntim
 
   return {
     nativeRuntime: supertonic2NativeRuntime,
+    shouldBlockUnsupportedRuntime: Platform.OS === 'ios',
     loadModelDependencies: async () => {
       const [{ supertonic2ModelManifest }, { supertonic2ModelStore }] = await Promise.all([
         import('./supertonic2Manifest'),
@@ -178,6 +182,33 @@ export async function loadTtsBootstrapDependencies(): Promise<TtsBootstrapRuntim
   };
 }
 
+async function downloadAndVerifyModel({
+  dispatchIfActive,
+  isActive,
+  manifest,
+  modelStore,
+}: {
+  dispatchIfActive(event: TtsBootstrapEvent): void;
+  isActive(): boolean;
+  manifest: Supertonic2ModelManifest;
+  modelStore: TtsBootstrapModelDependencies['modelStore'];
+}) {
+  await modelStore.downloadModel(manifest, (progress) =>
+    dispatchIfActive({ type: 'download-progress', progress }),
+  );
+  if (!isActive()) return null;
+
+  dispatchIfActive({ type: 'verifying' });
+  const checkedStatus = await modelStore.getStatus(manifest);
+  if (!isActive()) return null;
+
+  if (checkedStatus.state !== 'ready') {
+    throw new Error(checkedStatus.reason ?? 'model-verification-failed');
+  }
+
+  return checkedStatus.rootUri;
+}
+
 export async function runTtsBootstrap({
   dispatch,
   isActive,
@@ -190,10 +221,19 @@ export async function runTtsBootstrap({
   };
 
   try {
-    const { loadModelDependencies, nativeRuntime } = await loadDependencies();
+    const { loadModelDependencies, nativeRuntime, shouldBlockUnsupportedRuntime } =
+      await loadDependencies();
     if (!isActive()) return;
 
     if (!nativeRuntime.isSupported()) {
+      if (shouldBlockUnsupportedRuntime) {
+        dispatchIfActive({
+          type: 'failed',
+          errorMessage: 'supertonic2-runtime-unavailable',
+        });
+        return;
+      }
+
       dispatchIfActive({ type: 'ready' });
       return;
     }
@@ -207,19 +247,13 @@ export async function runTtsBootstrap({
     let rootUri = localStatus.rootUri ?? modelStore.getModelRootUri(manifest);
 
     if (localStatus.state !== 'ready') {
-      await modelStore.downloadModel(manifest, (progress) =>
-        dispatchIfActive({ type: 'download-progress', progress }),
-      );
-      if (!isActive()) return;
-
-      dispatchIfActive({ type: 'verifying' });
-      const checkedStatus = await modelStore.getStatus(manifest);
-      if (!isActive()) return;
-
-      if (checkedStatus.state !== 'ready') {
-        throw new Error(checkedStatus.reason ?? 'model-verification-failed');
-      }
-      rootUri = checkedStatus.rootUri;
+      rootUri = await downloadAndVerifyModel({
+        dispatchIfActive,
+        isActive,
+        manifest,
+        modelStore,
+      });
+      if (!rootUri) return;
     }
 
     if (!rootUri) {
@@ -231,9 +265,28 @@ export async function runTtsBootstrap({
     if (!isActive()) return;
 
     if (nativeStatus.state !== 'ready') {
-      throw new Error(nativeStatus.reason ?? 'native-model-verification-failed');
+      await modelStore.deleteModel(manifest);
+      if (!isActive()) return;
+
+      rootUri = await downloadAndVerifyModel({
+        dispatchIfActive,
+        isActive,
+        manifest,
+        modelStore,
+      });
+      if (!rootUri) return;
+
+      dispatchIfActive({ type: 'verifying' });
+      const repairedNativeStatus = await nativeRuntime.getModelStatus(rootUri, manifest);
+      if (!isActive()) return;
+
+      if (repairedNativeStatus.state !== 'ready') {
+        throw new Error(repairedNativeStatus.reason ?? 'native-model-verification-failed');
+      }
+      rootUri = repairedNativeStatus.rootUri ?? rootUri;
+    } else {
+      rootUri = nativeStatus.rootUri ?? rootUri;
     }
-    rootUri = nativeStatus.rootUri ?? rootUri;
 
     dispatchIfActive({ type: 'preparing' });
     await nativeRuntime.prepareTts(rootUri);

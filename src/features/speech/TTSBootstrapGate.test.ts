@@ -6,6 +6,9 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('@/src/components/speech/ModelDownloadScreen', () => ({
   ModelDownloadScreen: () => null,
 }));
+vi.mock('react-native', () => ({
+  Platform: { OS: 'ios' },
+}));
 
 import {
   getBootstrapMessage,
@@ -37,6 +40,7 @@ const completeProgress: Supertonic2DownloadProgress = {
 };
 
 function createBootstrapRunnerHarness({
+  deleteModel,
   downloadModel,
   getModelRootUri,
   nativeStatuses = [
@@ -45,10 +49,12 @@ function createBootstrapRunnerHarness({
   isSupported,
   getModelStatus,
   prepareTts,
+  shouldBlockUnsupportedRuntime,
   statuses = [
     { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
   ],
 }: {
+  deleteModel?: TtsBootstrapModelDependencies['modelStore']['deleteModel'];
   downloadModel?: TtsBootstrapModelDependencies['modelStore']['downloadModel'];
   getModelRootUri?: TtsBootstrapModelDependencies['modelStore']['getModelRootUri'];
   nativeStatuses?: Supertonic2ModelStatus[];
@@ -58,6 +64,7 @@ function createBootstrapRunnerHarness({
     manifest: Supertonic2ModelManifest,
   ) => Promise<Supertonic2ModelStatus>;
   prepareTts?: TtsBootstrapRuntimeDependencies['nativeRuntime']['prepareTts'];
+  shouldBlockUnsupportedRuntime?: TtsBootstrapRuntimeDependencies['shouldBlockUnsupportedRuntime'];
   statuses?: Supertonic2ModelStatus[];
 } = {}) {
   const dispatch = vi.fn();
@@ -66,6 +73,7 @@ function createBootstrapRunnerHarness({
   const nativeStatusQueue = [...nativeStatuses];
   const lastNativeStatus = nativeStatuses[nativeStatuses.length - 1];
   const modelStore = {
+    deleteModel: vi.fn(deleteModel ?? (async () => undefined)),
     downloadModel: vi.fn(downloadModel ?? (async () => undefined)),
     getModelRootUri: vi.fn(
       getModelRootUri ??
@@ -86,6 +94,7 @@ function createBootstrapRunnerHarness({
       ({
         loadModelDependencies,
         nativeRuntime,
+        shouldBlockUnsupportedRuntime,
       }) satisfies TtsBootstrapRuntimeDependencies,
   );
 
@@ -198,14 +207,39 @@ describe('TTS bootstrap gate state', () => {
       "import { ModelDownloadScreen } from '@/src/components/speech/ModelDownloadScreen';",
     );
     expect(source).not.toContain('setDownloadScreen');
-    expect(source).not.toContain('return null;');
+    expect(source).toContain('return (\n    <ModelDownloadScreen');
   });
 });
 
 describe('TTS bootstrap runner', () => {
-  it('bypasses model work when the native runtime is unsupported', async () => {
+  it('keeps the app blocked when a required native runtime is unsupported', async () => {
     const { dispatch, loadDependencies, loadModelDependencies, modelStore, nativeRuntime } =
-      createBootstrapRunnerHarness({ isSupported: vi.fn(() => false) });
+      createBootstrapRunnerHarness({
+        isSupported: vi.fn(() => false),
+        shouldBlockUnsupportedRuntime: true,
+      });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    expect(nativeRuntime.isSupported).toHaveBeenCalledOnce();
+    expect(loadModelDependencies).not.toHaveBeenCalled();
+    expect(modelStore.getStatus).not.toHaveBeenCalled();
+    expect(modelStore.downloadModel).not.toHaveBeenCalled();
+    expect(getDispatchedEvents(dispatch)).toEqual([
+      { type: 'failed', errorMessage: 'supertonic2-runtime-unavailable' },
+    ]);
+  });
+
+  it('bypasses model work when the native runtime is unsupported but optional', async () => {
+    const { dispatch, loadDependencies, loadModelDependencies, modelStore, nativeRuntime } =
+      createBootstrapRunnerHarness({
+        isSupported: vi.fn(() => false),
+        shouldBlockUnsupportedRuntime: false,
+      });
 
     await runTtsBootstrap({
       dispatch,
@@ -245,8 +279,8 @@ describe('TTS bootstrap runner', () => {
     ]);
   });
 
-  it('dispatches failed and does not prepare when native status is invalid', async () => {
-    const { dispatch, loadDependencies, nativeRuntime } = createBootstrapRunnerHarness({
+  it('dispatches failed after one repair attempt when native status remains invalid', async () => {
+    const { dispatch, loadDependencies, modelStore, nativeRuntime } = createBootstrapRunnerHarness({
       nativeStatuses: [
         {
           state: 'invalid',
@@ -267,10 +301,54 @@ describe('TTS bootstrap runner', () => {
       'file:///docs/supertonic2/rev',
       manifest,
     );
+    expect(modelStore.deleteModel).toHaveBeenCalledWith(manifest);
+    expect(modelStore.downloadModel).toHaveBeenCalledOnce();
     expect(nativeRuntime.prepareTts).not.toHaveBeenCalled();
     expect(getDispatchedEvents(dispatch)).toEqual([
       { type: 'verifying' },
+      { type: 'verifying' },
+      { type: 'verifying' },
       { type: 'failed', errorMessage: 'sha256-mismatch' },
+    ]);
+  });
+
+  it('purges and redownloads once when native checksum verification rejects a same-size local model', async () => {
+    const { dispatch, loadDependencies, modelStore, nativeRuntime } = createBootstrapRunnerHarness({
+      downloadModel: async (_manifestArg, onProgress) => {
+        onProgress(completeProgress);
+      },
+      nativeStatuses: [
+        {
+          state: 'invalid',
+          reason: 'sha256-mismatch',
+          revision: manifest.revision,
+          rootUri: 'file:///docs/supertonic2/rev',
+        },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+      ],
+      statuses: [
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+      ],
+    });
+
+    await runTtsBootstrap({
+      dispatch,
+      isActive: () => true,
+      loadDependencies,
+    });
+
+    expect(modelStore.deleteModel).toHaveBeenCalledWith(manifest);
+    expect(modelStore.downloadModel).toHaveBeenCalledOnce();
+    expect(nativeRuntime.getModelStatus).toHaveBeenCalledTimes(2);
+    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(getDispatchedEvents(dispatch)).toEqual([
+      { type: 'verifying' },
+      { type: 'download-progress', progress: completeProgress },
+      { type: 'verifying' },
+      { type: 'verifying' },
+      { type: 'preparing' },
+      { type: 'ready' },
     ]);
   });
 
