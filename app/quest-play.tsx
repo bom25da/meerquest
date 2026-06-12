@@ -39,6 +39,7 @@ import {
   type QuestStep,
 } from '@/src/features/quests/questProgress';
 import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
+import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';
 import { colors } from '@/src/theme/colors';
 
 const appleCountScreen = require('../assets/images/quests/apple-count/apple-count-screen.png');
@@ -125,7 +126,7 @@ export default function QuestPlayScreen() {
   });
   const isNextAvailable = continueAction !== 'blocked';
   const rewardAvailable = isQuestRewardAvailable(isCompleted);
-  const soundPressHandler = step.soundAsset ? handleSoundPress : undefined;
+  const soundPressHandler = handleSoundPress;
 
   useEffect(() => {
     setFeedbackMessage(initialFeedbackMessage);
@@ -184,14 +185,22 @@ export default function QuestPlayScreen() {
   };
 
   async function handleSoundPress() {
-    if (!step.soundAsset) {
+    if (step.soundAsset) {
+      const didPlaySound = await playOptionalQuestSound(step.soundAsset);
+
+      if (!didPlaySound) {
+        setFeedbackMessage('소리 기능은 앱을 새로 설치한 뒤 들을 수 있어요.');
+      }
       return;
     }
 
-    const didPlaySound = await playOptionalQuestSound(step.soundAsset);
+    const result = await supertonic2SpeechService.speakText(step.instructionText, {
+      lang: 'ko',
+      voice: 'F1',
+    });
 
-    if (!didPlaySound) {
-      setFeedbackMessage('소리 기능은 앱을 새로 설치한 뒤 들을 수 있어요.');
+    if (result.status === 'unavailable') {
+      setFeedbackMessage('미어루 목소리를 준비한 뒤 들을 수 있어요.');
     }
   }
 
