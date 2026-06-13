@@ -20,19 +20,19 @@ import {
   type TtsBootstrapEvent,
   type TtsBootstrapState,
 } from './TTSBootstrapGate';
-import type { Supertonic2ModelManifest } from './supertonic2Manifest';
+import type { Supertonic3ModelManifest } from './supertonic3Manifest';
 import type {
-  Supertonic2DownloadProgress,
-  Supertonic2ModelStatus,
-} from './supertonic2ModelStore';
+  Supertonic3DownloadProgress,
+  Supertonic3ModelStatus,
+} from './supertonic3ModelStore';
 
-const manifest: Supertonic2ModelManifest = {
-  modelId: 'Supertone/supertonic-2',
-  revision: '75e6727618a02f323c720cba9478152d4bc16ca4',
+const manifest: Supertonic3ModelManifest = {
+  modelId: 'Supertone/supertonic-3',
+  revision: '3cadd1ee6394adea1bd021217a0e650ede09a323',
   files: [],
 };
 
-const completeProgress: Supertonic2DownloadProgress = {
+const completeProgress: Supertonic3DownloadProgress = {
   downloadedBytes: 100,
   totalBytes: 100,
   fileIndex: 7,
@@ -44,28 +44,28 @@ function createBootstrapRunnerHarness({
   downloadModel,
   getModelRootUri,
   nativeStatuses = [
-    { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+    { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
   ],
   isSupported,
   getModelStatus,
   prepareTts,
   shouldBlockUnsupportedRuntime,
   statuses = [
-    { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+    { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
   ],
 }: {
   deleteModel?: TtsBootstrapModelDependencies['modelStore']['deleteModel'];
   downloadModel?: TtsBootstrapModelDependencies['modelStore']['downloadModel'];
   getModelRootUri?: TtsBootstrapModelDependencies['modelStore']['getModelRootUri'];
-  nativeStatuses?: Supertonic2ModelStatus[];
+  nativeStatuses?: Supertonic3ModelStatus[];
   isSupported?: TtsBootstrapRuntimeDependencies['nativeRuntime']['isSupported'];
   getModelStatus?: (
     rootUri: string,
-    manifest: Supertonic2ModelManifest,
-  ) => Promise<Supertonic2ModelStatus>;
+    manifest: Supertonic3ModelManifest,
+  ) => Promise<Supertonic3ModelStatus>;
   prepareTts?: TtsBootstrapRuntimeDependencies['nativeRuntime']['prepareTts'];
   shouldBlockUnsupportedRuntime?: TtsBootstrapRuntimeDependencies['shouldBlockUnsupportedRuntime'];
-  statuses?: Supertonic2ModelStatus[];
+  statuses?: Supertonic3ModelStatus[];
 } = {}) {
   const dispatch = vi.fn();
   const statusQueue = [...statuses];
@@ -77,7 +77,7 @@ function createBootstrapRunnerHarness({
     downloadModel: vi.fn(downloadModel ?? (async () => undefined)),
     getModelRootUri: vi.fn(
       getModelRootUri ??
-        ((_manifest: Supertonic2ModelManifest) => 'file:///docs/supertonic2/rev'),
+        ((_manifest: Supertonic3ModelManifest) => 'file:///docs/supertonic3/rev'),
     ),
     getStatus: vi.fn(async () => statusQueue.shift() ?? lastStatus),
   } satisfies TtsBootstrapModelDependencies['modelStore'];
@@ -230,7 +230,7 @@ describe('TTS bootstrap runner', () => {
     expect(modelStore.getStatus).not.toHaveBeenCalled();
     expect(modelStore.downloadModel).not.toHaveBeenCalled();
     expect(getDispatchedEvents(dispatch)).toEqual([
-      { type: 'failed', errorMessage: 'supertonic2-runtime-unavailable' },
+      { type: 'failed', errorMessage: 'supertonic3-runtime-unavailable' },
     ]);
   });
 
@@ -265,10 +265,10 @@ describe('TTS bootstrap runner', () => {
 
     expect(modelStore.downloadModel).not.toHaveBeenCalled();
     expect(nativeRuntime.getModelStatus).toHaveBeenCalledWith(
-      'file:///docs/supertonic2/rev',
+      'file:///docs/supertonic3/rev',
       manifest,
     );
-    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic3/rev');
     expect(nativeRuntime.getModelStatus.mock.invocationCallOrder[0]).toBeLessThan(
       nativeRuntime.prepareTts.mock.invocationCallOrder[0],
     );
@@ -286,7 +286,7 @@ describe('TTS bootstrap runner', () => {
           state: 'invalid',
           reason: 'sha256-mismatch',
           revision: manifest.revision,
-          rootUri: 'file:///docs/supertonic2/rev',
+          rootUri: 'file:///docs/supertonic3/rev',
         },
       ],
     });
@@ -298,7 +298,7 @@ describe('TTS bootstrap runner', () => {
     });
 
     expect(nativeRuntime.getModelStatus).toHaveBeenCalledWith(
-      'file:///docs/supertonic2/rev',
+      'file:///docs/supertonic3/rev',
       manifest,
     );
     expect(modelStore.deleteModel).toHaveBeenCalledWith(manifest);
@@ -322,13 +322,13 @@ describe('TTS bootstrap runner', () => {
           state: 'invalid',
           reason: 'sha256-mismatch',
           revision: manifest.revision,
-          rootUri: 'file:///docs/supertonic2/rev',
+          rootUri: 'file:///docs/supertonic3/rev',
         },
-        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
       ],
       statuses: [
-        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
-        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
       ],
     });
 
@@ -341,7 +341,7 @@ describe('TTS bootstrap runner', () => {
     expect(modelStore.deleteModel).toHaveBeenCalledWith(manifest);
     expect(modelStore.downloadModel).toHaveBeenCalledOnce();
     expect(nativeRuntime.getModelStatus).toHaveBeenCalledTimes(2);
-    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic3/rev');
     expect(getDispatchedEvents(dispatch)).toEqual([
       { type: 'verifying' },
       { type: 'download-progress', progress: completeProgress },
@@ -358,8 +358,8 @@ describe('TTS bootstrap runner', () => {
         onProgress(completeProgress);
       },
       statuses: [
-        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
-        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
+        { state: 'ready', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
       ],
     });
 
@@ -372,10 +372,10 @@ describe('TTS bootstrap runner', () => {
     expect(modelStore.downloadModel).toHaveBeenCalledOnce();
     expect(modelStore.getStatus).toHaveBeenCalledTimes(2);
     expect(nativeRuntime.getModelStatus).toHaveBeenCalledWith(
-      'file:///docs/supertonic2/rev',
+      'file:///docs/supertonic3/rev',
       manifest,
     );
-    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(nativeRuntime.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic3/rev');
     expect(modelStore.getStatus.mock.invocationCallOrder[1]).toBeLessThan(
       nativeRuntime.getModelStatus.mock.invocationCallOrder[0],
     );
@@ -397,12 +397,12 @@ describe('TTS bootstrap runner', () => {
         onProgress(completeProgress);
       },
       statuses: [
-        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
         {
           state: 'invalid',
           reason: 'size-mismatch',
           revision: manifest.revision,
-          rootUri: 'file:///docs/supertonic2/rev',
+          rootUri: 'file:///docs/supertonic3/rev',
         },
       ],
     });
@@ -439,7 +439,7 @@ describe('TTS bootstrap runner', () => {
         throw new Error('network');
       },
       statuses: [
-        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic2/rev' },
+        { state: 'missing', revision: manifest.revision, rootUri: 'file:///docs/supertonic3/rev' },
       ],
     });
 

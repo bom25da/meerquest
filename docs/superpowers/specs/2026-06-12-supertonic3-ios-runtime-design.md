@@ -1,11 +1,11 @@
-# Supertonic 2 iOS Runtime Design
+# Supertonic 3 iOS Runtime Design
 
 Date: 2026-06-12
 Status: Ready for user review
 
 ## Goal
 
-MeerQuest will support on-device text-to-speech on iOS using the Supertonic 2 ONNX model. The app will not bundle the model in the app binary. On first launch, the app will block entry, download the model, verify it, prepare the iOS runtime, and only then render the main app.
+MeerQuest will support on-device text-to-speech on iOS using the Supertonic 3 ONNX model. The app will not bundle the model in the app binary. On first launch, the app will block entry, download the model, verify it, prepare the iOS runtime, and only then render the main app.
 
 ## Scope
 
@@ -13,7 +13,7 @@ This first milestone is iOS-only. Android support is intentionally out of scope 
 
 The app must:
 
-- Download Supertonic 2 model files on first launch.
+- Download Supertonic 3 model files on first launch.
 - Store model files in persistent app storage.
 - Verify model version and file integrity before use.
 - Initialize the local iOS ONNX TTS runtime before entering the app.
@@ -31,11 +31,11 @@ The app does not need to:
 
 ## External Model
 
-The target model is `Supertone/supertonic-2` from Hugging Face.
+The target model is `Supertone/supertonic-3` from Hugging Face.
 
 Known fixed settings:
 
-- Model name: `supertonic-2`
+- Model name: `supertonic-3`
 - Revision: `75e6727618a02f323c720cba9478152d4bc16ca4`
 - Supported languages for this milestone: `ko`, `en`
 - Primary app language: `ko`

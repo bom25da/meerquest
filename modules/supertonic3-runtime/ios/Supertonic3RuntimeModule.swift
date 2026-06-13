@@ -1,10 +1,10 @@
 import ExpoModulesCore
 
-public class Supertonic2RuntimeModule: Module {
-  private let service = Supertonic2RuntimeService()
+public class Supertonic3RuntimeModule: Module {
+  private let service = Supertonic3RuntimeService()
 
   public func definition() -> ModuleDefinition {
-    Name("Supertonic2Runtime")
+    Name("Supertonic3Runtime")
 
     AsyncFunction("getModelStatus") { (rootUri: String, manifest: [String: Any]) -> [String: Any] in
       return try service.status(rootUri: rootUri, manifest: manifest)
@@ -20,7 +20,7 @@ public class Supertonic2RuntimeModule: Module {
   }
 }
 
-struct Supertonic2RuntimeError: Error, CustomStringConvertible {
+struct Supertonic3RuntimeError: Error, CustomStringConvertible {
   let description: String
 
   init(_ description: String) {

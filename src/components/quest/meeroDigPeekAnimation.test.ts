@@ -947,9 +947,9 @@ describe('Meero dig-peek animation', () => {
     const soundHandlerConnections = screenSource.match(/onSound=\{soundPressHandler\}/g) ?? [];
 
     expect(soundHandlerConnections).toHaveLength(12);
-    expect(screenSource).toContain('supertonic2SpeechService.speakText(step.instructionText');
-    expect(screenSource).toContain("lang: 'ko'");
-    expect(screenSource).toContain("voice: 'F1'");
+    expect(screenSource).toContain('supertonic3SpeechService.speakText(step.instructionText');
+    expect(screenSource).toContain('meerQuestSpeechDefaults');
+    expect(screenSource).toContain('...meerQuestSpeechDefaults');
     expect(screenSource).toContain('미어루 목소리를 준비한 뒤 들을 수 있어요.');
   });
 });

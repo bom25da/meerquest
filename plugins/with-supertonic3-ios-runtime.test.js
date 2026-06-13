@@ -2,20 +2,20 @@ import fs from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import supertonic2IosRuntime from './with-supertonic2-ios-runtime.js';
+import supertonic3IosRuntime from './with-supertonic3-ios-runtime.js';
 
-describe('supertonic2 iOS runtime config', () => {
+describe('supertonic3 iOS runtime config', () => {
   it('registers the config plugin in app.json', () => {
     const appConfig = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-    expect(appConfig.expo.plugins).toContain('./plugins/with-supertonic2-ios-runtime.js');
+    expect(appConfig.expo.plugins).toContain('./plugins/with-supertonic3-ios-runtime.js');
   });
 
   it('exports the SPM constants used by the plugin', () => {
-    expect(supertonic2IosRuntime.ONNX_RUNTIME_SPM_URL).toBe(
+    expect(supertonic3IosRuntime.ONNX_RUNTIME_SPM_URL).toBe(
       'https://github.com/microsoft/onnxruntime-swift-package-manager.git',
     );
-    expect(supertonic2IosRuntime.ONNX_RUNTIME_PRODUCT).toBe('onnxruntime');
-    expect(supertonic2IosRuntime.ONNX_RUNTIME_MIN_VERSION).toBe('1.16.0');
+    expect(supertonic3IosRuntime.ONNX_RUNTIME_PRODUCT).toBe('onnxruntime');
+    expect(supertonic3IosRuntime.ONNX_RUNTIME_MIN_VERSION).toBe('1.16.0');
   });
 
   it('keeps package insertion idempotent', () => {
@@ -33,8 +33,8 @@ describe('supertonic2 iOS runtime config', () => {
       ');',
     ].join('\n');
 
-    const once = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
-    const twice = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(once);
+    const once = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
+    const twice = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(once);
 
     expect((twice.match(/onnxruntime-swift-package-manager/g) ?? []).length).toBe(1);
     expect((twice.match(/isa = XCSwiftPackageProductDependency;/g) ?? []).length).toBe(1);
@@ -62,7 +62,7 @@ describe('supertonic2 iOS runtime config', () => {
       ');',
     ].join('\n');
 
-    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
+    const updated = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
 
     expect(updated).toContain('isa = XCRemoteSwiftPackageReference;');
     expect(updated).toContain(
@@ -98,7 +98,7 @@ describe('supertonic2 iOS runtime config', () => {
       '/* End XCBuildConfiguration section */',
     ].join('\n');
 
-    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
+    const updated = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
       ensureSwiftPackageSections: true,
     });
 
@@ -111,7 +111,7 @@ describe('supertonic2 iOS runtime config', () => {
   });
 
   it('uses the mod request project name for default prebuild attachment', () => {
-    const options = supertonic2IosRuntime.getOnnxRuntimeSwiftPackagePatchOptions({
+    const options = supertonic3IosRuntime.getOnnxRuntimeSwiftPackagePatchOptions({
       projectName: 'MeerQuest',
     });
 
@@ -133,11 +133,11 @@ describe('supertonic2 iOS runtime config', () => {
       'end',
     ].join('\n');
 
-    const once = supertonic2IosRuntime.addOnnxRuntimeObjcPodLinkageExclusion(
+    const once = supertonic3IosRuntime.addOnnxRuntimeObjcPodLinkageExclusion(
       podfile,
       'MeerQuest',
     );
-    const twice = supertonic2IosRuntime.addOnnxRuntimeObjcPodLinkageExclusion(
+    const twice = supertonic3IosRuntime.addOnnxRuntimeObjcPodLinkageExclusion(
       once,
       'MeerQuest',
     );
@@ -145,30 +145,30 @@ describe('supertonic2 iOS runtime config', () => {
     expect(twice).toContain("Target Support Files', 'Pods-MeerQuest'");
     expect(twice).toContain('Pods-MeerQuest.*.xcconfig');
     expect(twice).toContain('gsub(\' -l"onnxruntime-objc"\', \'\')');
-    expect((twice.match(/supertonic2-onnxruntime-objc-linkage/g) ?? []).length).toBe(2);
+    expect((twice.match(/supertonic3-onnxruntime-objc-linkage/g) ?? []).length).toBe(2);
     expect(twice.indexOf('react_native_post_install')).toBeLessThan(
-      twice.indexOf('supertonic2-onnxruntime-objc-linkage'),
+      twice.indexOf('supertonic3-onnxruntime-objc-linkage'),
     );
   });
 
   it('can attach the product dependency to a named native target', () => {
     const pbxproj = [
       '/* Begin PBXNativeTarget section */',
-      '    8D101DC8E085BC33A59C07215B56B898 /* Supertonic2Runtime */ = {',
+      '    8D101DC8E085BC33A59C07215B56B898 /* Supertonic3Runtime */ = {',
       '      isa = PBXNativeTarget;',
-      '      name = Supertonic2Runtime;',
-      '      productName = Supertonic2Runtime;',
+      '      name = Supertonic3Runtime;',
+      '      productName = Supertonic3Runtime;',
       '    };',
       '/* End PBXNativeTarget section */',
       'packageReferences = (',
       ');',
     ].join('\n');
 
-    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
-      targetName: 'Supertonic2Runtime',
+    const updated = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
+      targetName: 'Supertonic3Runtime',
     });
 
-    expect(updated).toContain('name = Supertonic2Runtime;');
+    expect(updated).toContain('name = Supertonic3Runtime;');
     expect(updated).toContain('packageProductDependencies = (');
     expect(updated).toContain('5A2D0F760F974E4E94D00002 /* onnxruntime */');
   });
@@ -186,7 +186,7 @@ describe('supertonic2 iOS runtime config', () => {
       ');',
     ].join('\n');
 
-    const updated = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
+    const updated = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj, {
       targetName: null,
     });
 
@@ -196,15 +196,15 @@ describe('supertonic2 iOS runtime config', () => {
 
   it('defines the native iOS module autolinking contract', () => {
     const moduleConfig = JSON.parse(
-      fs.readFileSync('modules/supertonic2-runtime/expo-module.config.json', 'utf8'),
+      fs.readFileSync('modules/supertonic3-runtime/expo-module.config.json', 'utf8'),
     );
-    const podspecPath = 'modules/supertonic2-runtime/Supertonic2Runtime.podspec';
+    const podspecPath = 'modules/supertonic3-runtime/Supertonic3Runtime.podspec';
 
-    expect(moduleConfig.ios.modules).toContain('Supertonic2RuntimeModule');
+    expect(moduleConfig.ios.modules).toContain('Supertonic3RuntimeModule');
     expect(fs.existsSync(podspecPath)).toBe(true);
 
     const podspec = fs.readFileSync(podspecPath, 'utf8');
-    expect(podspec).toContain("s.name           = 'Supertonic2Runtime'");
+    expect(podspec).toContain("s.name           = 'Supertonic3Runtime'");
     expect(podspec).toContain("s.version        = package['version']");
     expect(podspec).toContain("s.source         = { :git => 'https://github.com/bom25da/meerquest.git' }");
     expect(podspec).toContain(":ios => '16.4'");
@@ -212,7 +212,7 @@ describe('supertonic2 iOS runtime config', () => {
     expect(podspec).toContain("s.dependency 'ExpoModulesCore'");
     expect(podspec).toContain("s.dependency 'onnxruntime-objc', '1.16.0'");
     expect(podspec).toContain('s.source_files = "ios/**/*.{swift,h,m,mm}"');
-    expect(moduleConfig.ios.podspecPath).toBe('./Supertonic2Runtime.podspec');
-    expect(moduleConfig.ios.swiftModuleName).toBe('Supertonic2Runtime');
+    expect(moduleConfig.ios.podspecPath).toBe('./Supertonic3Runtime.podspec');
+    expect(moduleConfig.ios.swiftModuleName).toBe('Supertonic3Runtime');
   });
 });

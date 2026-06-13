@@ -20,7 +20,7 @@ describe('home screen content', () => {
   it('uses the mountain adventure image for the full-width quest map banner', () => {
     expect(homeHero).toEqual({
       image: 'home-adventure-background-clean',
-      alt: '미어루가 산길 앞에서 손을 흔드는 퀘스트맵 배너',
+      alt: '미어로가 산길 앞에서 손을 흔드는 퀘스트맵 배너',
       aspectRatio: 1857 / 847,
       resizeMode: 'cover',
       frameBorderWidth: 0,
@@ -66,22 +66,29 @@ describe('home screen content', () => {
   it('uses a smaller generated speech bubble and bold hero speech text', () => {
     const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
 
-    expect(homeScreenSource).toContain("width: '17.2%'");
+    expect(homeScreenSource).toMatch(/width:\s*['"]17\.2%['"]/);
     expect(homeScreenSource).toContain('aspectRatio: 512 / 353');
-    expect(homeScreenSource).toContain("fontWeight: '900'");
+    expect(homeScreenSource).toMatch(/fontWeight:\s*['"]900['"]/);
   });
 
-  it('speaks the home entry greeting through Supertonic 2 when the home screen mounts', () => {
+  it('speaks the home entry greeting through Supertonic 3 when the home screen mounts', () => {
     const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
 
-    expect(homeEntrySpeechText).toBe('오늘 같이 탐험해보자');
-    expect(homeScreenSource).toContain(
-      "import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';",
-    );
+    expect(homeEntrySpeechText).toBe('좋아! 오늘도 같이 탐험하자~');
+    expect(homeScreenSource).toContain('supertonic3SpeechService');
+    expect(homeScreenSource).toContain('meerQuestBrightSpeechDefaults');
     expect(homeScreenSource).toContain('useFocusEffect');
-    expect(homeScreenSource).toContain('supertonic2SpeechService.speakText(homeEntrySpeechText');
-    expect(homeScreenSource).toContain("lang: 'ko'");
-    expect(homeScreenSource).toContain("voice: 'F1'");
+    expect(homeScreenSource).toContain('supertonic3SpeechService.speakText(homeEntrySpeechText');
+    expect(homeScreenSource).toContain('...meerQuestBrightSpeechDefaults');
+  });
+
+  it('keeps Supertonic 3 voice audition controls out of the home screen', () => {
+    const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
+
+    expect(homeScreenSource).not.toContain('VoiceAuditionButtons');
+    expect(homeScreenSource).not.toContain('supertonic3SupportedVoices');
+    expect(homeScreenSource).not.toContain('voiceAuditionSpeechText');
+    expect(homeScreenSource).not.toContain('목소리 ${voice}로 오늘도 같이 탐험하자 듣기');
   });
 
   it('defines the landscape-first home layout bounds', () => {

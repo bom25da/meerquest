@@ -39,7 +39,8 @@ import {
   type QuestStep,
 } from '@/src/features/quests/questProgress';
 import { useQuestProgress } from '@/src/features/quests/useQuestProgress';
-import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';
+import { supertonic3SpeechService } from '@/src/features/speech/supertonic3Speech';
+import { meerQuestSpeechDefaults } from '@/src/features/speech/supertonic3VoiceProfile';
 import { colors } from '@/src/theme/colors';
 
 const appleCountScreen = require('../assets/images/quests/apple-count/apple-count-screen.png');
@@ -194,9 +195,8 @@ export default function QuestPlayScreen() {
       return;
     }
 
-    const result = await supertonic2SpeechService.speakText(step.instructionText, {
-      lang: 'ko',
-      voice: 'F1',
+    const result = await supertonic3SpeechService.speakText(step.instructionText, {
+      ...meerQuestSpeechDefaults,
     });
 
     if (result.status === 'unavailable') {

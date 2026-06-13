@@ -9,7 +9,7 @@ const ONNX_RUNTIME_PACKAGE_REFERENCE_ID = '5A2D0F760F974E4E94D00001';
 const ONNX_RUNTIME_PRODUCT_DEPENDENCY_ID = '5A2D0F760F974E4E94D00002';
 const PACKAGE_REFERENCE_COMMENT = 'onnxruntime package';
 const PRODUCT_DEPENDENCY_COMMENT = ONNX_RUNTIME_PRODUCT;
-const ONNX_RUNTIME_OBJC_LINKAGE_MARKER = 'supertonic2-onnxruntime-objc-linkage';
+const ONNX_RUNTIME_OBJC_LINKAGE_MARKER = 'supertonic3-onnxruntime-objc-linkage';
 
 function addOnnxRuntimeSwiftPackage(pbxproj, options = {}) {
   const ensureSwiftPackageSections = options.ensureSwiftPackageSections === true;
@@ -269,7 +269,7 @@ function getOnnxRuntimeSwiftPackagePatchOptions(modRequest = {}) {
   };
 }
 
-function withSupertonic2IosRuntime(config) {
+function withSupertonic3IosRuntime(config) {
   return withDangerousMod(config, [
     'ios',
     async (modConfig) => {
@@ -301,7 +301,7 @@ function withSupertonic2IosRuntime(config) {
   ]);
 }
 
-module.exports = withSupertonic2IosRuntime;
+module.exports = withSupertonic3IosRuntime;
 module.exports.addOnnxRuntimeSwiftPackage = addOnnxRuntimeSwiftPackage;
 module.exports.addOnnxRuntimeObjcPodLinkageExclusion = addOnnxRuntimeObjcPodLinkageExclusion;
 module.exports.getOnnxRuntimeSwiftPackagePatchOptions = getOnnxRuntimeSwiftPackagePatchOptions;

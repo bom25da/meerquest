@@ -1,10 +1,10 @@
-# Supertonic 2 iOS Runtime Implementation Plan
+# Supertonic 3 iOS Runtime Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add iOS-first on-device Supertonic 2 TTS with first-launch model download that blocks app entry until the model is downloaded, verified, and prepared.
+**Goal:** Add iOS-first on-device Supertonic 3 TTS with first-launch model download that blocks app entry until the model is downloaded, verified, and prepared.
 
-**Architecture:** A React bootstrap gate blocks the Expo Router stack until a model store verifies the downloaded Supertonic 2 files and an iOS Expo module prepares the ONNX runtime. JavaScript owns manifest-driven download progress with `expo-file-system`; the native module owns checksum/status, ONNX session loading, synthesis, and WAV output. Quest screens use a speech service so existing UI does not call native code directly.
+**Architecture:** A React bootstrap gate blocks the Expo Router stack until a model store verifies the downloaded Supertonic 3 files and an iOS Expo module prepares the ONNX runtime. JavaScript owns manifest-driven download progress with `expo-file-system`; the native module owns checksum/status, ONNX session loading, synthesis, and WAV output. Quest screens use a speech service so existing UI does not call native code directly.
 
 **Tech Stack:** Expo 56, React Native 0.85, TypeScript, Vitest, Expo Modules API, Swift, ONNX Runtime Swift Package Manager, `expo-file-system`, `expo-audio`.
 
@@ -12,65 +12,65 @@
 
 ## File Structure
 
-- `tools/build_supertonic2_manifest.py`: Generates a versioned manifest from Hugging Face file metadata and local downloads.
-- `src/features/speech/supertonic2ModelManifest.json`: Runtime model manifest consumed by JS and passed to native checks.
-- `src/features/speech/supertonic2Manifest.ts`: Typed manifest exports and URL helpers.
-- `src/features/speech/supertonic2Manifest.test.ts`: Manifest shape and URL tests.
-- `src/features/speech/supertonic2ModelStore.ts`: JS download orchestration, local path planning, status mapping.
-- `src/features/speech/supertonic2ModelStore.test.ts`: Unit tests using an injected file-system port.
-- `src/features/speech/supertonic2Native.ts`: TypeScript wrapper around the iOS Expo module with platform gating.
-- `src/features/speech/supertonic2Native.test.ts`: Native wrapper tests with injected module mocks.
-- `src/features/speech/supertonic2Speech.ts`: Quest-facing `speakQuestText()` queue and playback handoff.
-- `src/features/speech/supertonic2Speech.test.ts`: Queue, fallback, and generated URI tests.
+- `tools/build_supertonic3_manifest.py`: Generates a versioned manifest from Hugging Face file metadata and local downloads.
+- `src/features/speech/supertonic3ModelManifest.json`: Runtime model manifest consumed by JS and passed to native checks.
+- `src/features/speech/supertonic3Manifest.ts`: Typed manifest exports and URL helpers.
+- `src/features/speech/supertonic3Manifest.test.ts`: Manifest shape and URL tests.
+- `src/features/speech/supertonic3ModelStore.ts`: JS download orchestration, local path planning, status mapping.
+- `src/features/speech/supertonic3ModelStore.test.ts`: Unit tests using an injected file-system port.
+- `src/features/speech/supertonic3Native.ts`: TypeScript wrapper around the iOS Expo module with platform gating.
+- `src/features/speech/supertonic3Native.test.ts`: Native wrapper tests with injected module mocks.
+- `src/features/speech/supertonic3Speech.ts`: Quest-facing `speakQuestText()` queue and playback handoff.
+- `src/features/speech/supertonic3Speech.test.ts`: Queue, fallback, and generated URI tests.
 - `src/components/speech/ModelDownloadScreen.tsx`: Blocking child-friendly model download UI.
 - `src/features/speech/TTSBootstrapGate.tsx`: Root gate that downloads, verifies, prepares, and renders children only when ready.
 - `src/features/speech/TTSBootstrapGate.test.ts`: Pure state-machine tests for bootstrap transitions.
 - `app/_layout.tsx`: Wraps `RootLayoutNav` in the gate after fonts load.
 - `app/quest-play.tsx`: Uses runtime TTS from the existing speaker button for instruction text when no static sound is present.
-- `modules/supertonic2-runtime/package.json`: Local Expo module package.
-- `modules/supertonic2-runtime/expo-module.config.json`: Expo autolinking metadata.
-- `modules/supertonic2-runtime/src/index.ts`: JS export for the native module.
-- `modules/supertonic2-runtime/ios/Supertonic2RuntimeModule.swift`: Expo module API.
-- `modules/supertonic2-runtime/ios/Supertonic2RuntimeSupport.swift`: Status, checksum, file location, and synthesis service glue.
-- `modules/supertonic2-runtime/ios/Supertonic2Helper.swift`: Adapted Supertonic Swift ONNX helper.
-- `plugins/with-supertonic2-ios-runtime.js`: Config plugin that adds the ONNX Runtime SPM dependency to the iOS project.
-- `plugins/with-supertonic2-ios-runtime.test.js`: Static tests for plugin idempotence and app config wiring.
+- `modules/supertonic3-runtime/package.json`: Local Expo module package.
+- `modules/supertonic3-runtime/expo-module.config.json`: Expo autolinking metadata.
+- `modules/supertonic3-runtime/src/index.ts`: JS export for the native module.
+- `modules/supertonic3-runtime/ios/Supertonic3RuntimeModule.swift`: Expo module API.
+- `modules/supertonic3-runtime/ios/Supertonic3RuntimeSupport.swift`: Status, checksum, file location, and synthesis service glue.
+- `modules/supertonic3-runtime/ios/Supertonic3Helper.swift`: Adapted Supertonic Swift ONNX helper.
+- `plugins/with-supertonic3-ios-runtime.js`: Config plugin that adds the ONNX Runtime SPM dependency to the iOS project.
+- `plugins/with-supertonic3-ios-runtime.test.js`: Static tests for plugin idempotence and app config wiring.
 - `app.json`: Registers the local plugin.
 - `package.json`: Adds direct dependencies and scripts for manifest generation and iOS verification.
 
 ## Task 1: Manifest Generator And Typed Manifest
 
 **Files:**
-- Create: `tools/build_supertonic2_manifest.py`
-- Create: `src/features/speech/supertonic2ModelManifest.json`
-- Create: `src/features/speech/supertonic2Manifest.ts`
-- Create: `src/features/speech/supertonic2Manifest.test.ts`
+- Create: `tools/build_supertonic3_manifest.py`
+- Create: `src/features/speech/supertonic3ModelManifest.json`
+- Create: `src/features/speech/supertonic3Manifest.ts`
+- Create: `src/features/speech/supertonic3Manifest.test.ts`
 - Modify: `package.json`
 
 - [ ] **Step 1: Write the failing manifest tests**
 
-Create `src/features/speech/supertonic2Manifest.test.ts`:
+Create `src/features/speech/supertonic3Manifest.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
 
-import manifestJson from './supertonic2ModelManifest.json';
+import manifestJson from './supertonic3ModelManifest.json';
 import {
-  getSupertonic2DownloadTotalBytes,
-  getSupertonic2RequiredFiles,
-  supertonic2ModelManifest,
-} from './supertonic2Manifest';
+  getSupertonic3DownloadTotalBytes,
+  getSupertonic3RequiredFiles,
+  supertonic3ModelManifest,
+} from './supertonic3Manifest';
 
-describe('supertonic2 model manifest', () => {
-  it('pins the approved Supertonic 2 revision', () => {
-    expect(supertonic2ModelManifest.modelId).toBe('Supertone/supertonic-2');
-    expect(supertonic2ModelManifest.revision).toBe(
+describe('supertonic3 model manifest', () => {
+  it('pins the approved Supertonic 3 revision', () => {
+    expect(supertonic3ModelManifest.modelId).toBe('Supertone/supertonic-3');
+    expect(supertonic3ModelManifest.revision).toBe(
       '75e6727618a02f323c720cba9478152d4bc16ca4',
     );
   });
 
   it('contains the minimum runtime files with sha256 checksums', () => {
-    const files = getSupertonic2RequiredFiles();
+    const files = getSupertonic3RequiredFiles();
     const paths = files.map((file) => file.path).sort();
 
     expect(paths).toEqual([
@@ -87,16 +87,16 @@ describe('supertonic2 model manifest', () => {
   });
 
   it('uses stable Hugging Face resolve URLs for development downloads', () => {
-    for (const file of supertonic2ModelManifest.files) {
+    for (const file of supertonic3ModelManifest.files) {
       expect(file.url).toBe(
-        `https://huggingface.co/${supertonic2ModelManifest.modelId}/resolve/${supertonic2ModelManifest.revision}/${file.path}`,
+        `https://huggingface.co/${supertonic3ModelManifest.modelId}/resolve/${supertonic3ModelManifest.revision}/${file.path}`,
       );
     }
   });
 
   it('reports total download bytes', () => {
     const expected = manifestJson.files.reduce((sum, file) => sum + file.bytes, 0);
-    expect(getSupertonic2DownloadTotalBytes()).toBe(expected);
+    expect(getSupertonic3DownloadTotalBytes()).toBe(expected);
   });
 });
 ```
@@ -106,14 +106,14 @@ describe('supertonic2 model manifest', () => {
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2Manifest.test.ts
+rtk npm test -- src/features/speech/supertonic3Manifest.test.ts
 ```
 
-Expected: FAIL because `supertonic2Manifest.ts` and the JSON manifest do not exist.
+Expected: FAIL because `supertonic3Manifest.ts` and the JSON manifest do not exist.
 
 - [ ] **Step 3: Add the manifest generator**
 
-Create `tools/build_supertonic2_manifest.py`:
+Create `tools/build_supertonic3_manifest.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -125,7 +125,7 @@ import json
 from pathlib import Path
 from urllib.request import urlopen
 
-MODEL_ID = "Supertone/supertonic-2"
+MODEL_ID = "Supertone/supertonic-3"
 REVISION = "75e6727618a02f323c720cba9478152d4bc16ca4"
 REQUIRED_FILES = [
     "onnx/tts.json",
@@ -148,7 +148,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output",
-        default="src/features/speech/supertonic2ModelManifest.json",
+        default="src/features/speech/supertonic3ModelManifest.json",
     )
     args = parser.parse_args()
     files = []
@@ -185,39 +185,39 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-rtk python3 tools/build_supertonic2_manifest.py
+rtk python3 tools/build_supertonic3_manifest.py
 ```
 
-Expected: `src/features/speech/supertonic2ModelManifest.json` is created with seven files, positive byte counts, and SHA-256 strings.
+Expected: `src/features/speech/supertonic3ModelManifest.json` is created with seven files, positive byte counts, and SHA-256 strings.
 
 - [ ] **Step 5: Add typed manifest helpers**
 
-Create `src/features/speech/supertonic2Manifest.ts`:
+Create `src/features/speech/supertonic3Manifest.ts`:
 
 ```ts
-import manifestJson from './supertonic2ModelManifest.json';
+import manifestJson from './supertonic3ModelManifest.json';
 
-export interface Supertonic2ManifestFile {
+export interface Supertonic3ManifestFile {
   path: string;
   bytes: number;
   sha256: string;
   url: string;
 }
 
-export interface Supertonic2ModelManifest {
-  modelId: 'Supertone/supertonic-2';
+export interface Supertonic3ModelManifest {
+  modelId: 'Supertone/supertonic-3';
   revision: '75e6727618a02f323c720cba9478152d4bc16ca4';
-  files: Supertonic2ManifestFile[];
+  files: Supertonic3ManifestFile[];
 }
 
-export const supertonic2ModelManifest = manifestJson as Supertonic2ModelManifest;
+export const supertonic3ModelManifest = manifestJson as Supertonic3ModelManifest;
 
-export function getSupertonic2RequiredFiles() {
-  return [...supertonic2ModelManifest.files];
+export function getSupertonic3RequiredFiles() {
+  return [...supertonic3ModelManifest.files];
 }
 
-export function getSupertonic2DownloadTotalBytes() {
-  return supertonic2ModelManifest.files.reduce((sum, file) => sum + file.bytes, 0);
+export function getSupertonic3DownloadTotalBytes() {
+  return supertonic3ModelManifest.files.reduce((sum, file) => sum + file.bytes, 0);
 }
 ```
 
@@ -226,7 +226,7 @@ export function getSupertonic2DownloadTotalBytes() {
 Modify `package.json` scripts:
 
 ```json
-"model:supertonic2-manifest": "python3 tools/build_supertonic2_manifest.py"
+"model:supertonic3-manifest": "python3 tools/build_supertonic3_manifest.py"
 ```
 
 - [ ] **Step 7: Run the manifest tests to verify they pass**
@@ -234,7 +234,7 @@ Modify `package.json` scripts:
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2Manifest.test.ts
+rtk npm test -- src/features/speech/supertonic3Manifest.test.ts
 ```
 
 Expected: PASS.
@@ -242,15 +242,15 @@ Expected: PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-rtk git add tools/build_supertonic2_manifest.py src/features/speech/supertonic2ModelManifest.json src/features/speech/supertonic2Manifest.ts src/features/speech/supertonic2Manifest.test.ts package.json package-lock.json
-rtk git commit -m "feat: add supertonic2 model manifest"
+rtk git add tools/build_supertonic3_manifest.py src/features/speech/supertonic3ModelManifest.json src/features/speech/supertonic3Manifest.ts src/features/speech/supertonic3Manifest.test.ts package.json package-lock.json
+rtk git commit -m "feat: add supertonic3 model manifest"
 ```
 
 ## Task 2: JavaScript Model Store And Downloader
 
 **Files:**
-- Create: `src/features/speech/supertonic2ModelStore.ts`
-- Create: `src/features/speech/supertonic2ModelStore.test.ts`
+- Create: `src/features/speech/supertonic3ModelStore.ts`
+- Create: `src/features/speech/supertonic3ModelStore.test.ts`
 - Modify: `package.json`
 
 - [ ] **Step 1: Add direct dependency on `expo-file-system`**
@@ -265,19 +265,19 @@ Expected: `package.json` includes `expo-file-system` and `package-lock.json` is 
 
 - [ ] **Step 2: Write failing model store tests**
 
-Create `src/features/speech/supertonic2ModelStore.test.ts`:
+Create `src/features/speech/supertonic3ModelStore.test.ts`:
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Supertonic2ModelManifest } from './supertonic2Manifest';
+import type { Supertonic3ModelManifest } from './supertonic3Manifest';
 import {
-  createSupertonic2ModelStore,
+  createSupertonic3ModelStore,
   getDownloadedRelativePath,
-} from './supertonic2ModelStore';
+} from './supertonic3ModelStore';
 
-const manifest: Supertonic2ModelManifest = {
-  modelId: 'Supertone/supertonic-2',
+const manifest: Supertonic3ModelManifest = {
+  modelId: 'Supertone/supertonic-3',
   revision: '75e6727618a02f323c720cba9478152d4bc16ca4',
   files: [
     {
@@ -295,15 +295,15 @@ const manifest: Supertonic2ModelManifest = {
   ],
 };
 
-describe('supertonic2 model store', () => {
+describe('supertonic3 model store', () => {
   it('maps manifest paths into the revisioned local model directory', () => {
     expect(
       getDownloadedRelativePath(manifest, { path: 'onnx/tts.json', bytes: 1, sha256: 'c'.repeat(64), url: 'x' }),
-    ).toBe('supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json');
+    ).toBe('supertonic3/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json');
   });
 
   it('reports missing when the document directory is unavailable', async () => {
-    const store = createSupertonic2ModelStore({
+    const store = createSupertonic3ModelStore({
       documentDirectory: null,
       getInfoAsync: vi.fn(),
       makeDirectoryAsync: vi.fn(),
@@ -319,7 +319,7 @@ describe('supertonic2 model store', () => {
   it('downloads files in manifest order and reports aggregate progress', async () => {
     const progress: number[] = [];
     const downloaded: string[] = [];
-    const store = createSupertonic2ModelStore({
+    const store = createSupertonic3ModelStore({
       documentDirectory: 'file:///docs/',
       getInfoAsync: vi.fn(async () => ({ exists: false })),
       makeDirectoryAsync: vi.fn(async () => undefined),
@@ -333,8 +333,8 @@ describe('supertonic2 model store', () => {
     await store.downloadModel(manifest, (event) => progress.push(event.downloadedBytes));
 
     expect(downloaded).toEqual([
-      'https://example.test/onnx/tts.json -> file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json',
-      'https://example.test/voice_styles/F1.json -> file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/voice_styles/F1.json',
+      'https://example.test/onnx/tts.json -> file:///docs/supertonic3/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json',
+      'https://example.test/voice_styles/F1.json -> file:///docs/supertonic3/75e6727618a02f323c720cba9478152d4bc16ca4/voice_styles/F1.json',
     ]);
     expect(progress).toEqual([5, 10, 15, 30]);
   });
@@ -346,25 +346,25 @@ describe('supertonic2 model store', () => {
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2ModelStore.test.ts
+rtk npm test -- src/features/speech/supertonic3ModelStore.test.ts
 ```
 
-Expected: FAIL because `supertonic2ModelStore.ts` does not exist.
+Expected: FAIL because `supertonic3ModelStore.ts` does not exist.
 
 - [ ] **Step 4: Implement model store**
 
-Create `src/features/speech/supertonic2ModelStore.ts`:
+Create `src/features/speech/supertonic3ModelStore.ts`:
 
 ```ts
 import * as FileSystem from 'expo-file-system/legacy';
 
-import type { Supertonic2ManifestFile, Supertonic2ModelManifest } from './supertonic2Manifest';
+import type { Supertonic3ManifestFile, Supertonic3ModelManifest } from './supertonic3Manifest';
 
-export type Supertonic2ModelStatus =
+export type Supertonic3ModelStatus =
   | { state: 'ready'; revision: string; rootUri: string }
   | { state: 'missing' | 'invalid'; reason?: string; revision?: string; rootUri?: string };
 
-export interface Supertonic2DownloadProgress {
+export interface Supertonic3DownloadProgress {
   downloadedBytes: number;
   totalBytes: number;
   fileIndex: number;
@@ -381,7 +381,7 @@ interface DownloadProgressEvent {
   totalBytesExpectedToWrite: number;
 }
 
-export interface Supertonic2FileSystemPort {
+export interface Supertonic3FileSystemPort {
   documentDirectory: string | null;
   getInfoAsync(uri: string): Promise<FileInfo>;
   makeDirectoryAsync(uri: string, options?: { intermediates?: boolean }): Promise<void>;
@@ -392,7 +392,7 @@ export interface Supertonic2FileSystemPort {
   ): Promise<void>;
 }
 
-const defaultFileSystemPort: Supertonic2FileSystemPort = {
+const defaultFileSystemPort: Supertonic3FileSystemPort = {
   documentDirectory: FileSystem.documentDirectory,
   getInfoAsync: FileSystem.getInfoAsync,
   makeDirectoryAsync: FileSystem.makeDirectoryAsync,
@@ -404,26 +404,26 @@ const defaultFileSystemPort: Supertonic2FileSystemPort = {
 };
 
 export function getDownloadedRelativePath(
-  manifest: Supertonic2ModelManifest,
-  file: Supertonic2ManifestFile,
+  manifest: Supertonic3ModelManifest,
+  file: Supertonic3ManifestFile,
 ) {
-  return `supertonic2/${manifest.revision}/${file.path}`;
+  return `supertonic3/${manifest.revision}/${file.path}`;
 }
 
 function joinUri(base: string, relativePath: string) {
   return `${base.replace(/\/$/, '')}/${relativePath}`;
 }
 
-function getModelRootUri(port: Supertonic2FileSystemPort, manifest: Supertonic2ModelManifest) {
+function getModelRootUri(port: Supertonic3FileSystemPort, manifest: Supertonic3ModelManifest) {
   if (!port.documentDirectory) return null;
-  return joinUri(port.documentDirectory, `supertonic2/${manifest.revision}`);
+  return joinUri(port.documentDirectory, `supertonic3/${manifest.revision}`);
 }
 
-export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
+export function createSupertonic3ModelStore(port = defaultFileSystemPort) {
   return {
-    getModelRootUri: (manifest: Supertonic2ModelManifest) => getModelRootUri(port, manifest),
+    getModelRootUri: (manifest: Supertonic3ModelManifest) => getModelRootUri(port, manifest),
 
-    async getStatus(manifest: Supertonic2ModelManifest): Promise<Supertonic2ModelStatus> {
+    async getStatus(manifest: Supertonic3ModelManifest): Promise<Supertonic3ModelStatus> {
       const rootUri = getModelRootUri(port, manifest);
       if (!rootUri) {
         return { state: 'missing', reason: 'document-directory-unavailable' };
@@ -441,11 +441,11 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
     },
 
     async downloadModel(
-      manifest: Supertonic2ModelManifest,
-      onProgress: (progress: Supertonic2DownloadProgress) => void,
+      manifest: Supertonic3ModelManifest,
+      onProgress: (progress: Supertonic3DownloadProgress) => void,
     ) {
       if (!port.documentDirectory) {
-        throw new Error('Supertonic 2 model storage is unavailable.');
+        throw new Error('Supertonic 3 model storage is unavailable.');
       }
 
       const totalBytes = manifest.files.reduce((sum, file) => sum + file.bytes, 0);
@@ -470,7 +470,7 @@ export function createSupertonic2ModelStore(port = defaultFileSystemPort) {
   };
 }
 
-export const supertonic2ModelStore = createSupertonic2ModelStore();
+export const supertonic3ModelStore = createSupertonic3ModelStore();
 ```
 
 - [ ] **Step 5: Run model store tests to verify they pass**
@@ -478,7 +478,7 @@ export const supertonic2ModelStore = createSupertonic2ModelStore();
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2ModelStore.test.ts
+rtk npm test -- src/features/speech/supertonic3ModelStore.test.ts
 ```
 
 Expected: PASS.
@@ -486,33 +486,33 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-rtk git add package.json package-lock.json src/features/speech/supertonic2ModelStore.ts src/features/speech/supertonic2ModelStore.test.ts
-rtk git commit -m "feat: add supertonic2 model store"
+rtk git add package.json package-lock.json src/features/speech/supertonic3ModelStore.ts src/features/speech/supertonic3ModelStore.test.ts
+rtk git commit -m "feat: add supertonic3 model store"
 ```
 
 ## Task 3: Native Runtime Wrapper And Platform Gate
 
 **Files:**
-- Create: `src/features/speech/supertonic2Native.ts`
-- Create: `src/features/speech/supertonic2Native.test.ts`
+- Create: `src/features/speech/supertonic3Native.ts`
+- Create: `src/features/speech/supertonic3Native.test.ts`
 
 - [ ] **Step 1: Write failing native wrapper tests**
 
-Create `src/features/speech/supertonic2Native.test.ts`:
+Create `src/features/speech/supertonic3Native.test.ts`:
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  createSupertonic2NativeRuntime,
-  isSupertonic2RuntimeSupported,
-} from './supertonic2Native';
+  createSupertonic3NativeRuntime,
+  isSupertonic3RuntimeSupported,
+} from './supertonic3Native';
 
-describe('supertonic2 native runtime wrapper', () => {
+describe('supertonic3 native runtime wrapper', () => {
   it('only supports iOS with an installed native module', () => {
-    expect(isSupertonic2RuntimeSupported('ios', {})).toBe(false);
-    expect(isSupertonic2RuntimeSupported('android', { prepareTts: vi.fn() })).toBe(false);
-    expect(isSupertonic2RuntimeSupported('ios', { prepareTts: vi.fn() })).toBe(true);
+    expect(isSupertonic3RuntimeSupported('ios', {})).toBe(false);
+    expect(isSupertonic3RuntimeSupported('android', { prepareTts: vi.fn() })).toBe(false);
+    expect(isSupertonic3RuntimeSupported('ios', { prepareTts: vi.fn() })).toBe(true);
   });
 
   it('passes model root and synthesis options to native', async () => {
@@ -521,15 +521,15 @@ describe('supertonic2 native runtime wrapper', () => {
       prepareTts: vi.fn(async () => undefined),
       synthesizeToFile: vi.fn(async () => ({ uri: 'file:///speech.wav', durationSeconds: 1.2 })),
     };
-    const runtime = createSupertonic2NativeRuntime({
+    const runtime = createSupertonic3NativeRuntime({
       nativeModule,
       platformOS: 'ios',
     });
 
-    await runtime.prepareTts('file:///docs/supertonic2/rev');
+    await runtime.prepareTts('file:///docs/supertonic3/rev');
     const result = await runtime.synthesizeToFile('안녕', { lang: 'ko', voice: 'F1' });
 
-    expect(nativeModule.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic2/rev');
+    expect(nativeModule.prepareTts).toHaveBeenCalledWith('file:///docs/supertonic3/rev');
     expect(nativeModule.synthesizeToFile).toHaveBeenCalledWith('안녕', {
       lang: 'ko',
       voice: 'F1',
@@ -546,14 +546,14 @@ describe('supertonic2 native runtime wrapper', () => {
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2Native.test.ts
+rtk npm test -- src/features/speech/supertonic3Native.test.ts
 ```
 
-Expected: FAIL because `supertonic2Native.ts` does not exist.
+Expected: FAIL because `supertonic3Native.ts` does not exist.
 
 - [ ] **Step 3: Implement native wrapper**
 
-Create `src/features/speech/supertonic2Native.ts`:
+Create `src/features/speech/supertonic3Native.ts`:
 
 ```ts
 import { requireOptionalNativeModule } from 'expo-modules-core';
@@ -568,47 +568,47 @@ type NativeModuleLike = {
   ) => Promise<{ uri: string; durationSeconds: number }>;
 };
 
-export interface Supertonic2SynthesisOptions {
+export interface Supertonic3SynthesisOptions {
   lang?: 'ko' | 'en';
   voice?: 'F1';
   speed?: number;
   steps?: number;
 }
 
-export function isSupertonic2RuntimeSupported(
+export function isSupertonic3RuntimeSupported(
   platformOS = Platform.OS,
-  nativeModule: NativeModuleLike | null = requireOptionalNativeModule('Supertonic2Runtime'),
+  nativeModule: NativeModuleLike | null = requireOptionalNativeModule('Supertonic3Runtime'),
 ) {
   return platformOS === 'ios' && typeof nativeModule?.prepareTts === 'function';
 }
 
-export function createSupertonic2NativeRuntime({
-  nativeModule = requireOptionalNativeModule('Supertonic2Runtime') as NativeModuleLike | null,
+export function createSupertonic3NativeRuntime({
+  nativeModule = requireOptionalNativeModule('Supertonic3Runtime') as NativeModuleLike | null,
   platformOS = Platform.OS,
 }: {
   nativeModule?: NativeModuleLike | null;
   platformOS?: string;
 } = {}) {
   return {
-    isSupported: () => isSupertonic2RuntimeSupported(platformOS, nativeModule),
+    isSupported: () => isSupertonic3RuntimeSupported(platformOS, nativeModule),
 
     async getModelStatus(rootUri: string, manifest: unknown) {
-      if (!isSupertonic2RuntimeSupported(platformOS, nativeModule)) {
+      if (!isSupertonic3RuntimeSupported(platformOS, nativeModule)) {
         return { state: 'missing', reason: 'runtime-unavailable' };
       }
       return nativeModule!.getModelStatus!(rootUri, manifest);
     },
 
     async prepareTts(rootUri: string) {
-      if (!isSupertonic2RuntimeSupported(platformOS, nativeModule)) {
-        throw new Error('Supertonic 2 native runtime is unavailable on this platform.');
+      if (!isSupertonic3RuntimeSupported(platformOS, nativeModule)) {
+        throw new Error('Supertonic 3 native runtime is unavailable on this platform.');
       }
       await nativeModule!.prepareTts!(rootUri);
     },
 
-    async synthesizeToFile(text: string, options: Supertonic2SynthesisOptions = {}) {
-      if (!isSupertonic2RuntimeSupported(platformOS, nativeModule)) {
-        throw new Error('Supertonic 2 native runtime is unavailable on this platform.');
+    async synthesizeToFile(text: string, options: Supertonic3SynthesisOptions = {}) {
+      if (!isSupertonic3RuntimeSupported(platformOS, nativeModule)) {
+        throw new Error('Supertonic 3 native runtime is unavailable on this platform.');
       }
       return nativeModule!.synthesizeToFile!(text, {
         lang: options.lang ?? 'ko',
@@ -620,7 +620,7 @@ export function createSupertonic2NativeRuntime({
   };
 }
 
-export const supertonic2NativeRuntime = createSupertonic2NativeRuntime();
+export const supertonic3NativeRuntime = createSupertonic3NativeRuntime();
 ```
 
 - [ ] **Step 4: Run native wrapper tests**
@@ -628,7 +628,7 @@ export const supertonic2NativeRuntime = createSupertonic2NativeRuntime();
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2Native.test.ts
+rtk npm test -- src/features/speech/supertonic3Native.test.ts
 ```
 
 Expected: PASS.
@@ -636,8 +636,8 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-rtk git add src/features/speech/supertonic2Native.ts src/features/speech/supertonic2Native.test.ts
-rtk git commit -m "feat: add supertonic2 native runtime wrapper"
+rtk git add src/features/speech/supertonic3Native.ts src/features/speech/supertonic3Native.test.ts
+rtk git commit -m "feat: add supertonic3 native runtime wrapper"
 ```
 
 ## Task 4: Blocking Bootstrap Gate And Download UI
@@ -712,23 +712,23 @@ Create `src/features/speech/TTSBootstrapGate.tsx` with these exported helpers an
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { ModelDownloadScreen } from '@/src/components/speech/ModelDownloadScreen';
-import { supertonic2ModelManifest } from './supertonic2Manifest';
+import { supertonic3ModelManifest } from './supertonic3Manifest';
 import {
-  supertonic2ModelStore,
-  type Supertonic2DownloadProgress,
-} from './supertonic2ModelStore';
-import { supertonic2NativeRuntime } from './supertonic2Native';
+  supertonic3ModelStore,
+  type Supertonic3DownloadProgress,
+} from './supertonic3ModelStore';
+import { supertonic3NativeRuntime } from './supertonic3Native';
 
 export type TtsBootstrapPhase = 'checking' | 'downloading' | 'verifying' | 'preparing' | 'ready' | 'failed';
 
 export type TtsBootstrapState =
   | { phase: 'checking' | 'verifying' | 'preparing'; canEnterApp: false }
-  | { phase: 'downloading'; canEnterApp: false; progress: Supertonic2DownloadProgress }
+  | { phase: 'downloading'; canEnterApp: false; progress: Supertonic3DownloadProgress }
   | { phase: 'failed'; canEnterApp: false; errorMessage: string }
   | { phase: 'ready'; canEnterApp: true };
 
 export type TtsBootstrapEvent =
-  | { type: 'download-progress'; progress: Supertonic2DownloadProgress }
+  | { type: 'download-progress'; progress: Supertonic3DownloadProgress }
   | { type: 'verifying' }
   | { type: 'preparing' }
   | { type: 'ready' }
@@ -747,7 +747,7 @@ export function reduceTtsBootstrapState(
   return { phase: 'failed', canEnterApp: false, errorMessage: event.errorMessage };
 }
 
-export function getDownloadPercent(progress?: Supertonic2DownloadProgress) {
+export function getDownloadPercent(progress?: Supertonic3DownloadProgress) {
   if (!progress || progress.totalBytes <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round((progress.downloadedBytes / progress.totalBytes) * 100)));
 }
@@ -772,20 +772,20 @@ export function TTSBootstrapGate({ children }: { children: ReactNode }) {
     setState({ phase: 'checking', canEnterApp: false });
 
     try {
-      if (!supertonic2NativeRuntime.isSupported()) {
+      if (!supertonic3NativeRuntime.isSupported()) {
         dispatch({ type: 'ready' });
         return;
       }
 
-      const localStatus = await supertonic2ModelStore.getStatus(supertonic2ModelManifest);
-      let rootUri = localStatus.rootUri ?? supertonic2ModelStore.getModelRootUri(supertonic2ModelManifest);
+      const localStatus = await supertonic3ModelStore.getStatus(supertonic3ModelManifest);
+      let rootUri = localStatus.rootUri ?? supertonic3ModelStore.getModelRootUri(supertonic3ModelManifest);
 
       if (localStatus.state !== 'ready') {
-        await supertonic2ModelStore.downloadModel(supertonic2ModelManifest, (progress) =>
+        await supertonic3ModelStore.downloadModel(supertonic3ModelManifest, (progress) =>
           dispatch({ type: 'download-progress', progress }),
         );
         dispatch({ type: 'verifying' });
-        const checkedStatus = await supertonic2ModelStore.getStatus(supertonic2ModelManifest);
+        const checkedStatus = await supertonic3ModelStore.getStatus(supertonic3ModelManifest);
         rootUri = checkedStatus.rootUri;
         if (checkedStatus.state !== 'ready' || !rootUri) {
           throw new Error(checkedStatus.reason ?? 'model-verification-failed');
@@ -793,7 +793,7 @@ export function TTSBootstrapGate({ children }: { children: ReactNode }) {
       }
 
       dispatch({ type: 'preparing' });
-      await supertonic2NativeRuntime.prepareTts(rootUri!);
+      await supertonic3NativeRuntime.prepareTts(rootUri!);
       dispatch({ type: 'ready' });
     } catch (error) {
       dispatch({ type: 'failed', errorMessage: error instanceof Error ? error.message : 'unknown' });
@@ -939,43 +939,43 @@ Expected: both commands exit 0.
 
 ```bash
 rtk git add app/_layout.tsx src/components/speech/ModelDownloadScreen.tsx src/features/speech/TTSBootstrapGate.tsx src/features/speech/TTSBootstrapGate.test.ts
-rtk git commit -m "feat: block app while preparing supertonic2"
+rtk git commit -m "feat: block app while preparing supertonic3"
 ```
 
 ## Task 5: Expo Module Scaffold And iOS Build Plugin
 
 **Files:**
-- Create: `modules/supertonic2-runtime/package.json`
-- Create: `modules/supertonic2-runtime/expo-module.config.json`
-- Create: `modules/supertonic2-runtime/src/index.ts`
-- Create: `modules/supertonic2-runtime/ios/Supertonic2RuntimeModule.swift`
-- Create: `plugins/with-supertonic2-ios-runtime.js`
-- Create: `plugins/with-supertonic2-ios-runtime.test.js`
+- Create: `modules/supertonic3-runtime/package.json`
+- Create: `modules/supertonic3-runtime/expo-module.config.json`
+- Create: `modules/supertonic3-runtime/src/index.ts`
+- Create: `modules/supertonic3-runtime/ios/Supertonic3RuntimeModule.swift`
+- Create: `plugins/with-supertonic3-ios-runtime.js`
+- Create: `plugins/with-supertonic3-ios-runtime.test.js`
 - Modify: `app.json`
 - Modify: `package.json`
 
 - [ ] **Step 1: Write failing plugin tests**
 
-Create `plugins/with-supertonic2-ios-runtime.test.js`:
+Create `plugins/with-supertonic3-ios-runtime.test.js`:
 
 ```js
 import fs from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import supertonic2IosRuntime from './with-supertonic2-ios-runtime.js';
+import supertonic3IosRuntime from './with-supertonic3-ios-runtime.js';
 
-describe('supertonic2 iOS runtime config', () => {
+describe('supertonic3 iOS runtime config', () => {
   it('registers the config plugin in app.json', () => {
     const appConfig = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-    expect(appConfig.expo.plugins).toContain('./plugins/with-supertonic2-ios-runtime.js');
+    expect(appConfig.expo.plugins).toContain('./plugins/with-supertonic3-ios-runtime.js');
   });
 
   it('exports the SPM constants used by the plugin', () => {
-    expect(supertonic2IosRuntime.ONNX_RUNTIME_SPM_URL).toBe(
+    expect(supertonic3IosRuntime.ONNX_RUNTIME_SPM_URL).toBe(
       'https://github.com/microsoft/onnxruntime-swift-package-manager.git',
     );
-    expect(supertonic2IosRuntime.ONNX_RUNTIME_PRODUCT).toBe('onnxruntime');
+    expect(supertonic3IosRuntime.ONNX_RUNTIME_PRODUCT).toBe('onnxruntime');
   });
 });
 ```
@@ -985,69 +985,69 @@ describe('supertonic2 iOS runtime config', () => {
 Run:
 
 ```bash
-rtk npm test -- plugins/with-supertonic2-ios-runtime.test.js
+rtk npm test -- plugins/with-supertonic3-ios-runtime.test.js
 ```
 
 Expected: FAIL because the plugin file and app config entry do not exist.
 
 - [ ] **Step 3: Add local module package**
 
-Create `modules/supertonic2-runtime/package.json`:
+Create `modules/supertonic3-runtime/package.json`:
 
 ```json
 {
-  "name": "supertonic2-runtime",
+  "name": "supertonic3-runtime",
   "version": "0.0.1",
   "main": "src/index.ts",
   "private": true
 }
 ```
 
-Create `modules/supertonic2-runtime/expo-module.config.json`:
+Create `modules/supertonic3-runtime/expo-module.config.json`:
 
 ```json
 {
   "platforms": ["ios"],
   "ios": {
-    "modules": ["Supertonic2RuntimeModule"]
+    "modules": ["Supertonic3RuntimeModule"]
   }
 }
 ```
 
-Create `modules/supertonic2-runtime/src/index.ts`:
+Create `modules/supertonic3-runtime/src/index.ts`:
 
 ```ts
 import { requireNativeModule } from 'expo-modules-core';
 
-export default requireNativeModule('Supertonic2Runtime');
+export default requireNativeModule('Supertonic3Runtime');
 ```
 
 - [ ] **Step 4: Add the initial Swift module**
 
-Create `modules/supertonic2-runtime/ios/Supertonic2RuntimeModule.swift`:
+Create `modules/supertonic3-runtime/ios/Supertonic3RuntimeModule.swift`:
 
 ```swift
 import ExpoModulesCore
 
-public class Supertonic2RuntimeModule: Module {
+public class Supertonic3RuntimeModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("Supertonic2Runtime")
+    Name("Supertonic3Runtime")
 
     AsyncFunction("getModelStatus") { (rootUri: String, manifest: [String: Any]) -> [String: Any] in
       return ["state": "missing", "reason": "native-status-not-implemented"]
     }
 
     AsyncFunction("prepareTts") { (rootUri: String) in
-      throw Supertonic2RuntimeError("Supertonic 2 runtime preparation is not implemented yet.")
+      throw Supertonic3RuntimeError("Supertonic 3 runtime preparation is not implemented yet.")
     }
 
     AsyncFunction("synthesizeToFile") { (text: String, options: [String: Any]) -> [String: Any] in
-      throw Supertonic2RuntimeError("Supertonic 2 synthesis is not implemented yet.")
+      throw Supertonic3RuntimeError("Supertonic 3 synthesis is not implemented yet.")
     }
   }
 }
 
-struct Supertonic2RuntimeError: Error, CustomStringConvertible {
+struct Supertonic3RuntimeError: Error, CustomStringConvertible {
   let description: String
 
   init(_ description: String) {
@@ -1058,7 +1058,7 @@ struct Supertonic2RuntimeError: Error, CustomStringConvertible {
 
 - [ ] **Step 5: Add the config plugin**
 
-Create `plugins/with-supertonic2-ios-runtime.js`:
+Create `plugins/with-supertonic3-ios-runtime.js`:
 
 ```js
 const { withDangerousMod } = require('@expo/config-plugins');
@@ -1066,7 +1066,7 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const ONNX_RUNTIME_SPM_URL = 'https://github.com/microsoft/onnxruntime-swift-package-manager.git';
 const ONNX_RUNTIME_PRODUCT = 'onnxruntime';
 
-function withSupertonic2IosRuntime(config) {
+function withSupertonic3IosRuntime(config) {
   return withDangerousMod(config, [
     'ios',
     async (modConfig) => {
@@ -1075,7 +1075,7 @@ function withSupertonic2IosRuntime(config) {
   ]);
 }
 
-module.exports = withSupertonic2IosRuntime;
+module.exports = withSupertonic3IosRuntime;
 module.exports.ONNX_RUNTIME_SPM_URL = ONNX_RUNTIME_SPM_URL;
 module.exports.ONNX_RUNTIME_PRODUCT = ONNX_RUNTIME_PRODUCT;
 ```
@@ -1083,13 +1083,13 @@ module.exports.ONNX_RUNTIME_PRODUCT = ONNX_RUNTIME_PRODUCT;
 Modify `app.json` plugins:
 
 ```json
-"./plugins/with-supertonic2-ios-runtime.js"
+"./plugins/with-supertonic3-ios-runtime.js"
 ```
 
 Modify `package.json` dependencies:
 
 ```json
-"supertonic2-runtime": "file:modules/supertonic2-runtime"
+"supertonic3-runtime": "file:modules/supertonic3-runtime"
 ```
 
 - [ ] **Step 6: Run install and plugin tests**
@@ -1098,7 +1098,7 @@ Run:
 
 ```bash
 rtk npm install
-rtk npm test -- plugins/with-supertonic2-ios-runtime.test.js
+rtk npm test -- plugins/with-supertonic3-ios-runtime.test.js
 rtk npm run typecheck
 ```
 
@@ -1117,21 +1117,21 @@ Expected: export exits 0. Native compilation is not proven by this step.
 - [ ] **Step 8: Commit**
 
 ```bash
-rtk git add app.json package.json package-lock.json modules/supertonic2-runtime plugins/with-supertonic2-ios-runtime.js plugins/with-supertonic2-ios-runtime.test.js
-rtk git commit -m "feat: scaffold supertonic2 ios module"
+rtk git add app.json package.json package-lock.json modules/supertonic3-runtime plugins/with-supertonic3-ios-runtime.js plugins/with-supertonic3-ios-runtime.test.js
+rtk git commit -m "feat: scaffold supertonic3 ios module"
 ```
 
 ## Task 6: Native Status, Checksum, Prepare, And Synthesis
 
 **Files:**
-- Create: `modules/supertonic2-runtime/ios/Supertonic2RuntimeSupport.swift`
-- Create: `modules/supertonic2-runtime/ios/Supertonic2Helper.swift`
-- Modify: `modules/supertonic2-runtime/ios/Supertonic2RuntimeModule.swift`
-- Modify: `plugins/with-supertonic2-ios-runtime.js`
+- Create: `modules/supertonic3-runtime/ios/Supertonic3RuntimeSupport.swift`
+- Create: `modules/supertonic3-runtime/ios/Supertonic3Helper.swift`
+- Modify: `modules/supertonic3-runtime/ios/Supertonic3RuntimeModule.swift`
+- Modify: `plugins/with-supertonic3-ios-runtime.js`
 
 - [ ] **Step 1: Add plugin implementation for ONNX Runtime SPM**
 
-Update `plugins/with-supertonic2-ios-runtime.js` to patch `ios/MeerQuest.xcodeproj/project.pbxproj`. The implementation must be idempotent and add:
+Update `plugins/with-supertonic3-ios-runtime.js` to patch `ios/MeerQuest.xcodeproj/project.pbxproj`. The implementation must be idempotent and add:
 
 ```pbxproj
 XCRemoteSwiftPackageReference "onnxruntime-swift-package-manager"
@@ -1148,7 +1148,7 @@ const ONNX_RUNTIME_MIN_VERSION = '1.16.0';
 
 - [ ] **Step 2: Extend plugin tests**
 
-Modify `plugins/with-supertonic2-ios-runtime.test.js`:
+Modify `plugins/with-supertonic3-ios-runtime.test.js`:
 
 ```js
 it('keeps package insertion idempotent', () => {
@@ -1159,8 +1159,8 @@ it('keeps package insertion idempotent', () => {
     ');',
   ].join('\n');
 
-  const once = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
-  const twice = supertonic2IosRuntime.addOnnxRuntimeSwiftPackage(once);
+  const once = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(pbxproj);
+  const twice = supertonic3IosRuntime.addOnnxRuntimeSwiftPackage(once);
 
   expect((twice.match(/onnxruntime-swift-package-manager/g) ?? []).length).toBe(1);
   expect((twice.match(/XCSwiftPackageProductDependency/g) ?? []).length).toBe(1);
@@ -1172,27 +1172,27 @@ it('keeps package insertion idempotent', () => {
 Run:
 
 ```bash
-rtk npm test -- plugins/with-supertonic2-ios-runtime.test.js
+rtk npm test -- plugins/with-supertonic3-ios-runtime.test.js
 ```
 
 Expected: PASS.
 
 - [ ] **Step 4: Add native support types**
 
-Create `modules/supertonic2-runtime/ios/Supertonic2RuntimeSupport.swift`:
+Create `modules/supertonic3-runtime/ios/Supertonic3RuntimeSupport.swift`:
 
 ```swift
 import CryptoKit
 import Foundation
 import OnnxRuntimeBindings
 
-struct Supertonic2ManifestFile {
+struct Supertonic3ManifestFile {
   let path: String
   let bytes: Int
   let sha256: String
 }
 
-final class Supertonic2RuntimeService {
+final class Supertonic3RuntimeService {
   private var env: ORTEnv?
   private var textToSpeech: TextToSpeech?
   private var rootURL: URL?
@@ -1227,7 +1227,7 @@ final class Supertonic2RuntimeService {
 
   func synthesize(text: String, options: [String: Any]) throws -> [String: Any] {
     guard let rootURL, let textToSpeech else {
-      throw Supertonic2RuntimeError("Supertonic 2 runtime is not prepared.")
+      throw Supertonic3RuntimeError("Supertonic 3 runtime is not prepared.")
     }
     let lang = options["lang"] as? String ?? "ko"
     let voice = options["voice"] as? String ?? "F1"
@@ -1236,7 +1236,7 @@ final class Supertonic2RuntimeService {
     let voiceURL = rootURL.appendingPathComponent("voice_styles/\(voice).json")
     let style = try loadVoiceStyle([voiceURL.path], verbose: false)
     let result = try textToSpeech.call(text, lang, style, steps, speed: Float(speed), silenceDuration: 0.3)
-    let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("supertonic2-\(UUID().uuidString).wav")
+    let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("supertonic3-\(UUID().uuidString).wav")
     try writeWavFile(outputURL.path, result.wav, textToSpeech.sampleRate)
     return ["uri": outputURL.absoluteString, "durationSeconds": Double(result.duration)]
   }
@@ -1244,14 +1244,14 @@ final class Supertonic2RuntimeService {
 
 private func fileURL(from uri: String) throws -> URL {
   guard let url = URL(string: uri), url.isFileURL else {
-    throw Supertonic2RuntimeError("Expected a file URL for Supertonic 2 model root.")
+    throw Supertonic3RuntimeError("Expected a file URL for Supertonic 3 model root.")
   }
   return url
 }
 
-private func manifestFiles(from manifest: [String: Any]) throws -> [Supertonic2ManifestFile] {
+private func manifestFiles(from manifest: [String: Any]) throws -> [Supertonic3ManifestFile] {
   guard let files = manifest["files"] as? [[String: Any]] else {
-    throw Supertonic2RuntimeError("Supertonic 2 manifest is missing files.")
+    throw Supertonic3RuntimeError("Supertonic 3 manifest is missing files.")
   }
   return try files.map { item in
     guard
@@ -1259,9 +1259,9 @@ private func manifestFiles(from manifest: [String: Any]) throws -> [Supertonic2M
       let bytes = item["bytes"] as? Int,
       let sha256 = item["sha256"] as? String
     else {
-      throw Supertonic2RuntimeError("Supertonic 2 manifest file entry is malformed.")
+      throw Supertonic3RuntimeError("Supertonic 3 manifest file entry is malformed.")
     }
-    return Supertonic2ManifestFile(path: path, bytes: bytes, sha256: sha256)
+    return Supertonic3ManifestFile(path: path, bytes: bytes, sha256: sha256)
   }
 }
 
@@ -1281,7 +1281,7 @@ private func sha256(url: URL) throws -> String {
 
 - [ ] **Step 5: Copy and adapt Supertonic Swift helper**
 
-Create `modules/supertonic2-runtime/ios/Supertonic2Helper.swift` from the official `swift/Sources/Helper.swift` source in `supertone-inc/supertonic`, keeping:
+Create `modules/supertonic3-runtime/ios/Supertonic3Helper.swift` from the official `swift/Sources/Helper.swift` source in `supertone-inc/supertonic`, keeping:
 
 - `UnicodeProcessor`
 - `Config`
@@ -1308,16 +1308,16 @@ let maxLen = (lang == "ko") ? 120 : 300
 
 - [ ] **Step 6: Wire the module to the service**
 
-Replace `modules/supertonic2-runtime/ios/Supertonic2RuntimeModule.swift` with:
+Replace `modules/supertonic3-runtime/ios/Supertonic3RuntimeModule.swift` with:
 
 ```swift
 import ExpoModulesCore
 
-public class Supertonic2RuntimeModule: Module {
-  private let service = Supertonic2RuntimeService()
+public class Supertonic3RuntimeModule: Module {
+  private let service = Supertonic3RuntimeService()
 
   public func definition() -> ModuleDefinition {
-    Name("Supertonic2Runtime")
+    Name("Supertonic3Runtime")
 
     AsyncFunction("getModelStatus") { (rootUri: String, manifest: [String: Any]) -> [String: Any] in
       return try service.status(rootUri: rootUri, manifest: manifest)
@@ -1333,7 +1333,7 @@ public class Supertonic2RuntimeModule: Module {
   }
 }
 
-struct Supertonic2RuntimeError: Error, CustomStringConvertible {
+struct Supertonic3RuntimeError: Error, CustomStringConvertible {
   let description: String
 
   init(_ description: String) {
@@ -1347,7 +1347,7 @@ struct Supertonic2RuntimeError: Error, CustomStringConvertible {
 Run:
 
 ```bash
-rtk npm test -- plugins/with-supertonic2-ios-runtime.test.js src/features/speech/supertonic2Native.test.ts
+rtk npm test -- plugins/with-supertonic3-ios-runtime.test.js src/features/speech/supertonic3Native.test.ts
 rtk npx expo prebuild --platform ios --no-install
 ```
 
@@ -1372,29 +1372,29 @@ Expected: Swift compiles and links with ONNX Runtime.
 - [ ] **Step 9: Commit**
 
 ```bash
-rtk git add modules/supertonic2-runtime/ios plugins/with-supertonic2-ios-runtime.js plugins/with-supertonic2-ios-runtime.test.js ios package.json package-lock.json
-rtk git commit -m "feat: implement supertonic2 ios runtime"
+rtk git add modules/supertonic3-runtime/ios plugins/with-supertonic3-ios-runtime.js plugins/with-supertonic3-ios-runtime.test.js ios package.json package-lock.json
+rtk git commit -m "feat: implement supertonic3 ios runtime"
 ```
 
 ## Task 7: Quest-Facing Speech Service
 
 **Files:**
-- Create: `src/features/speech/supertonic2Speech.ts`
-- Create: `src/features/speech/supertonic2Speech.test.ts`
+- Create: `src/features/speech/supertonic3Speech.ts`
+- Create: `src/features/speech/supertonic3Speech.test.ts`
 - Modify: `app/quest-play.tsx`
 
 - [ ] **Step 1: Write failing speech service tests**
 
-Create `src/features/speech/supertonic2Speech.test.ts`:
+Create `src/features/speech/supertonic3Speech.test.ts`:
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
-import { createSupertonic2SpeechService } from './supertonic2Speech';
+import { createSupertonic3SpeechService } from './supertonic3Speech';
 
-describe('supertonic2 speech service', () => {
+describe('supertonic3 speech service', () => {
   it('returns unavailable when runtime support is absent', async () => {
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: { isSupported: () => false, synthesizeToFile: vi.fn() },
       createPlayer: vi.fn(),
     });
@@ -1405,7 +1405,7 @@ describe('supertonic2 speech service', () => {
   it('synthesizes and plays one request at a time', async () => {
     const play = vi.fn();
     const remove = vi.fn();
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile: vi.fn(async (text: string) => ({
@@ -1428,23 +1428,23 @@ describe('supertonic2 speech service', () => {
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2Speech.test.ts
+rtk npm test -- src/features/speech/supertonic3Speech.test.ts
 ```
 
-Expected: FAIL because `supertonic2Speech.ts` does not exist.
+Expected: FAIL because `supertonic3Speech.ts` does not exist.
 
 - [ ] **Step 3: Implement speech service**
 
-Create `src/features/speech/supertonic2Speech.ts`:
+Create `src/features/speech/supertonic3Speech.ts`:
 
 ```ts
-import { supertonic2NativeRuntime, type Supertonic2SynthesisOptions } from './supertonic2Native';
+import { supertonic3NativeRuntime, type Supertonic3SynthesisOptions } from './supertonic3Native';
 
 interface RuntimePort {
   isSupported(): boolean;
   synthesizeToFile(
     text: string,
-    options?: Supertonic2SynthesisOptions,
+    options?: Supertonic3SynthesisOptions,
   ): Promise<{ uri: string; durationSeconds: number }>;
 }
 
@@ -1460,12 +1460,12 @@ interface SpeechServicePorts {
 
 let queue = Promise.resolve();
 
-export function createSupertonic2SpeechService({
-  runtime = supertonic2NativeRuntime,
+export function createSupertonic3SpeechService({
+  runtime = supertonic3NativeRuntime,
   createPlayer,
 }: SpeechServicePorts = {}) {
   return {
-    async speakText(text: string, options: Supertonic2SynthesisOptions = {}) {
+    async speakText(text: string, options: Supertonic3SynthesisOptions = {}) {
       if (!runtime.isSupported()) {
         return { status: 'unavailable' as const };
       }
@@ -1490,7 +1490,7 @@ async function createExpoAudioPlayer(uri: string) {
   return createAudioPlayer({ uri }, { keepAudioSessionActive: true, updateInterval: 1000 });
 }
 
-export const supertonic2SpeechService = createSupertonic2SpeechService();
+export const supertonic3SpeechService = createSupertonic3SpeechService();
 ```
 
 - [ ] **Step 4: Connect the quest speaker button**
@@ -1498,7 +1498,7 @@ export const supertonic2SpeechService = createSupertonic2SpeechService();
 Modify `app/quest-play.tsx`:
 
 ```ts
-import { supertonic2SpeechService } from '@/src/features/speech/supertonic2Speech';
+import { supertonic3SpeechService } from '@/src/features/speech/supertonic3Speech';
 ```
 
 Change:
@@ -1526,7 +1526,7 @@ async function handleSoundPress() {
     return;
   }
 
-  const result = await supertonic2SpeechService.speakText(step.instructionText, {
+  const result = await supertonic3SpeechService.speakText(step.instructionText, {
     lang: 'ko',
     voice: 'F1',
   });
@@ -1542,7 +1542,7 @@ async function handleSoundPress() {
 Run:
 
 ```bash
-rtk npm test -- src/features/speech/supertonic2Speech.test.ts src/components/quest/meeroDigPeekAnimation.test.ts
+rtk npm test -- src/features/speech/supertonic3Speech.test.ts src/components/quest/meeroDigPeekAnimation.test.ts
 rtk npm run typecheck
 ```
 
@@ -1551,8 +1551,8 @@ Expected: tests and typecheck exit 0.
 - [ ] **Step 6: Commit**
 
 ```bash
-rtk git add app/quest-play.tsx src/features/speech/supertonic2Speech.ts src/features/speech/supertonic2Speech.test.ts
-rtk git commit -m "feat: read quest prompts with supertonic2"
+rtk git add app/quest-play.tsx src/features/speech/supertonic3Speech.ts src/features/speech/supertonic3Speech.test.ts
+rtk git commit -m "feat: read quest prompts with supertonic3"
 ```
 
 ## Task 8: End-To-End Verification
@@ -1613,8 +1613,8 @@ Expected:
 If Step 1-4 required fixes, commit them:
 
 ```bash
-rtk git add app.json app/_layout.tsx app/quest-play.tsx package.json package-lock.json ios modules/supertonic2-runtime plugins/with-supertonic2-ios-runtime.js plugins/with-supertonic2-ios-runtime.test.js src/components/speech/ModelDownloadScreen.tsx src/features/speech tools/build_supertonic2_manifest.py
-rtk git commit -m "fix: stabilize supertonic2 ios runtime"
+rtk git add app.json app/_layout.tsx app/quest-play.tsx package.json package-lock.json ios modules/supertonic3-runtime plugins/with-supertonic3-ios-runtime.js plugins/with-supertonic3-ios-runtime.test.js src/components/speech/ModelDownloadScreen.tsx src/features/speech tools/build_supertonic3_manifest.py
+rtk git commit -m "fix: stabilize supertonic3 ios runtime"
 ```
 
 If no fixes were required, do not create an empty commit.
@@ -1623,4 +1623,4 @@ If no fixes were required, do not create an empty commit.
 
 - Spec coverage: iOS-first, first-launch download, full app block, model verification, native prepare, synthesis, and quest speech are covered by Tasks 1-8.
 - Placeholder scan: no task relies on undefined behavior; production CDN is excluded from the first implementation and the development manifest uses Hugging Face URLs.
-- Type consistency: the public JS surface consistently uses `getModelStatus`, `downloadModel`, `prepareTts`, `synthesizeToFile`, `Supertonic2DownloadProgress`, and `Supertonic2ModelStatus`.
+- Type consistency: the public JS surface consistently uses `getModelStatus`, `downloadModel`, `prepareTts`, `synthesizeToFile`, `Supertonic3DownloadProgress`, and `Supertonic3ModelStatus`.

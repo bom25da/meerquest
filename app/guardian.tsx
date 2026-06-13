@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/src/components/AppText';
 import { categories } from '@/src/content/categories';
+import { speechModelLicenseNotice } from '@/src/content/modelLicenses';
 import { quests } from '@/src/content/quests';
 import {
   getHighestCompletedLevel,
@@ -54,6 +55,37 @@ export default function GuardianScreen() {
             </View>
           );
         })}
+
+        <View style={styles.modelLicense}>
+          <Text style={styles.modelLicenseTitle}>모델 라이선스 고지</Text>
+          <Text style={styles.modelLicenseBody}>{speechModelLicenseNotice.notice}</Text>
+          <View style={styles.modelLicenseMeta}>
+            <Text style={styles.modelLicenseMetaText}>
+              모델: {speechModelLicenseNotice.modelName} ({speechModelLicenseNotice.modelId})
+            </Text>
+            <Text style={styles.modelLicenseMetaText}>
+              모델 라이선스: {speechModelLicenseNotice.licenseName}
+            </Text>
+            <Text style={styles.modelLicenseMetaText}>
+              샘플 코드 라이선스: {speechModelLicenseNotice.codeLicenseName}
+            </Text>
+          </View>
+          <Text style={styles.modelLicenseSectionTitle}>배포 시 유지할 항목</Text>
+          {speechModelLicenseNotice.obligations.map((item) => (
+            <Text key={item} style={styles.modelLicenseListItem}>
+              • {item}
+            </Text>
+          ))}
+          <Text style={styles.modelLicenseSectionTitle}>사용 제한 요약</Text>
+          {speechModelLicenseNotice.restrictedUseSummary.map((item) => (
+            <Text key={item} style={styles.modelLicenseListItem}>
+              • {item}
+            </Text>
+          ))}
+          <Text style={styles.modelLicenseSource}>
+            원문: {speechModelLicenseNotice.sourceUrls.join(' / ')}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -121,5 +153,54 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 15,
     fontWeight: '700',
+  },
+  modelLicense: {
+    backgroundColor: colors.surface,
+    borderColor: colors.skySoft,
+    borderRadius: 8,
+    borderWidth: 3,
+    gap: 8,
+    padding: 16,
+  },
+  modelLicenseBody: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  modelLicenseListItem: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 19,
+  },
+  modelLicenseMeta: {
+    backgroundColor: colors.skySoft,
+    borderRadius: 8,
+    gap: 4,
+    padding: 10,
+  },
+  modelLicenseMetaText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 18,
+  },
+  modelLicenseSectionTitle: {
+    color: colors.sky,
+    fontSize: 15,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+  modelLicenseSource: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
+  modelLicenseTitle: {
+    color: colors.ink,
+    fontSize: 21,
+    fontWeight: '900',
   },
 });

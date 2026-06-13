@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createSupertonic2SpeechService } from './supertonic2Speech';
+import { createSupertonic3SpeechService } from './supertonic3Speech';
 
-describe('supertonic2 speech service', () => {
+describe('supertonic3 speech service', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it('returns unavailable when runtime support is absent', async () => {
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: { isSupported: () => false, synthesizeToFile: vi.fn() },
       createPlayer: vi.fn(),
     });
@@ -19,7 +19,7 @@ describe('supertonic2 speech service', () => {
   it('synthesizes and starts playback', async () => {
     const play = vi.fn();
     const remove = vi.fn();
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile: vi.fn(async (text: string) => ({
@@ -41,7 +41,7 @@ describe('supertonic2 speech service', () => {
       uri: 'file:///미어루.wav',
       durationSeconds: 0.1,
     }));
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile,
@@ -68,7 +68,7 @@ describe('supertonic2 speech service', () => {
       uri: `file:///${text}.wav`,
       durationSeconds: 1,
     }));
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile,
@@ -101,7 +101,7 @@ describe('supertonic2 speech service', () => {
     const play = vi.fn();
     const remove = vi.fn();
     const deleteFile = vi.fn(async () => undefined);
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile: vi.fn(async () => ({
@@ -128,7 +128,7 @@ describe('supertonic2 speech service', () => {
 
   it('deletes a synthesized file if playback setup fails', async () => {
     const deleteFile = vi.fn(async () => undefined);
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile: vi.fn(async () => ({
@@ -156,7 +156,7 @@ describe('supertonic2 speech service', () => {
         durationSeconds: 0.1,
       });
     const play = vi.fn();
-    const service = createSupertonic2SpeechService({
+    const service = createSupertonic3SpeechService({
       runtime: {
         isSupported: () => true,
         synthesizeToFile,

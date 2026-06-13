@@ -1,10 +1,10 @@
-import type { Supertonic2SynthesisOptions } from './supertonic2Native';
+import type { Supertonic3SynthesisOptions } from './supertonic3Native';
 
 interface RuntimePort {
   isSupported(): boolean;
   synthesizeToFile(
     text: string,
-    options?: Supertonic2SynthesisOptions,
+    options?: Supertonic3SynthesisOptions,
   ): Promise<{ uri: string; durationSeconds: number }>;
 }
 
@@ -20,7 +20,7 @@ interface SpeechServicePorts {
   configureAudio?: () => Promise<void>;
 }
 
-export function createSupertonic2SpeechService({
+export function createSupertonic3SpeechService({
   configureAudio,
   runtime,
   createPlayer,
@@ -32,7 +32,7 @@ export function createSupertonic2SpeechService({
   const cleanupFile = deleteFile ?? deleteTemporarySpeechFile;
 
   return {
-    async speakText(text: string, options: Supertonic2SynthesisOptions = {}) {
+    async speakText(text: string, options: Supertonic3SynthesisOptions = {}) {
       const activeRuntime = await resolveRuntime(runtime);
 
       if (!activeRuntime.isSupported()) {
@@ -110,8 +110,8 @@ async function deleteTemporarySpeechFile(uri: string) {
 }
 
 async function getDefaultRuntime() {
-  const { supertonic2NativeRuntime } = await import('./supertonic2Native');
-  return supertonic2NativeRuntime;
+  const { supertonic3NativeRuntime } = await import('./supertonic3Native');
+  return supertonic3NativeRuntime;
 }
 
 async function resolveRuntime(runtime?: RuntimePort) {
@@ -125,7 +125,7 @@ async function resolveRuntime(runtime?: RuntimePort) {
     return {
       isSupported: () => false,
       synthesizeToFile: async () => {
-        throw new Error('Supertonic 2 runtime is unavailable.');
+        throw new Error('Supertonic 3 runtime is unavailable.');
       },
     };
   }
@@ -162,4 +162,4 @@ function wait(delayMs: number) {
   });
 }
 
-export const supertonic2SpeechService = createSupertonic2SpeechService();
+export const supertonic3SpeechService = createSupertonic3SpeechService();

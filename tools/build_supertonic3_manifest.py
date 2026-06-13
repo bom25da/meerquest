@@ -7,8 +7,9 @@ import json
 from pathlib import Path
 from urllib.request import urlopen
 
-MODEL_ID = "Supertone/supertonic-2"
-REVISION = "75e6727618a02f323c720cba9478152d4bc16ca4"
+MODEL_ID = "Supertone/supertonic-3"
+REVISION = "3cadd1ee6394adea1bd021217a0e650ede09a323"
+VOICE_NAMES = ("F1", "F2", "F3", "F4", "F5", "M1", "M2", "M3", "M4", "M5")
 REQUIRED_FILES = [
     "onnx/tts.json",
     "onnx/unicode_indexer.json",
@@ -16,7 +17,7 @@ REQUIRED_FILES = [
     "onnx/text_encoder.onnx",
     "onnx/vector_estimator.onnx",
     "onnx/vocoder.onnx",
-    "voice_styles/F1.json",
+    *(f"voice_styles/{voice}.json" for voice in VOICE_NAMES),
 ]
 
 
@@ -30,7 +31,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output",
-        default="src/features/speech/supertonic2ModelManifest.json",
+        default="src/features/speech/supertonic3ModelManifest.json",
     )
     args = parser.parse_args()
     files = []

@@ -1,0 +1,8 @@
+{
+  "platforms": ["ios"],
+  "ios": {
+    "modules": ["Supertonic3RuntimeModule"],
+    "podspecPath": "./Supertonic3Runtime.podspec",
+    "swiftModuleName": "Supertonic3Runtime"
+  }
+}

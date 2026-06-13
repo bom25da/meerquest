@@ -25,7 +25,7 @@
     "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.8.3",
-    "supertonic2-runtime": "file:modules/supertonic2-runtime"
+    "supertonic3-runtime": "file:modules/supertonic3-runtime"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
@@ -40,9 +40,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "voice:setup": "python3 -m pip install -r tools/supertonic2_requirements.txt",
-    "voice:supertonic2": "python3 tools/supertonic2_tts.py",
-    "model:supertonic2-manifest": "python3 tools/build_supertonic2_manifest.py"
+    "voice:setup": "python3 -m pip install -r tools/supertonic3_requirements.txt",
+    "voice:supertonic3": "python3 tools/supertonic3_tts.py",
+    "model:supertonic3-manifest": "python3 tools/build_supertonic3_manifest.py"
   },
   "private": true
 }

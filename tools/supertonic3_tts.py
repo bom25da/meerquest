@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate MeerQuest voice assets with Supertonic 2."""
+"""Generate MeerQuest voice assets with Supertonic 3."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-MODEL_NAME = "supertonic-2"
+MODEL_NAME = "supertonic-3"
 SUPPORTED_LANGUAGES = ("ko", "en", "es", "pt", "fr")
 VOICE_NAMES = ("F1", "F2", "F3", "F4", "F5", "M1", "M2", "M3", "M4", "M5")
 
@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Generate Expo-ready WAV voice assets with the Hugging Face "
-            "Supertone/supertonic-2 model."
+            "Supertone/supertonic-3 model."
         )
     )
     parser.add_argument("--text", required=True, help="Text to synthesize.")
@@ -32,13 +32,13 @@ def parse_args() -> argparse.Namespace:
         "--lang",
         choices=SUPPORTED_LANGUAGES,
         default="ko",
-        help="Language code for Supertonic 2. Default: ko.",
+        help="Language code for Supertonic 3. Default: ko.",
     )
     parser.add_argument(
         "--voice",
         choices=VOICE_NAMES,
-        default="F1",
-        help="Built-in voice style. Default: F1.",
+        default="F2",
+        help="Built-in voice style. Default: F2.",
     )
     parser.add_argument(
         "--custom-style-path",
@@ -80,7 +80,7 @@ def parse_args() -> argparse.Namespace:
 
 def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     output = Path(args.output)
-    cache_dir = os.environ.get("SUPERTONIC_CACHE_DIR", str(Path.home() / ".cache" / "supertonic2"))
+    cache_dir = os.environ.get("SUPERTONIC_CACHE_DIR", str(Path.home() / ".cache" / "supertonic3"))
     return {
         "cacheDir": cache_dir,
         "customStylePath": args.custom_style_path,
@@ -108,7 +108,7 @@ def generate_audio(args: argparse.Namespace) -> dict[str, Any]:
     except ImportError as exc:
         raise RuntimeError(
             "Missing Supertonic dependencies. Run: "
-            "python3 -m pip install -r tools/supertonic2_requirements.txt"
+            "python3 -m pip install -r tools/supertonic3_requirements.txt"
         ) from exc
 
     tts = TTS(model=MODEL_NAME, auto_download=True)
@@ -146,7 +146,7 @@ def main() -> int:
     try:
         result = generate_audio(args)
     except Exception as exc:
-        print(f"supertonic-2 generation failed: {exc}", file=sys.stderr)
+        print(f"supertonic-3 generation failed: {exc}", file=sys.stderr)
         return 1
 
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -3,10 +3,10 @@ require 'json'
 package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
 
 Pod::Spec.new do |s|
-  s.name           = 'Supertonic2Runtime'
+  s.name           = 'Supertonic3Runtime'
   s.version        = package['version']
-  s.summary        = 'Supertonic 2 runtime Expo module for MeerQuest.'
-  s.description    = 'Provides the native iOS Supertonic 2 runtime bridge for MeerQuest.'
+  s.summary        = 'Supertonic 3 runtime Expo module for MeerQuest.'
+  s.description    = 'Provides the native iOS Supertonic 3 runtime bridge for MeerQuest.'
   s.homepage       = 'https://github.com/bom25da/meerquest'
   s.source         = { :git => 'https://github.com/bom25da/meerquest.git' }
   s.license        = { :type => 'UNLICENSED' }

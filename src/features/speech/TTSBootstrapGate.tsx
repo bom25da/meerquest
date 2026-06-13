@@ -3,11 +3,11 @@ import { Platform } from 'react-native';
 
 import { ModelDownloadScreen } from '@/src/components/speech/ModelDownloadScreen';
 
-import type { Supertonic2ModelManifest } from './supertonic2Manifest';
+import type { Supertonic3ModelManifest } from './supertonic3Manifest';
 import type {
-  Supertonic2DownloadProgress,
-  Supertonic2ModelStatus,
-} from './supertonic2ModelStore';
+  Supertonic3DownloadProgress,
+  Supertonic3ModelStatus,
+} from './supertonic3ModelStore';
 
 export type TtsBootstrapPhase =
   | 'checking'
@@ -20,19 +20,19 @@ export type TtsBootstrapPhase =
 type TtsDownloadingBootstrapState = {
   phase: 'downloading';
   canEnterApp: false;
-  progress?: Supertonic2DownloadProgress;
+  progress?: Supertonic3DownloadProgress;
 };
 
 type TtsVerifyingBootstrapState = {
   phase: 'verifying';
   canEnterApp: false;
-  progress?: Supertonic2DownloadProgress;
+  progress?: Supertonic3DownloadProgress;
 };
 
 type TtsPreparingBootstrapState = {
   phase: 'preparing';
   canEnterApp: false;
-  progress?: Supertonic2DownloadProgress;
+  progress?: Supertonic3DownloadProgress;
 };
 
 export type TtsBootstrapState =
@@ -44,27 +44,27 @@ export type TtsBootstrapState =
       phase: 'failed';
       canEnterApp: false;
       errorMessage: string;
-      progress?: Supertonic2DownloadProgress;
+      progress?: Supertonic3DownloadProgress;
     }
   | { phase: 'ready'; canEnterApp: true };
 
 export type TtsBootstrapEvent =
-  | { type: 'download-progress'; progress: Supertonic2DownloadProgress }
+  | { type: 'download-progress'; progress: Supertonic3DownloadProgress }
   | { type: 'verifying' }
   | { type: 'preparing' }
   | { type: 'ready' }
   | { type: 'failed'; errorMessage: string };
 
 export interface TtsBootstrapModelDependencies {
-  manifest: Supertonic2ModelManifest;
+  manifest: Supertonic3ModelManifest;
   modelStore: {
-    deleteModel(manifest: Supertonic2ModelManifest): Promise<void>;
+    deleteModel(manifest: Supertonic3ModelManifest): Promise<void>;
     downloadModel(
-      manifest: Supertonic2ModelManifest,
-      onProgress: (progress: Supertonic2DownloadProgress) => void,
+      manifest: Supertonic3ModelManifest,
+      onProgress: (progress: Supertonic3DownloadProgress) => void,
     ): Promise<void>;
-    getModelRootUri(manifest: Supertonic2ModelManifest): string | null;
-    getStatus(manifest: Supertonic2ModelManifest): Promise<Supertonic2ModelStatus>;
+    getModelRootUri(manifest: Supertonic3ModelManifest): string | null;
+    getStatus(manifest: Supertonic3ModelManifest): Promise<Supertonic3ModelStatus>;
   };
 }
 
@@ -74,8 +74,8 @@ export interface TtsBootstrapRuntimeDependencies {
     isSupported(): boolean;
     getModelStatus(
       rootUri: string,
-      manifest: Supertonic2ModelManifest,
-    ): Promise<Supertonic2ModelStatus>;
+      manifest: Supertonic3ModelManifest,
+    ): Promise<Supertonic3ModelStatus>;
     prepareTts(rootUri: string): Promise<void>;
   };
   shouldBlockUnsupportedRuntime?: boolean;
@@ -91,7 +91,7 @@ function getBootstrapProgress(state: TtsBootstrapState) {
   return 'progress' in state ? state.progress : undefined;
 }
 
-function preserveProgress(progress?: Supertonic2DownloadProgress) {
+function preserveProgress(progress?: Supertonic3DownloadProgress) {
   return progress ? { progress } : {};
 }
 
@@ -145,7 +145,7 @@ export function reduceTtsBootstrapState(
   };
 }
 
-export function getDownloadPercent(progress?: Supertonic2DownloadProgress) {
+export function getDownloadPercent(progress?: Supertonic3DownloadProgress) {
   if (!progress || progress.totalBytes <= 0) return 0;
   return Math.max(
     0,
@@ -163,20 +163,20 @@ export function getBootstrapMessage(state: TtsBootstrapState) {
 }
 
 export async function loadTtsBootstrapDependencies(): Promise<TtsBootstrapRuntimeDependencies> {
-  const { supertonic2NativeRuntime } = await import('./supertonic2Native');
+  const { supertonic3NativeRuntime } = await import('./supertonic3Native');
 
   return {
-    nativeRuntime: supertonic2NativeRuntime,
+    nativeRuntime: supertonic3NativeRuntime,
     shouldBlockUnsupportedRuntime: Platform.OS === 'ios',
     loadModelDependencies: async () => {
-      const [{ supertonic2ModelManifest }, { supertonic2ModelStore }] = await Promise.all([
-        import('./supertonic2Manifest'),
-        import('./supertonic2ModelStore'),
+      const [{ supertonic3ModelManifest }, { supertonic3ModelStore }] = await Promise.all([
+        import('./supertonic3Manifest'),
+        import('./supertonic3ModelStore'),
       ]);
 
       return {
-        manifest: supertonic2ModelManifest,
-        modelStore: supertonic2ModelStore,
+        manifest: supertonic3ModelManifest,
+        modelStore: supertonic3ModelStore,
       };
     },
   };
@@ -190,7 +190,7 @@ async function downloadAndVerifyModel({
 }: {
   dispatchIfActive(event: TtsBootstrapEvent): void;
   isActive(): boolean;
-  manifest: Supertonic2ModelManifest;
+  manifest: Supertonic3ModelManifest;
   modelStore: TtsBootstrapModelDependencies['modelStore'];
 }) {
   await modelStore.downloadModel(manifest, (progress) =>
@@ -229,7 +229,7 @@ export async function runTtsBootstrap({
       if (shouldBlockUnsupportedRuntime) {
         dispatchIfActive({
           type: 'failed',
-          errorMessage: 'supertonic2-runtime-unavailable',
+          errorMessage: 'supertonic3-runtime-unavailable',
         });
         return;
       }

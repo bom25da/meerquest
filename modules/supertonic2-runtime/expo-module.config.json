@@ -1,8 +1,0 @@
-{
-  "platforms": ["ios"],
-  "ios": {
-    "modules": ["Supertonic2RuntimeModule"],
-    "podspecPath": "./Supertonic2Runtime.podspec",
-    "swiftModuleName": "Supertonic2Runtime"
-  }
-}

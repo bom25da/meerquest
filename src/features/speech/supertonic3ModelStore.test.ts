@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Supertonic2ModelManifest } from './supertonic2Manifest';
+import type { Supertonic3ModelManifest } from './supertonic3Manifest';
 
 const fileSystemMock = vi.hoisted(() => ({
   cacheDirectory: 'file:///cache/',
@@ -14,9 +14,9 @@ const fileSystemMock = vi.hoisted(() => ({
 vi.mock('expo-file-system/legacy', () => fileSystemMock);
 
 import {
-  createSupertonic2ModelStore,
+  createSupertonic3ModelStore,
   getDownloadedRelativePath,
-} from './supertonic2ModelStore';
+} from './supertonic3ModelStore';
 
 const ttsFile = {
   path: 'onnx/tts.json',
@@ -32,18 +32,23 @@ const voiceStyleFile = {
   url: 'https://example.test/voice_styles/F1.json',
 };
 
-const manifest: Supertonic2ModelManifest = {
-  modelId: 'Supertone/supertonic-2',
-  revision: '75e6727618a02f323c720cba9478152d4bc16ca4',
+const testRevision = '3cadd1ee6394adea1bd021217a0e650ede09a323';
+const testModelRootUri = `file:///docs/supertonic3/${testRevision}`;
+const testTtsFileUri = `${testModelRootUri}/onnx/tts.json`;
+const testVoiceStyleFileUri = `${testModelRootUri}/voice_styles/F1.json`;
+
+const manifest: Supertonic3ModelManifest = {
+  modelId: 'Supertone/supertonic-3',
+  revision: testRevision,
   files: [ttsFile, voiceStyleFile],
 };
 
-const singleFileManifest: Supertonic2ModelManifest = {
+const singleFileManifest: Supertonic3ModelManifest = {
   ...manifest,
   files: [ttsFile],
 };
 
-describe('supertonic2 model store', () => {
+describe('supertonic3 model store', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fileSystemMock.getInfoAsync.mockResolvedValue({ exists: true, size: ttsFile.bytes });
@@ -52,7 +57,7 @@ describe('supertonic2 model store', () => {
       downloadAsync: vi.fn(async () => ({
         headers: {},
         status: 200,
-        uri: 'file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json',
+        uri: testTtsFileUri,
       })),
     });
   });
@@ -65,11 +70,11 @@ describe('supertonic2 model store', () => {
         sha256: 'c'.repeat(64),
         url: 'x',
       }),
-    ).toBe('supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json');
+    ).toBe(`supertonic3/${testRevision}/onnx/tts.json`);
   });
 
   it('reports missing when the document directory is unavailable', async () => {
-    const store = createSupertonic2ModelStore({
+    const store = createSupertonic3ModelStore({
       storageDirectory: null,
       deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(),
@@ -86,11 +91,12 @@ describe('supertonic2 model store', () => {
   it('downloads files in manifest order and reports aggregate progress', async () => {
     const progress: number[] = [];
     const downloaded: string[] = [];
-    const store = createSupertonic2ModelStore({
+    const downloadedDestinations = new Set<string>();
+    const store = createSupertonic3ModelStore({
       storageDirectory: 'file:///docs/',
       deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async (uri: string) => ({
-        exists: true,
+        exists: downloadedDestinations.has(uri),
         size: uri.endsWith('voice_styles/F1.json') ? voiceStyleFile.bytes : ttsFile.bytes,
       })),
       makeDirectoryAsync: vi.fn(async () => undefined),
@@ -98,44 +104,75 @@ describe('supertonic2 model store', () => {
         downloaded.push(`${url} -> ${destination}`);
         onProgress({ totalBytesWritten: 5, totalBytesExpectedToWrite: 10 });
         onProgress({ totalBytesWritten: 10, totalBytesExpectedToWrite: 10 });
+        downloadedDestinations.add(destination);
       }),
     });
 
     await store.downloadModel(manifest, (event) => progress.push(event.downloadedBytes));
 
     expect(downloaded).toEqual([
-      'https://example.test/onnx/tts.json -> file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json',
-      'https://example.test/voice_styles/F1.json -> file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/voice_styles/F1.json',
+      `https://example.test/onnx/tts.json -> ${testTtsFileUri}`,
+      `https://example.test/voice_styles/F1.json -> ${testVoiceStyleFileUri}`,
     ]);
     expect(progress).toEqual([5, 10, 10, 15, 30, 30]);
   });
 
+  it('skips existing files that already match the manifest size', async () => {
+    const progress: number[] = [];
+    const downloaded: string[] = [];
+    const downloadedDestinations = new Set<string>([testTtsFileUri]);
+    const store = createSupertonic3ModelStore({
+      storageDirectory: 'file:///docs/',
+      deleteAsync: vi.fn(),
+      getInfoAsync: vi.fn(async (uri: string) => ({
+        exists: downloadedDestinations.has(uri),
+        size: uri.endsWith('voice_styles/F1.json') ? voiceStyleFile.bytes : ttsFile.bytes,
+      })),
+      makeDirectoryAsync: vi.fn(async () => undefined),
+      downloadAsync: vi.fn(async (url: string, destination: string, onProgress) => {
+        downloaded.push(`${url} -> ${destination}`);
+        onProgress({ totalBytesWritten: 5, totalBytesExpectedToWrite: 20 });
+        onProgress({ totalBytesWritten: 20, totalBytesExpectedToWrite: 20 });
+        downloadedDestinations.add(destination);
+      }),
+    });
+
+    await store.downloadModel(manifest, (event) => progress.push(event.downloadedBytes));
+
+    expect(downloaded).toEqual([
+      `https://example.test/voice_styles/F1.json -> ${testVoiceStyleFileUri}`,
+    ]);
+    expect(progress).toEqual([10, 15, 30, 30]);
+  });
+
   it('throws when the default download completes without a result', async () => {
+    fileSystemMock.getInfoAsync.mockResolvedValue({ exists: false });
     fileSystemMock.createDownloadResumable.mockReturnValue({
       downloadAsync: vi.fn(async () => undefined),
     });
 
     await expect(
-      createSupertonic2ModelStore().downloadModel(singleFileManifest, vi.fn()),
-    ).rejects.toThrow('Supertonic 2 model download did not complete.');
+      createSupertonic3ModelStore().downloadModel(singleFileManifest, vi.fn()),
+    ).rejects.toThrow('Supertonic 3 model download did not complete.');
   });
 
   it('throws when the default download returns a non-2xx status', async () => {
+    fileSystemMock.getInfoAsync.mockResolvedValue({ exists: false });
     fileSystemMock.createDownloadResumable.mockReturnValue({
       downloadAsync: vi.fn(async () => ({
         headers: {},
         status: 500,
-        uri: 'file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4/onnx/tts.json',
+        uri: testTtsFileUri,
       })),
     });
 
     await expect(
-      createSupertonic2ModelStore().downloadModel(singleFileManifest, vi.fn()),
-    ).rejects.toThrow('Supertonic 2 model download failed with HTTP status 500.');
+      createSupertonic3ModelStore().downloadModel(singleFileManifest, vi.fn()),
+    ).rejects.toThrow('Supertonic 3 model download failed with HTTP status 500.');
   });
 
   it('throws when a downloaded file is missing after download', async () => {
-    const store = createSupertonic2ModelStore({
+    const store = createSupertonic3ModelStore({
       storageDirectory: 'file:///docs/',
       deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async () => ({ exists: false })),
@@ -144,12 +181,12 @@ describe('supertonic2 model store', () => {
     });
 
     await expect(store.downloadModel(singleFileManifest, vi.fn())).rejects.toThrow(
-      'Supertonic 2 downloaded file is missing: onnx/tts.json.',
+      'Supertonic 3 downloaded file is missing: onnx/tts.json.',
     );
   });
 
   it('throws when a downloaded file size differs from the manifest', async () => {
-    const store = createSupertonic2ModelStore({
+    const store = createSupertonic3ModelStore({
       storageDirectory: 'file:///docs/',
       deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async () => ({ exists: true, size: 9 })),
@@ -158,21 +195,24 @@ describe('supertonic2 model store', () => {
     });
 
     await expect(store.downloadModel(singleFileManifest, vi.fn())).rejects.toThrow(
-      'Supertonic 2 downloaded file size mismatch for onnx/tts.json: expected 10 bytes, got 9 bytes.',
+      'Supertonic 3 downloaded file size mismatch for onnx/tts.json: expected 10 bytes, got 9 bytes.',
     );
   });
 
   it('reports final progress after each file when native progress is not emitted', async () => {
     const progress: number[] = [];
-    const store = createSupertonic2ModelStore({
+    const downloadedDestinations = new Set<string>();
+    const store = createSupertonic3ModelStore({
       storageDirectory: 'file:///docs/',
       deleteAsync: vi.fn(),
       getInfoAsync: vi.fn(async (uri: string) => ({
-        exists: true,
+        exists: downloadedDestinations.has(uri),
         size: uri.endsWith('voice_styles/F1.json') ? voiceStyleFile.bytes : ttsFile.bytes,
       })),
       makeDirectoryAsync: vi.fn(async () => undefined),
-      downloadAsync: vi.fn(async () => undefined),
+      downloadAsync: vi.fn(async (_url: string, destination: string) => {
+        downloadedDestinations.add(destination);
+      }),
     });
 
     await store.downloadModel(manifest, (event) => progress.push(event.downloadedBytes));
@@ -182,7 +222,7 @@ describe('supertonic2 model store', () => {
 
   it('deletes the revisioned model directory idempotently for repair downloads', async () => {
     const deleteAsync = vi.fn(async () => undefined);
-    const store = createSupertonic2ModelStore({
+    const store = createSupertonic3ModelStore({
       storageDirectory: 'file:///docs/',
       deleteAsync,
       getInfoAsync: vi.fn(),
@@ -193,7 +233,7 @@ describe('supertonic2 model store', () => {
     await store.deleteModel(manifest);
 
     expect(deleteAsync).toHaveBeenCalledWith(
-      'file:///docs/supertonic2/75e6727618a02f323c720cba9478152d4bc16ca4',
+      testModelRootUri,
       { idempotent: true },
     );
   });

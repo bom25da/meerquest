@@ -3,10 +3,10 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-const scriptPath = resolve(process.cwd(), 'tools/supertonic2_tts.py');
+const scriptPath = resolve(process.cwd(), 'tools/supertonic3_tts.py');
 
-describe('supertonic-2 TTS helper', () => {
-  it('reports the pinned supertonic-2 settings without loading the model', () => {
+describe('supertonic TTS helper', () => {
+  it('reports the pinned supertonic-3 settings without loading the model', () => {
     const result = spawnSync(
       'python3',
       [
@@ -24,17 +24,17 @@ describe('supertonic-2 TTS helper', () => {
     const payload = JSON.parse(result.stdout);
     expect(payload).toMatchObject({
       lang: 'ko',
-      model: 'supertonic-2',
+      model: 'supertonic-3',
       output: 'assets/audio/voice/meero-waits.wav',
-      voice: 'F1',
+      voice: 'F2',
     });
   });
 
-  it('documents the Supertonic 2 model option in help output', () => {
+  it('documents the Supertonic 3 model option in help output', () => {
     const result = spawnSync('python3', [scriptPath, '--help'], { encoding: 'utf8' });
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('supertonic-2');
+    expect(result.stdout).toContain('supertonic-3');
     expect(result.stdout).toContain('--lang');
     expect(result.stdout).toContain('--voice');
   });

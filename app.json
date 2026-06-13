@@ -43,7 +43,7 @@
         }
       ],
       "expo-audio",
-      "./plugins/with-supertonic2-ios-runtime.js"
+      "./plugins/with-supertonic3-ios-runtime.js"
     ],
     "experiments": {
       "typedRoutes": true
