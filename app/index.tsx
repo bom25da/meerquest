@@ -26,7 +26,6 @@ import type {
 } from "@/src/content/home";
 import {
   getHomeViewportLayout,
-  homeEntrySpeechText,
   homeHero,
   homeLandscapeLayout,
   homeLearningRegions,
@@ -35,8 +34,7 @@ import {
   homeRegionCardStyle,
   homeSectionHeader,
 } from "@/src/content/home";
-import { supertonic3SpeechService } from "@/src/features/speech/supertonic3Speech";
-import { meerQuestBrightSpeechDefaults } from "@/src/features/speech/supertonic3VoiceProfile";
+import { bundledSpeechService } from "@/src/features/audio/bundledSpeech";
 import { colors } from "@/src/theme/colors";
 
 const meerquestWordmark = require("../assets/images/brand/meerquest-wordmark.png");
@@ -54,6 +52,7 @@ const homeHeroCtaImages = {
 } as const;
 
 const heroSpeechBubble = require("../assets/images/home/hero-speech-bubble.png");
+const homeChildExploreVoice = require("../assets/audio/voice/home-child-explore.wav");
 
 const regionBackgrounds: Record<HomeRegionBackground, ImageSourcePropType> = {
   "category-math-background": require("../assets/images/home/category-math-background.png"),
@@ -97,9 +96,7 @@ export default function HomeScreen() {
     : homeHero.cta.layout.regular;
   useFocusEffect(
     useCallback(() => {
-      void supertonic3SpeechService.speakText(homeEntrySpeechText, {
-        ...meerQuestBrightSpeechDefaults,
-      });
+      void bundledSpeechService.play(homeChildExploreVoice);
     }, []),
   );
 

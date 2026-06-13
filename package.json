@@ -42,6 +42,8 @@
     "typecheck": "tsc --noEmit",
     "voice:setup": "python3 -m pip install -r tools/supertonic3_requirements.txt",
     "voice:supertonic3": "python3 tools/supertonic3_tts.py",
+    "voice:qwen3:setup": "uv venv --python 3.12 .venv-qwen3-tts && uv pip install --python .venv-qwen3-tts/bin/python -r tools/qwen3_tts_requirements.txt",
+    "voice:qwen3": "${QWEN3_TTS_PYTHON:-.venv-qwen3-tts/bin/python} tools/qwen3_tts.py",
     "model:supertonic3-manifest": "python3 tools/build_supertonic3_manifest.py"
   },
   "private": true

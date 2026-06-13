@@ -71,15 +71,18 @@ describe('home screen content', () => {
     expect(homeScreenSource).toMatch(/fontWeight:\s*['"]900['"]/);
   });
 
-  it('speaks the home entry greeting through Supertonic 3 when the home screen mounts', () => {
+  it('plays the bundled child voice greeting when the home screen mounts', () => {
     const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
 
-    expect(homeEntrySpeechText).toBe('좋아! 오늘도 같이 탐험하자~');
-    expect(homeScreenSource).toContain('supertonic3SpeechService');
-    expect(homeScreenSource).toContain('meerQuestBrightSpeechDefaults');
+    expect(homeEntrySpeechText).toBe('오늘도 같이 탐험해보자!');
+    expect(existsSync(resolve(process.cwd(), 'assets/audio/voice/home-child-explore.wav'))).toBe(
+      true,
+    );
+    expect(homeScreenSource).toContain('bundledSpeechService');
+    expect(homeScreenSource).toContain('homeChildExploreVoice');
     expect(homeScreenSource).toContain('useFocusEffect');
-    expect(homeScreenSource).toContain('supertonic3SpeechService.speakText(homeEntrySpeechText');
-    expect(homeScreenSource).toContain('...meerQuestBrightSpeechDefaults');
+    expect(homeScreenSource).toContain('bundledSpeechService.play(homeChildExploreVoice)');
+    expect(homeScreenSource).not.toContain('supertonic3SpeechService.speakText(homeEntrySpeechText');
   });
 
   it('keeps Supertonic 3 voice audition controls out of the home screen', () => {

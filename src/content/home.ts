@@ -123,7 +123,7 @@ export interface HomeViewportLayout {
   regionCardWidth: number;
 }
 
-export const homeEntrySpeechText = "좋아! 오늘도 같이 탐험하자~";
+export const homeEntrySpeechText = "오늘도 같이 탐험해보자!";
 
 export const homeHero: HomeHero = {
   image: "home-adventure-background-clean",
