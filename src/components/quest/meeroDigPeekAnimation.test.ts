@@ -137,7 +137,7 @@ describe('Meero dig-peek animation', () => {
     expect(source).toContain('setInterval');
     expect(source).toContain('meeroThinkAgainFrames');
     expect(source).not.toContain('thinkingFrameStyles');
-    expect(source).toContain('다시 생각해보는 미어루');
+    expect(source).toContain('다시 생각해보는 미어로');
   });
 
   it('keeps retry-thinking frames registered to a stable character position', () => {
@@ -927,6 +927,54 @@ describe('Meero dig-peek animation', () => {
     );
   });
 
+  it('uses a social playground slide-wait template with Fena taking a slide turn', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const slideWaitAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/slide-wait/slide-wait-fena-meero-v2.png',
+    );
+
+    expect(existsSync(slideWaitAssetPath)).toBe(true);
+    expect(readFileSync(slideWaitAssetPath)[25]).toBe(6);
+    expect(progressSource).toContain("'slide-wait'");
+    expect(progressSource).toContain("'social-playground-background'");
+    expect(questSource).toContain("id: 'social-3'");
+    expect(questSource).toContain(
+      '페나가 미끄럼틀을 타려고 해요. 뒤에서 기다리는 미어로는 어떻게 하면 좋을까요?',
+    );
+    expect(questSource).toContain("backgroundAsset: 'social-playground-background'");
+    expect(questSource).toContain("visualLayout: 'slide-wait'");
+    expect(questSource).toContain("{ id: 'wait', label: '기다려요' }");
+    expect(questSource).toContain("{ id: 'push', label: '밀어요' }");
+    expect(questSource).toContain("{ id: 'cut', label: '앞으로 가요' }");
+    expect(questSource).toContain("correctChoiceId: 'wait'");
+    expect(screenSource).toContain("quest.visualLayout === 'slide-wait'");
+    expect(screenSource).toContain('slideWaitSceneImage');
+    expect(screenSource).toContain('slide-wait-fena-meero-v2.png');
+    expect(screenSource).toContain('sceneSource={slideWaitSceneImage}');
+    expect(screenSource).toContain(
+      'sceneAccessibilityLabel="페나가 미끄럼틀을 타려고 하고 미어로가 뒤에서 기다리는 장면"',
+    );
+
+    const sceneRect = getSourceRect(screenSource, 'slideWaitSceneImageRect');
+    const waitChoiceRect = getRecordChoiceRect(screenSource, 'slideWaitChoiceRects', 'wait');
+    const pushChoiceRect = getRecordChoiceRect(screenSource, 'slideWaitChoiceRects', 'push');
+    const cutChoiceRect = getRecordChoiceRect(screenSource, 'slideWaitChoiceRects', 'cut');
+
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(waitChoiceRect.left - 36);
+    expect(pushChoiceRect.top).toBeGreaterThanOrEqual(
+      waitChoiceRect.top + waitChoiceRect.height + 16,
+    );
+    expect(cutChoiceRect.top).toBeGreaterThanOrEqual(
+      pushChoiceRect.top + pushChoiceRect.height + 16,
+    );
+  });
+
   it('does not statically load the native audio module before the sound button is pressed', () => {
     const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
 
@@ -946,11 +994,11 @@ describe('Meero dig-peek animation', () => {
     const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
     const soundHandlerConnections = screenSource.match(/onSound=\{soundPressHandler\}/g) ?? [];
 
-    expect(soundHandlerConnections).toHaveLength(12);
+    expect(soundHandlerConnections).toHaveLength(13);
     expect(screenSource).toContain('supertonic3SpeechService.speakText(step.instructionText');
     expect(screenSource).toContain('meerQuestSpeechDefaults');
     expect(screenSource).toContain('...meerQuestSpeechDefaults');
-    expect(screenSource).toContain('미어루 목소리를 준비한 뒤 들을 수 있어요.');
+    expect(screenSource).toContain('미어로 목소리를 준비한 뒤 들을 수 있어요.');
   });
 });
 

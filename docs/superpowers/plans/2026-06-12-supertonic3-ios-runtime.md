@@ -753,10 +753,10 @@ export function getDownloadPercent(progress?: Supertonic3DownloadProgress) {
 }
 
 export function getBootstrapMessage(state: TtsBootstrapState) {
-  if (state.phase === 'checking') return '미어루의 목소리를 확인하고 있어요.';
+  if (state.phase === 'checking') return '미어로의 목소리를 확인하고 있어요.';
   if (state.phase === 'downloading') return '목소리 보물을 가져오고 있어요.';
   if (state.phase === 'verifying') return '목소리 보물을 살펴보고 있어요.';
-  if (state.phase === 'preparing') return '미어루가 말할 준비를 하고 있어요.';
+  if (state.phase === 'preparing') return '미어로가 말할 준비를 하고 있어요.';
   if (state.phase === 'failed') return '목소리 보물을 다시 준비해볼게요.';
   return '준비됐어요.';
 }
@@ -1416,7 +1416,7 @@ describe('supertonic3 speech service', () => {
       createPlayer: vi.fn(() => ({ play, remove })),
     });
 
-    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
+    await expect(service.speakText('미어로')).resolves.toEqual({ status: 'played' });
     expect(play).toHaveBeenCalledTimes(1);
     expect(remove).toHaveBeenCalledTimes(1);
   });
@@ -1532,7 +1532,7 @@ async function handleSoundPress() {
   });
 
   if (result.status === 'unavailable') {
-    setFeedbackMessage('미어루 목소리를 준비한 뒤 들을 수 있어요.');
+    setFeedbackMessage('미어로 목소리를 준비한 뒤 들을 수 있어요.');
   }
 }
 ```

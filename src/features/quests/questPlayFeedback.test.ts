@@ -195,7 +195,7 @@ describe('quest play feedback', () => {
     expect(
       getQuestResultOverlay({
         continueAction: 'blocked',
-        feedbackMessage: '미어루가 땅굴에서 빼꼼 나와 기다려요.',
+        feedbackMessage: '미어로가 땅굴에서 빼꼼 나와 기다려요.',
         isStepComplete: false,
         selectedChoiceId: null,
       }),

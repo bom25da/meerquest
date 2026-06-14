@@ -241,4 +241,23 @@ describe('quest content', () => {
     expect(socialQuest?.steps[0].correctChoiceId).toBe('thanks');
     expect(socialQuest?.steps[0].hintText).toBe('도움을 받았을 때 따뜻하게 하는 말이에요.');
   });
+
+  it('uses a slide turn-taking story for the third social playground quest', () => {
+    const socialQuest = quests.find((quest) => quest.id === 'social-3');
+
+    expect(socialQuest?.backgroundAsset).toBe('social-playground-background');
+    expect(socialQuest?.visualLayout).toBe('slide-wait');
+    expect(socialQuest?.title).toBe('차례를 기다려요');
+    expect(socialQuest?.introduction).toBe('놀이터에서 차례를 기다리는 방법을 골라요.');
+    expect(socialQuest?.steps[0].instructionText).toBe(
+      '페나가 미끄럼틀을 타려고 해요. 뒤에서 기다리는 미어로는 어떻게 하면 좋을까요?',
+    );
+    expect(socialQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '기다려요',
+      '밀어요',
+      '앞으로 가요',
+    ]);
+    expect(socialQuest?.steps[0].correctChoiceId).toBe('wait');
+    expect(socialQuest?.steps[0].hintText).toBe('페나가 먼저 탈 수 있도록 차례를 지켜요.');
+  });
 });

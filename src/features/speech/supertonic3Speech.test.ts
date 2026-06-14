@@ -30,7 +30,7 @@ describe('supertonic3 speech service', () => {
       createPlayer: vi.fn(() => ({ play, remove })),
     });
 
-    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
+    await expect(service.speakText('미어로')).resolves.toEqual({ status: 'played' });
     expect(play).toHaveBeenCalledTimes(1);
   });
 
@@ -38,7 +38,7 @@ describe('supertonic3 speech service', () => {
     const configureAudio = vi.fn(async () => undefined);
     const play = vi.fn();
     const synthesizeToFile = vi.fn(async () => ({
-      uri: 'file:///미어루.wav',
+      uri: 'file:///미어로.wav',
       durationSeconds: 0.1,
     }));
     const service = createSupertonic3SpeechService({
@@ -50,7 +50,7 @@ describe('supertonic3 speech service', () => {
       configureAudio,
     });
 
-    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
+    await expect(service.speakText('미어로')).resolves.toEqual({ status: 'played' });
 
     expect(configureAudio).toHaveBeenCalledOnce();
     expect(configureAudio.mock.invocationCallOrder[0]).toBeLessThan(
@@ -105,7 +105,7 @@ describe('supertonic3 speech service', () => {
       runtime: {
         isSupported: () => true,
         synthesizeToFile: vi.fn(async () => ({
-          uri: 'file:///미어루.wav',
+          uri: 'file:///미어로.wav',
           durationSeconds: 0.75,
         })),
       },
@@ -113,7 +113,7 @@ describe('supertonic3 speech service', () => {
       deleteFile,
     });
 
-    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'played' });
+    await expect(service.speakText('미어로')).resolves.toEqual({ status: 'played' });
     expect(remove).not.toHaveBeenCalled();
     expect(deleteFile).not.toHaveBeenCalled();
 
@@ -123,7 +123,7 @@ describe('supertonic3 speech service', () => {
 
     await vi.advanceTimersByTimeAsync(1);
     expect(remove).toHaveBeenCalledTimes(1);
-    expect(deleteFile).toHaveBeenCalledWith('file:///미어루.wav');
+    expect(deleteFile).toHaveBeenCalledWith('file:///미어로.wav');
   });
 
   it('deletes a synthesized file if playback setup fails', async () => {
@@ -142,7 +142,7 @@ describe('supertonic3 speech service', () => {
       deleteFile,
     });
 
-    await expect(service.speakText('미어루')).resolves.toEqual({ status: 'unavailable' });
+    await expect(service.speakText('미어로')).resolves.toEqual({ status: 'unavailable' });
     expect(deleteFile).toHaveBeenCalledWith('file:///failed.wav');
   });
 

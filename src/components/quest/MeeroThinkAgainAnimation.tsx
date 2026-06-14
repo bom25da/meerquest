@@ -39,7 +39,7 @@ export function MeeroThinkAgainAnimation({
 
   return (
     <Image
-      accessibilityLabel="다시 생각해보는 미어루"
+      accessibilityLabel="다시 생각해보는 미어로"
       resizeMode="contain"
       source={meeroThinkAgainFrames[frameIndex]}
       style={style}

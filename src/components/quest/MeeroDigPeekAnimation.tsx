@@ -39,7 +39,7 @@ export function MeeroDigPeekAnimation({
 
   return (
     <Image
-      accessibilityLabel="땅굴에서 빼꼼 올라오는 미어루"
+      accessibilityLabel="땅굴에서 빼꼼 올라오는 미어로"
       resizeMode="contain"
       source={meeroDigPeekFrames[frameIndex]}
       style={style}

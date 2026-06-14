@@ -15,7 +15,8 @@ export type QuestVisualLayout =
   | 'emotion-face'
   | 'gift-thanks'
   | 'toy-share'
-  | 'help-thanks';
+  | 'help-thanks'
+  | 'slide-wait';
 export type QuestBackgroundAsset =
   | 'math-cave-background'
   | 'language-hill-background'

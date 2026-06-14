@@ -13,7 +13,7 @@ describe('supertonic TTS helper', () => {
         scriptPath,
         '--dry-run',
         '--text',
-        '미어루가 기다려요.',
+        '미어로가 기다려요.',
         '--output',
         'assets/audio/voice/meero-waits.wav',
       ],

@@ -52,6 +52,7 @@ const giftThanksSceneImage = require('../assets/images/quests/gift-thanks/gift-t
 const helpThanksSceneImage = require('../assets/images/quests/help-thanks/help-thanks-meero-fena-v3.png');
 const happyMeeroEmotionImage = require('../assets/images/quests/emotion-face/emotion-face-meero-happy-v1.png');
 const seedStorySceneImage = require('../assets/images/quests/story-sequence/story-sequence-meero-seed-v3.png');
+const slideWaitSceneImage = require('../assets/images/quests/slide-wait/slide-wait-fena-meero-v2.png');
 const toyShareSceneImage = require('../assets/images/quests/toy-share/toy-share-meero-fena-v1.png');
 const dogBarkSound = require('../assets/audio/quests/language-1/language-1-dog-bark-v1.mp3');
 const languageHillBackground = require('../assets/images/home/category-language-background.png');
@@ -71,7 +72,7 @@ const questSoundSources: Record<QuestSoundAsset, number> = {
   'dog-bark': dogBarkSound,
 };
 
-const initialFeedbackMessage = '미어루가 땅굴에서 빼꼼 나와 기다려요.';
+const initialFeedbackMessage = '미어로가 땅굴에서 빼꼼 나와 기다려요.';
 
 export default function QuestPlayScreen() {
   const { questId } = useLocalSearchParams<{ questId?: string }>();
@@ -200,7 +201,7 @@ export default function QuestPlayScreen() {
     });
 
     if (result.status === 'unavailable') {
-      setFeedbackMessage('미어루 목소리를 준비한 뒤 들을 수 있어요.');
+      setFeedbackMessage('미어로 목소리를 준비한 뒤 들을 수 있어요.');
     }
   }
 
@@ -538,6 +539,41 @@ export default function QuestPlayScreen() {
         sceneAccessibilityLabel="미어로가 페나의 짐을 들어주는 장면"
         sceneImageRect={helpThanksSceneImageRect}
         sceneSource={helpThanksSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'slide-wait') {
+    return (
+      <AnimalSoundQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : socialPlaygroundBackground
+        }
+        choiceRects={slideWaitChoiceRects}
+        fallbackChoiceRect={slideWaitFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="페나가 미끄럼틀을 타려고 하고 미어로가 뒤에서 기다리는 장면"
+        sceneImageRect={slideWaitSceneImageRect}
+        sceneSource={slideWaitSceneImage}
         selectedChoiceId={selectedChoiceId}
         stars={earnedStars}
         step={step}
@@ -1898,6 +1934,13 @@ const helpThanksChoiceRects: Record<string, QuestStageSourceRect> = {
   hide: { height: 112, left: 850, top: 508, width: 252 },
 };
 const helpThanksFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const slideWaitSceneImageRect = { height: 402, left: 72, top: 224, width: 742 };
+const slideWaitChoiceRects: Record<string, QuestStageSourceRect> = {
+  wait: { height: 112, left: 850, top: 244, width: 252 },
+  push: { height: 112, left: 850, top: 376, width: 252 },
+  cut: { height: 112, left: 850, top: 508, width: 252 },
+};
+const slideWaitFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
 const shapeFindPromptRect = { height: 96, left: 233, top: 136, width: 900 };
 const shapeFindDoorImageRect = { height: 360, left: 108, top: 248, width: 640 };
 const shapeFindDoorButtonLabelRects: Record<string, QuestStageSourceRect> = {
