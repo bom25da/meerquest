@@ -10,6 +10,13 @@ interface DecodedPng {
   width: number;
 }
 
+interface SourceRect {
+  height: number;
+  left: number;
+  top: number;
+  width: number;
+}
+
 const require = createRequire(import.meta.url);
 const { PNG } = require('pngjs') as {
   PNG: { sync: { read: (buffer: Buffer) => DecodedPng } };
@@ -290,7 +297,7 @@ describe('Meero dig-peek animation', () => {
     expect(doorAsset[25]).toBe(6);
     expect(questSource).toContain('동그라미 버튼을 찾아요');
     expect(questSource).toContain(
-      '미어로가 문을 통과하기 위하여 동그라미 버튼을 눌러야해요. 동그라미 버튼은 무엇인가요?',
+      '미어로가 문 앞에서 1번 동그라미 버튼과 2번 네모 버튼을 보았어요. 문을 열 동그라미 버튼은 몇 번인가요?',
     );
     expect(questSource).not.toContain('이 도형');
     expect(questSource).toContain("{ id: 'button-1', label: '1번' }");
@@ -344,7 +351,7 @@ describe('Meero dig-peek animation', () => {
     expect(patternAsset[25]).toBe(6);
     expect(progressSource).toContain("'pattern-path'");
     expect(questSource).toContain("id: 'math-3'");
-    expect(questSource).toContain('미어로가 길을 건너고 있어요. 다음 길은 무슨 색 길일까요?');
+    expect(questSource).toContain('미어로가 빨강, 파랑, 빨강, 파랑 길을 건너고 있어요. 다음에 밟을 길은 무슨 색일까요?');
     expect(questSource).toContain("backgroundAsset: 'math-cave-background'");
     expect(questSource).toContain("visualLayout: 'pattern-path'");
     expect(screenSource).toContain("quest.visualLayout === 'pattern-path'");
@@ -393,7 +400,7 @@ describe('Meero dig-peek animation', () => {
     expect(questSource).toContain("id: 'math-4'");
     expect(questSource).toContain('큰 잠자리 구멍을 골라요');
     expect(questSource).toContain(
-      '졸린 미어로가 잠을 잘 큰 구멍을 찾고 있어요. 어떤 구멍이 클까요?',
+      '졸린 미어로가 작은 구멍과 큰 구멍을 보았어요. 잠을 편하게 잘 큰 구멍은 몇 번인가요?',
     );
     expect(questSource).toContain("backgroundAsset: 'math-cave-background'");
     expect(questSource).toContain("visualLayout: 'size-compare'");
@@ -573,7 +580,7 @@ describe('Meero dig-peek animation', () => {
     expect(questSource).toContain("id: 'math-5'");
     expect(questSource).toContain('당근을 더해요');
     expect(questSource).toContain(
-      '미어로가 당근 2개를 갖고 있었어요. 페나가 당근 1개를 주면 모두 몇 개일까요?',
+      '미어로가 당근 2개를 들고 있는데 페나가 당근 1개를 건네줬어요. 미어로의 당근은 모두 몇 개가 되었나요?',
     );
     expect(questSource).toContain("visualLayout: 'carrot-addition'");
     expect(questSource).toContain("correctChoiceId: 'three'");
@@ -604,6 +611,300 @@ describe('Meero dig-peek animation', () => {
     );
   });
 
+  it('uses a Meero sparkling gem counting template for the stage 6 math quest', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const gemAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/gem-count/gem-count-meero-gems-v1.png',
+    );
+
+    expect(existsSync(gemAssetPath)).toBe(true);
+    const gemAsset = readFileSync(gemAssetPath);
+
+    expect(gemAsset[25]).toBe(6);
+    expect(progressSource).toContain("'gem-count'");
+    expect(questSource).toContain("id: 'math-6'");
+    expect(questSource).toContain('반짝이는 보석을 세요');
+    expect(questSource).toContain('미어로가 동굴에서 반짝이는 보석을 발견했어요. 미어로가 찾은 보석은 몇 개일까요?');
+    expect(questSource).toContain("visualLayout: 'gem-count'");
+    expect(questSource).toContain("correctChoiceId: 'four'");
+    expect(screenSource).toContain("quest.visualLayout === 'gem-count'");
+    expect(screenSource).toContain('gemCountSceneImage');
+    expect(screenSource).toContain('gem-count-meero-gems-v1.png');
+    expect(screenSource).toContain('미어로가 반짝이는 보석을 바라보는 장면');
+    expect(screenSource).toContain('gemCountSceneImageRect');
+    expect(screenSource).toContain('gemCountPromptRect');
+    expect(screenSource).toContain('gemCountChoiceRects');
+    expect(screenSource).toContain('gemCountChoiceDots');
+
+    const panelRect = getSourceRect(screenSource, 'questContentBackdropRect');
+    const sceneRect = getSourceRect(screenSource, 'gemCountSceneImageRect');
+    const promptRect = getSourceRect(screenSource, 'gemCountPromptRect');
+    const threeChoiceRect = getRecordChoiceRect(screenSource, 'gemCountChoiceRects', 'three');
+    const fourChoiceRect = getRecordChoiceRect(screenSource, 'gemCountChoiceRects', 'four');
+    const fiveChoiceRect = getRecordChoiceRect(screenSource, 'gemCountChoiceRects', 'five');
+
+    expect(sceneRect.top).toBeGreaterThanOrEqual(promptRect.top + promptRect.height + 6);
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(threeChoiceRect.left - 36);
+    expect(threeChoiceRect.left).toBe(fourChoiceRect.left);
+    expect(fourChoiceRect.left).toBe(fiveChoiceRect.left);
+    expect(fourChoiceRect.top).toBeGreaterThanOrEqual(threeChoiceRect.top + threeChoiceRect.height + 16);
+    expect(fiveChoiceRect.top).toBeGreaterThanOrEqual(fourChoiceRect.top + fourChoiceRect.height + 16);
+    expect(fiveChoiceRect.top + fiveChoiceRect.height).toBeLessThanOrEqual(
+      panelRect.top + panelRect.height,
+    );
+  });
+
+  it('uses a Meero small-number door button template for the stage 7 quest', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const smallNumberAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/small-number/small-number-meero-door-buttons-v1.png',
+    );
+
+    expect(existsSync(smallNumberAssetPath)).toBe(true);
+    const smallNumberAsset = readFileSync(smallNumberAssetPath);
+
+    expect(smallNumberAsset[25]).toBe(6);
+    expect(progressSource).toContain("'small-number'");
+    expect(questSource).toContain("id: 'math-7'");
+    expect(questSource).toContain('작은 수를 찾아요');
+    expect(questSource).toContain('미어로가 숫자 버튼이 달린 동굴 문을 발견했어요.');
+    expect(questSource).toContain(
+      '미어로가 2와 5가 적힌 문 버튼을 보았어요. 더 작은 수의 버튼은 무엇인가요?',
+    );
+    expect(questSource).toContain("visualLayout: 'small-number'");
+    expect(questSource).toContain("correctChoiceId: 'two'");
+    expect(screenSource).toContain("quest.visualLayout === 'small-number'");
+    expect(screenSource).toContain('smallNumberSceneImage');
+    expect(screenSource).toContain('small-number-meero-door-buttons-v1.png');
+    expect(screenSource).toContain('미어로가 숫자 2와 5 버튼이 달린 동굴 문을 바라보는 장면');
+    expect(screenSource).toContain('smallNumberSceneImageRect');
+    expect(screenSource).toContain('smallNumberPromptRect');
+    expect(screenSource).toContain('smallNumberChoiceRects');
+    expect(screenSource).toContain('smallNumberChoiceDots');
+
+    const panelRect = getSourceRect(screenSource, 'questContentBackdropRect');
+    const sceneRect = getSourceRect(screenSource, 'smallNumberSceneImageRect');
+    const promptRect = getSourceRect(screenSource, 'smallNumberPromptRect');
+    const twoChoiceRect = getRecordChoiceRect(screenSource, 'smallNumberChoiceRects', 'two');
+    const fiveChoiceRect = getRecordChoiceRect(screenSource, 'smallNumberChoiceRects', 'five');
+
+    expect(sceneRect.top).toBeGreaterThanOrEqual(promptRect.top + promptRect.height + 6);
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(twoChoiceRect.left - 36);
+    expect(twoChoiceRect.left).toBe(fiveChoiceRect.left);
+    expect(fiveChoiceRect.top).toBeGreaterThanOrEqual(twoChoiceRect.top + twoChoiceRect.height + 20);
+    expect(fiveChoiceRect.top + fiveChoiceRect.height).toBeLessThanOrEqual(
+      panelRect.top + panelRect.height,
+    );
+  });
+
+  it('uses a Meero stone stack addition template for the stage 8 math quest', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const stoneStackAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/stone-stack-addition/stone-stack-addition-meero-pebbles-v1.png',
+    );
+
+    expect(existsSync(stoneStackAssetPath)).toBe(true);
+    const stoneStackAsset = readFileSync(stoneStackAssetPath);
+
+    expect(stoneStackAsset[25]).toBe(6);
+    expect(progressSource).toContain("'stone-stack-addition'");
+    expect(questSource).toContain("id: 'math-8'");
+    expect(questSource).toContain('하나 더하면 몇 개일까');
+    expect(questSource).toContain('미어로가 조약돌을 하나 더 쌓으려고 해요.');
+    expect(questSource).toContain(
+      '미어로가 조약돌 4개를 쌓고 하나를 더 올렸어요. 조약돌은 모두 몇 개가 되었나요?',
+    );
+    expect(questSource).toContain("visualLayout: 'stone-stack-addition'");
+    expect(questSource).toContain("correctChoiceId: 'five'");
+    expect(screenSource).toContain("quest.visualLayout === 'stone-stack-addition'");
+    expect(screenSource).toContain('stoneStackSceneImage');
+    expect(screenSource).toContain('stone-stack-addition-meero-pebbles-v1.png');
+    expect(screenSource).toContain('미어로가 조약돌 4개 위에 조약돌 1개를 더 쌓으려는 장면');
+    expect(screenSource).toContain('stoneStackSceneImageRect');
+    expect(screenSource).toContain('stoneStackPromptRect');
+    expect(screenSource).toContain('stoneStackChoiceRects');
+    expect(screenSource).toContain('stoneStackChoiceDots');
+
+    const panelRect = getSourceRect(screenSource, 'questContentBackdropRect');
+    const sceneRect = getSourceRect(screenSource, 'stoneStackSceneImageRect');
+    const promptRect = getSourceRect(screenSource, 'stoneStackPromptRect');
+    const fourChoiceRect = getRecordChoiceRect(screenSource, 'stoneStackChoiceRects', 'four');
+    const fiveChoiceRect = getRecordChoiceRect(screenSource, 'stoneStackChoiceRects', 'five');
+    const sixChoiceRect = getRecordChoiceRect(screenSource, 'stoneStackChoiceRects', 'six');
+
+    expect(sceneRect.top).toBeGreaterThanOrEqual(promptRect.top + promptRect.height + 6);
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(fourChoiceRect.left - 36);
+    expect(fourChoiceRect.left).toBe(fiveChoiceRect.left);
+    expect(fiveChoiceRect.left).toBe(sixChoiceRect.left);
+    expect(fiveChoiceRect.top).toBeGreaterThanOrEqual(fourChoiceRect.top + fourChoiceRect.height + 16);
+    expect(sixChoiceRect.top).toBeGreaterThanOrEqual(fiveChoiceRect.top + fiveChoiceRect.height + 16);
+    expect(sixChoiceRect.top + sixChoiceRect.height).toBeLessThanOrEqual(
+      panelRect.top + panelRect.height,
+    );
+  });
+
+  it('uses a Meero cave door shape matching template for the stage 9 math quest', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const shapeMatchAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/shape-match/shape-match-meero-door-groove-v1.png',
+    );
+
+    expect(existsSync(shapeMatchAssetPath)).toBe(true);
+    const shapeMatchAsset = readFileSync(shapeMatchAssetPath);
+
+    expect(shapeMatchAsset[25]).toBe(6);
+    expect(progressSource).toContain("'shape-match'");
+    expect(questSource).toContain("id: 'math-9'");
+    expect(questSource).toContain('같은 모양을 골라요');
+    expect(questSource).toContain('동굴 문에 같은 모양을 맞추는 홈이 있어요.');
+    expect(questSource).toContain(
+      '미어로가 도형 조각을 들고 동굴 문 앞에 섰어요. 미어로가 들고 있는 도형은 무엇인가요?',
+    );
+    expect(questSource).toContain("visualLayout: 'shape-match'");
+    expect(questSource).toContain("correctChoiceId: 'circle'");
+    expect(screenSource).toContain("quest.visualLayout === 'shape-match'");
+    expect(screenSource).toContain('shapeMatchSceneImage');
+    expect(screenSource).toContain('shape-match-meero-door-groove-v1.png');
+    expect(screenSource).toContain('미어로가 동굴 문의 동그라미 홈에 같은 모양 조각을 맞추려는 장면');
+    expect(screenSource).toContain('shapeMatchSceneImageRect');
+    expect(screenSource).toContain('shapeMatchPromptRect');
+    expect(screenSource).toContain('shapeMatchChoiceRects');
+    expect(screenSource).toContain('shapeMatchChoiceDots');
+
+    const panelRect = getSourceRect(screenSource, 'questContentBackdropRect');
+    const sceneRect = getSourceRect(screenSource, 'shapeMatchSceneImageRect');
+    const promptRect = getSourceRect(screenSource, 'shapeMatchPromptRect');
+    const circleChoiceRect = getRecordChoiceRect(screenSource, 'shapeMatchChoiceRects', 'circle');
+    const triangleChoiceRect = getRecordChoiceRect(screenSource, 'shapeMatchChoiceRects', 'triangle');
+    const squareChoiceRect = getRecordChoiceRect(screenSource, 'shapeMatchChoiceRects', 'square');
+
+    expect(sceneRect.top).toBeGreaterThanOrEqual(promptRect.top + promptRect.height + 6);
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(circleChoiceRect.left - 36);
+    expect(circleChoiceRect.left).toBe(triangleChoiceRect.left);
+    expect(triangleChoiceRect.left).toBe(squareChoiceRect.left);
+    expect(triangleChoiceRect.top).toBeGreaterThanOrEqual(circleChoiceRect.top + circleChoiceRect.height + 16);
+    expect(squareChoiceRect.top).toBeGreaterThanOrEqual(triangleChoiceRect.top + triangleChoiceRect.height + 16);
+    expect(squareChoiceRect.top + squareChoiceRect.height).toBeLessThanOrEqual(
+      panelRect.top + panelRect.height,
+    );
+  });
+
+  it('uses a numbered footprint sequence template for the stage 10 math quest', () => {
+    const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+    const progressSource = readFileSync(
+      resolve(process.cwd(), 'src/features/quests/questProgress.ts'),
+      'utf8',
+    );
+    const footprintSequenceAssetPath = resolve(
+      process.cwd(),
+      'assets/images/quests/footprint-sequence/footprint-sequence-cave-trail-v6.png',
+    );
+
+    expect(existsSync(footprintSequenceAssetPath)).toBe(true);
+    const footprintSequenceAsset = readFileSync(footprintSequenceAssetPath);
+
+    expect(footprintSequenceAsset[25]).toBe(6);
+    expect(progressSource).toContain("'footprint-sequence'");
+    expect(questSource).toContain("id: 'math-10'");
+    expect(questSource).toContain('열 번째 발자국');
+    expect(questSource).toContain('미어로가 숫자가 이어진 발자국 길을 발견했어요.');
+    expect(questSource).toContain(
+      '미어로가 1, 2, 3, 4가 적힌 발자국을 따라갔어요. 빈 발자국에 이어질 숫자는 무엇인가요?',
+    );
+    expect(questSource).toContain('4 다음 숫자를 떠올려봐요.');
+    expect(questSource).toContain("visualLayout: 'footprint-sequence'");
+    expect(questSource).toContain("correctChoiceId: 'five'");
+    expect(screenSource).toContain("quest.visualLayout === 'footprint-sequence'");
+    expect(screenSource).toContain('footprintSequenceSceneImage');
+    expect(screenSource).toContain('footprint-sequence-cave-trail-v6.png');
+    expect(screenSource).toContain('미어로가 숫자 발자국 길의 마지막 빈칸을 바라보는 장면');
+    expect(screenSource).toContain('footprintSequenceSceneImageRect');
+    expect(screenSource).toContain('footprintSequencePromptRect');
+    expect(screenSource).toContain('footprintSequenceChoiceRects');
+    expect(screenSource).toContain('footprintSequenceChoiceDots');
+    expect(screenSource).toContain('footprintSequenceLabelRects');
+    expect(screenSource).toContain('footprintSequenceLabels');
+    expect(screenSource).toContain("label: '1'");
+    expect(screenSource).toContain("label: '?'");
+    expect(screenSource).toContain('isMissing: true');
+    expect(screenSource).toContain('footprintSequenceMissingSlotText');
+    expect(screenSource).not.toContain("label: '□'");
+    expect(screenSource).not.toContain("label: '6'");
+    expect(screenSource).toContain('renderSceneOverlay={renderFootprintSequenceOverlay}');
+
+    const panelRect = getSourceRect(screenSource, 'questContentBackdropRect');
+    const sceneRect = getSourceRect(screenSource, 'footprintSequenceSceneImageRect');
+    const promptRect = getSourceRect(screenSource, 'footprintSequencePromptRect');
+    const threeChoiceRect = getRecordChoiceRect(screenSource, 'footprintSequenceChoiceRects', 'three');
+    const fourChoiceRect = getRecordChoiceRect(screenSource, 'footprintSequenceChoiceRects', 'four');
+    const fiveChoiceRect = getRecordChoiceRect(screenSource, 'footprintSequenceChoiceRects', 'five');
+    const oneLabelRect = getRecordChoiceRect(screenSource, 'footprintSequenceLabelRects', 'one');
+    const twoLabelRect = getRecordChoiceRect(screenSource, 'footprintSequenceLabelRects', 'two');
+    const threeLabelRect = getRecordChoiceRect(screenSource, 'footprintSequenceLabelRects', 'three');
+    const fourLabelRect = getRecordChoiceRect(screenSource, 'footprintSequenceLabelRects', 'four');
+    const slotLabelRect = getRecordChoiceRect(screenSource, 'footprintSequenceLabelRects', 'slot');
+    const numberLabelCount = screenSource.match(/label: '[0-9]'/g) ?? [];
+
+    expect(numberLabelCount).toHaveLength(4);
+    expect(sceneRect.top).toBeGreaterThanOrEqual(promptRect.top + promptRect.height + 6);
+    expect(sceneRect.left + sceneRect.width).toBeLessThanOrEqual(threeChoiceRect.left - 36);
+    expect(threeChoiceRect.left).toBe(fourChoiceRect.left);
+    expect(fourChoiceRect.left).toBe(fiveChoiceRect.left);
+    expect(fourChoiceRect.top).toBeGreaterThanOrEqual(threeChoiceRect.top + threeChoiceRect.height + 16);
+    expect(fiveChoiceRect.top).toBeGreaterThanOrEqual(fourChoiceRect.top + fourChoiceRect.height + 16);
+    expect(fiveChoiceRect.top + fiveChoiceRect.height).toBeLessThanOrEqual(
+      panelRect.top + panelRect.height,
+    );
+    expect(oneLabelRect.top).toBeGreaterThanOrEqual(sceneRect.top);
+    expect(oneLabelRect.width).toBeGreaterThanOrEqual(76);
+    expect(oneLabelRect.height).toBeGreaterThanOrEqual(66);
+    expect(oneLabelRect.left).toBeGreaterThan(twoLabelRect.left + 54);
+    expect(twoLabelRect.left).toBeGreaterThan(threeLabelRect.left + 54);
+    expect(threeLabelRect.left).toBeGreaterThan(fourLabelRect.left + 64);
+    expect(fourLabelRect.left).toBeGreaterThan(slotLabelRect.left + 36);
+    expect(twoLabelRect.top).toBeLessThan(threeLabelRect.top - 28);
+    expect(fourLabelRect.top).toBeLessThan(threeLabelRect.top - 28);
+    expect(oneLabelRect.top).toBeGreaterThan(twoLabelRect.top + 12);
+    expect(threeLabelRect.top).toBeGreaterThan(twoLabelRect.top + 28);
+    expect(slotLabelRect.left + slotLabelRect.width).toBeLessThanOrEqual(
+      sceneRect.left + sceneRect.width - 56,
+    );
+    expect(slotLabelRect.top).toBeGreaterThan(threeLabelRect.top + 36);
+    expect(slotLabelRect.width).toBeGreaterThanOrEqual(96);
+    expect(slotLabelRect.height).toBeGreaterThanOrEqual(80);
+    expect(slotLabelRect.top + slotLabelRect.height).toBeLessThanOrEqual(sceneRect.top + sceneRect.height);
+    [oneLabelRect, twoLabelRect, threeLabelRect, fourLabelRect, slotLabelRect].forEach((labelRect) => {
+      expect(getFootprintDarkPixelRatio(footprintSequenceAsset, sceneRect, labelRect)).toBeGreaterThan(
+        0.18,
+      );
+    });
+  });
+
   it('uses a language hill animal-sound template with playable dog bark audio', () => {
     const questSource = readFileSync(resolve(process.cwd(), 'src/content/quests.ts'), 'utf8');
     const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
@@ -630,7 +931,7 @@ describe('Meero dig-peek animation', () => {
     expect(progressSource).toContain("'animal-sound'");
     expect(progressSource).toContain("'language-hill-background'");
     expect(questSource).toContain("id: 'language-1'");
-    expect(questSource).toContain('언덕 뒤에서 동물 소리가 들려요. 어떤 동물 소리일까요?');
+    expect(questSource).toContain('미어로가 언덕 뒤에서 멍멍 소리를 들었어요. 어떤 동물 소리일까요?');
     expect(questSource).toContain("soundAsset: 'dog-bark'");
     expect(questSource).toContain("visualLayout: 'animal-sound'");
     expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
@@ -679,7 +980,7 @@ describe('Meero dig-peek animation', () => {
     expect(progressSource).toContain("'food-name'");
     expect(questSource).toContain("id: 'language-2'");
     expect(questSource).toContain(
-      '미어로가 배가고파서 무언가를 먹고있어요. 무엇을 먹고 있을까요?',
+      '미어로가 노랗고 길쭉한 과일을 먹고 있어요. 미어로가 먹는 것은 무엇인가요?',
     );
     expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
     expect(questSource).toContain("visualLayout: 'food-name'");
@@ -728,7 +1029,7 @@ describe('Meero dig-peek animation', () => {
     expect(readFileSync(storyAssetPath)[25]).toBe(6);
     expect(progressSource).toContain("'story-sequence'");
     expect(questSource).toContain("id: 'language-3'");
-    expect(questSource).toContain('미어로가 씨앗을 심고 무엇을 하고 있나요?');
+    expect(questSource).toContain('미어로가 씨앗을 심고 물뿌리개를 들었어요. 미어로는 무엇을 하고 있나요?');
     expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
     expect(questSource).toContain("visualLayout: 'story-sequence'");
     expect(questSource).toContain("{ id: 'water', label: '물을 줘요' }");
@@ -771,7 +1072,7 @@ describe('Meero dig-peek animation', () => {
     expect(readFileSync(emotionAssetPath)[25]).toBe(6);
     expect(progressSource).toContain("'emotion-face'");
     expect(questSource).toContain("id: 'language-4'");
-    expect(questSource).toContain('활짝 웃는 얼굴은 어떤 기분일까요?');
+    expect(questSource).toContain('미어로가 활짝 웃고 있어요. 미어로의 기분은 어떨까요?');
     expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
     expect(questSource).toContain("visualLayout: 'emotion-face'");
     expect(questSource).toContain("{ id: 'happy', label: '기뻐요' }");
@@ -814,7 +1115,7 @@ describe('Meero dig-peek animation', () => {
     expect(readFileSync(giftAssetPath)[25]).toBe(6);
     expect(progressSource).toContain("'gift-thanks'");
     expect(questSource).toContain("id: 'language-5'");
-    expect(questSource).toContain('친구가 선물을 주면 어떤 말을 하면 좋을까요?');
+    expect(questSource).toContain('페나가 미어로에게 선물을 건네줬어요. 미어로는 어떤 말을 하면 좋을까요?');
     expect(questSource).toContain("backgroundAsset: 'language-hill-background'");
     expect(questSource).toContain("visualLayout: 'gift-thanks'");
     expect(questSource).toContain("{ id: 'thanks', label: '고마워' }");
@@ -858,7 +1159,7 @@ describe('Meero dig-peek animation', () => {
     expect(progressSource).toContain("'toy-share'");
     expect(progressSource).toContain("'social-playground-background'");
     expect(questSource).toContain("id: 'social-1'");
-    expect(questSource).toContain('친구가 장난감을 빌리고 싶대요. 어떻게 말하면 좋을까요?');
+    expect(questSource).toContain('페나가 미어로의 장난감을 빌리고 싶어 해요. 미어로는 어떻게 말하면 좋을까요?');
     expect(questSource).toContain("backgroundAsset: 'social-playground-background'");
     expect(questSource).toContain("visualLayout: 'toy-share'");
     expect(questSource).toContain("{ id: 'share', label: '같이 쓰자' }");
@@ -899,7 +1200,7 @@ describe('Meero dig-peek animation', () => {
     expect(progressSource).toContain("'social-playground-background'");
     expect(questSource).toContain("id: 'social-2'");
     expect(questSource).toContain(
-      '미어로가 페나의 짐을 들어줬어요. 페나는 어떤 말을 하면 좋을까요?',
+      '미어로가 페나의 짐을 들어줬어요. 페나는 미어로에게 어떤 말을 하면 좋을까요?',
     );
     expect(questSource).toContain("backgroundAsset: 'social-playground-background'");
     expect(questSource).toContain("visualLayout: 'help-thanks'");
@@ -945,7 +1246,7 @@ describe('Meero dig-peek animation', () => {
     expect(progressSource).toContain("'social-playground-background'");
     expect(questSource).toContain("id: 'social-3'");
     expect(questSource).toContain(
-      '페나가 미끄럼틀을 타려고 해요. 뒤에서 기다리는 미어로는 어떻게 하면 좋을까요?',
+      '페나가 미끄럼틀을 타려고 하고 미어로가 뒤에서 기다리고 있어요. 미어로는 어떻게 하면 좋을까요?',
     );
     expect(questSource).toContain("backgroundAsset: 'social-playground-background'");
     expect(questSource).toContain("visualLayout: 'slide-wait'");
@@ -994,11 +1295,27 @@ describe('Meero dig-peek animation', () => {
     const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
     const soundHandlerConnections = screenSource.match(/onSound=\{soundPressHandler\}/g) ?? [];
 
-    expect(soundHandlerConnections).toHaveLength(13);
+    expect(soundHandlerConnections).toHaveLength(19);
     expect(screenSource).toContain('supertonic3SpeechService.speakText(step.instructionText');
     expect(screenSource).toContain('meerQuestSpeechDefaults');
     expect(screenSource).toContain('...meerQuestSpeechDefaults');
     expect(screenSource).toContain('미어로 목소리를 준비한 뒤 들을 수 있어요.');
+  });
+
+  it('renders quests without dedicated visual layouts with the shared illustrated problem screen', () => {
+    const screenSource = readFileSync(resolve(process.cwd(), 'app/quest-play.tsx'), 'utf8');
+
+    expect(screenSource).toContain('getFallbackIllustratedBackgroundSource');
+    expect(screenSource).toContain('getIndexedChoiceRects');
+    expect(screenSource).toContain('illustratedChoiceSceneImageRect');
+    expect(screenSource).toContain('categorySafetyBackground');
+    expect(screenSource).toContain('getQuestProblemSceneAsset(quest.id)');
+    expect(screenSource).toContain('const sceneAsset = getQuestProblemSceneAsset(quest.id);');
+    expect(screenSource).toContain('source={sceneAsset}');
+    expect(screenSource).toContain('getQuestProblemScene(quest.id, quest.categoryId)');
+    expect(screenSource).toContain('renderScene={(stage) => {');
+    expect(screenSource).toContain('sceneAccessibilityLabel={`${questTitle} 문제 일러스트`}');
+    expect(screenSource).not.toContain('<MeerkatMascot mood={mascotMood} />');
   });
 });
 
@@ -1054,6 +1371,40 @@ function getRecordChoiceRect(source: string, recordName: string, choiceId: strin
   }
 
   return getChoiceRect(source.slice(start, end), choiceId);
+}
+
+function getFootprintDarkPixelRatio(
+  pngBuffer: Buffer,
+  sceneRect: SourceRect,
+  labelRect: SourceRect,
+) {
+  const png = PNG.sync.read(pngBuffer);
+  const centerX =
+    ((labelRect.left + labelRect.width / 2 - sceneRect.left) / sceneRect.width) * png.width;
+  const centerY =
+    ((labelRect.top + labelRect.height / 2 - sceneRect.top) / sceneRect.height) * png.height;
+  let darkPixelCount = 0;
+  let sampledPixelCount = 0;
+
+  for (let y = Math.round(centerY - 45); y <= Math.round(centerY + 45); y += 1) {
+    for (let x = Math.round(centerX - 55); x <= Math.round(centerX + 55); x += 1) {
+      if (x < 0 || y < 0 || x >= png.width || y >= png.height) {
+        continue;
+      }
+
+      const index = (y * png.width + x) * 4;
+      const luminance =
+        0.2126 * png.data[index] + 0.7152 * png.data[index + 1] + 0.0722 * png.data[index + 2];
+
+      if (luminance < 70) {
+        darkPixelCount += 1;
+      }
+
+      sampledPixelCount += 1;
+    }
+  }
+
+  return sampledPixelCount === 0 ? 0 : darkPixelCount / sampledPixelCount;
 }
 
 function getFunctionBody(source: string, functionName: string) {

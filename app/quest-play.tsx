@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { requireOptionalNativeModule } from 'expo-modules-core';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Image,
   Pressable,
@@ -8,14 +8,15 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/src/components/AppText';
-import { MeerkatMascot, type MascotMood } from '@/src/components/MeerkatMascot';
 import { MeeroDigPeekAnimation } from '@/src/components/quest/MeeroDigPeekAnimation';
 import { MeeroThinkAgainAnimation } from '@/src/components/quest/MeeroThinkAgainAnimation';
+import { QuestProblemScene } from '@/src/components/quest/QuestProblemScene';
 import { QuestScreenFrame } from '@/src/components/quest/QuestScreenFrame';
-import { categories } from '@/src/content/categories';
+import { categories, type QuestCategoryId } from '@/src/content/categories';
+import { getQuestProblemSceneAsset } from '@/src/content/questProblemSceneAssets';
+import { getQuestProblemScene } from '@/src/content/questProblemScenes';
 import {
   getQuestStageRect,
   type QuestStageFillLayout,
@@ -26,7 +27,6 @@ import {
   getChoiceFeedback,
   getNextIncorrectChoiceIds,
   getQuestContinueAction,
-  getQuestFeedbackMessage,
   getQuestResultOverlay,
   isQuestRewardAvailable,
   type QuestResultOverlay,
@@ -48,13 +48,19 @@ const appleCountApplesImage = require('../assets/images/quests/apple-count/apple
 const animalSoundSceneImage = require('../assets/images/quests/animal-sound/animal-sound-meero-hill-v1.png');
 const bananaFoodSceneImage = require('../assets/images/quests/food-name/food-name-meero-banana-v1.png');
 const carrotAdditionSceneImage = require('../assets/images/quests/carrot-addition/carrot-addition-meero-fena-v1.png');
+const footprintSequenceSceneImage = require('../assets/images/quests/footprint-sequence/footprint-sequence-cave-trail-v6.png');
+const gemCountSceneImage = require('../assets/images/quests/gem-count/gem-count-meero-gems-v1.png');
 const giftThanksSceneImage = require('../assets/images/quests/gift-thanks/gift-thanks-meero-fena-v1.png');
 const helpThanksSceneImage = require('../assets/images/quests/help-thanks/help-thanks-meero-fena-v3.png');
 const happyMeeroEmotionImage = require('../assets/images/quests/emotion-face/emotion-face-meero-happy-v1.png');
 const seedStorySceneImage = require('../assets/images/quests/story-sequence/story-sequence-meero-seed-v3.png');
+const shapeMatchSceneImage = require('../assets/images/quests/shape-match/shape-match-meero-door-groove-v1.png');
 const slideWaitSceneImage = require('../assets/images/quests/slide-wait/slide-wait-fena-meero-v2.png');
+const smallNumberSceneImage = require('../assets/images/quests/small-number/small-number-meero-door-buttons-v1.png');
+const stoneStackSceneImage = require('../assets/images/quests/stone-stack-addition/stone-stack-addition-meero-pebbles-v1.png');
 const toyShareSceneImage = require('../assets/images/quests/toy-share/toy-share-meero-fena-v1.png');
 const dogBarkSound = require('../assets/audio/quests/language-1/language-1-dog-bark-v1.mp3');
+const categorySafetyBackground = require('../assets/images/home/category-safety-background.png');
 const languageHillBackground = require('../assets/images/home/category-language-background.png');
 const mathCaveBackground = require('../assets/images/quests/math-cave-background.png');
 const socialPlaygroundBackground = require('../assets/images/home/category-social-background.png');
@@ -80,7 +86,6 @@ export default function QuestPlayScreen() {
   const { height, width } = useWindowDimensions();
   const { isLoaded, profileProgress, recordAttempt } = useQuestProgress();
   const [feedbackMessage, setFeedbackMessage] = useState(initialFeedbackMessage);
-  const [mascotMood, setMascotMood] = useState<MascotMood>('greeting');
   const [stepIndex, setStepIndex] = useState(0);
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [incorrectChoiceIds, setIncorrectChoiceIds] = useState<string[]>([]);
@@ -116,10 +121,6 @@ export default function QuestPlayScreen() {
     isStepComplete,
     totalSteps,
   });
-  const visibleFeedbackMessage = getQuestFeedbackMessage({
-    continueAction,
-    feedbackMessage,
-  });
   const resultOverlay = getQuestResultOverlay({
     continueAction,
     feedbackMessage,
@@ -132,7 +133,6 @@ export default function QuestPlayScreen() {
 
   useEffect(() => {
     setFeedbackMessage(initialFeedbackMessage);
-    setMascotMood('greeting');
     setStepIndex(0);
     setSelectedChoiceId(null);
     setIncorrectChoiceIds([]);
@@ -158,7 +158,6 @@ export default function QuestPlayScreen() {
       successMessage: step.successMessage,
     });
 
-    setMascotMood(feedback.mascotMood);
     setFeedbackMessage(feedback.feedbackMessage);
 
     if (feedback.isCompleted) {
@@ -216,7 +215,6 @@ export default function QuestPlayScreen() {
     }
 
     setFeedbackMessage('좋아, 다음 문제도 살펴보자.');
-    setMascotMood('greeting');
     setSelectedChoiceId(null);
     setIncorrectChoiceIds([]);
     setIsStepComplete(false);
@@ -299,6 +297,192 @@ export default function QuestPlayScreen() {
         sceneAccessibilityLabel="미어로가 당근 2개를 들고 있고 페나가 당근 1개를 건네주는 장면"
         sceneImageRect={carrotAdditionSceneImageRect}
         sceneSource={carrotAdditionSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'gem-count') {
+    return (
+      <AppleCountQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : mathCaveBackground
+        }
+        choiceDots={gemCountChoiceDots}
+        choiceRects={gemCountChoiceRects}
+        fallbackChoiceRect={gemCountFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        promptRect={gemCountPromptRect}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 반짝이는 보석을 바라보는 장면"
+        sceneImageRect={gemCountSceneImageRect}
+        sceneSource={gemCountSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'small-number') {
+    return (
+      <AppleCountQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : mathCaveBackground
+        }
+        choiceDots={smallNumberChoiceDots}
+        choiceRects={smallNumberChoiceRects}
+        fallbackChoiceRect={smallNumberFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        promptRect={smallNumberPromptRect}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 숫자 2와 5 버튼이 달린 동굴 문을 바라보는 장면"
+        sceneImageRect={smallNumberSceneImageRect}
+        sceneSource={smallNumberSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'stone-stack-addition') {
+    return (
+      <AppleCountQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : mathCaveBackground
+        }
+        choiceDots={stoneStackChoiceDots}
+        choiceRects={stoneStackChoiceRects}
+        fallbackChoiceRect={stoneStackFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        promptRect={stoneStackPromptRect}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 조약돌 4개 위에 조약돌 1개를 더 쌓으려는 장면"
+        sceneImageRect={stoneStackSceneImageRect}
+        sceneSource={stoneStackSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'shape-match') {
+    return (
+      <AppleCountQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : mathCaveBackground
+        }
+        choiceDots={shapeMatchChoiceDots}
+        choiceRects={shapeMatchChoiceRects}
+        fallbackChoiceRect={shapeMatchFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        promptRect={shapeMatchPromptRect}
+        questTitle={questTitle}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 동굴 문의 동그라미 홈에 같은 모양 조각을 맞추려는 장면"
+        sceneImageRect={shapeMatchSceneImageRect}
+        sceneSource={shapeMatchSceneImage}
+        selectedChoiceId={selectedChoiceId}
+        stars={earnedStars}
+        step={step}
+        width={width}
+      />
+    );
+  }
+
+  if (quest.visualLayout === 'footprint-sequence') {
+    return (
+      <AppleCountQuestScreen
+        backgroundSource={
+          quest.backgroundAsset ? questBackgroundSources[quest.backgroundAsset] : mathCaveBackground
+        }
+        choiceDots={footprintSequenceChoiceDots}
+        choiceRects={footprintSequenceChoiceRects}
+        fallbackChoiceRect={footprintSequenceFallbackChoiceRect}
+        height={height}
+        isCompleted={isCompleted}
+        isLoaded={isLoaded}
+        incorrectChoiceIds={incorrectChoiceIds}
+        isRewardAvailable={rewardAvailable}
+        isNextAvailable={isNextAvailable}
+        isStepComplete={isStepComplete}
+        onBack={() => router.back()}
+        onChoicePress={handleChoicePress}
+        onContinue={handleContinue}
+        onHome={() => router.push('/' as Href)}
+        onReward={handleRewardPress}
+        onResultOverlayPress={handleResultOverlayPress}
+        onSound={soundPressHandler}
+        promptRect={footprintSequencePromptRect}
+        questTitle={questTitle}
+        renderSceneOverlay={renderFootprintSequenceOverlay}
+        resultOverlay={resultOverlay}
+        sceneAccessibilityLabel="미어로가 숫자 발자국 길의 마지막 빈칸을 바라보는 장면"
+        sceneImageRect={footprintSequenceSceneImageRect}
+        sceneSource={footprintSequenceSceneImage}
         selectedChoiceId={selectedChoiceId}
         stars={earnedStars}
         step={step}
@@ -673,96 +857,59 @@ export default function QuestPlayScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <MeerkatMascot mood={mascotMood} />
-        <View style={styles.panel}>
-          <Text style={styles.eyebrow}>
-            {category?.title ?? '탐험 지역'} {quest.level}단계
-          </Text>
-          <Text style={styles.title}>{quest.title}</Text>
-          <Text style={styles.prompt}>{quest.introduction}</Text>
-          <Text style={styles.instruction}>{step.instructionText}</Text>
+    <AnimalSoundQuestScreen
+      backgroundSource={
+        quest.backgroundAsset
+          ? questBackgroundSources[quest.backgroundAsset]
+          : getFallbackIllustratedBackgroundSource(quest.categoryId)
+      }
+      choiceRects={getIndexedChoiceRects(step)}
+      fallbackChoiceRect={illustratedChoiceFallbackChoiceRect}
+      height={height}
+      isCompleted={isCompleted}
+      isLoaded={isLoaded}
+      incorrectChoiceIds={incorrectChoiceIds}
+      isRewardAvailable={rewardAvailable}
+      isNextAvailable={isNextAvailable}
+      isStepComplete={isStepComplete}
+      onBack={() => router.back()}
+      onChoicePress={handleChoicePress}
+      onContinue={handleContinue}
+      onHome={() => router.push('/' as Href)}
+      onReward={handleRewardPress}
+      onResultOverlayPress={handleResultOverlayPress}
+      onSound={soundPressHandler}
+      questTitle={questTitle}
+      renderScene={(stage) => {
+        const sceneAsset = getQuestProblemSceneAsset(quest.id);
 
-          <View style={styles.choiceGrid}>
-            {step.choices.map((choice) => {
-              const isSelected = selectedChoiceId === choice.id;
-              const isCorrectChoice = choice.id === step.correctChoiceId;
-              const isIncorrectChoice = incorrectChoiceIds.includes(choice.id);
-              const isChoiceDisabled = !isLoaded || isStepComplete || isCompleted || isIncorrectChoice;
+        if (sceneAsset) {
+          return (
+            <Image
+              accessibilityLabel={`${questTitle} 문제 장면`}
+              accessibilityIgnoresInvertColors
+              resizeMode="contain"
+              source={sceneAsset}
+              style={[styles.animalSoundSceneImage, getQuestStageRect(stage, illustratedChoiceSceneImageRect)]}
+            />
+          );
+        }
 
-              return (
-                <Pressable
-                  accessibilityState={{ disabled: isChoiceDisabled, selected: isSelected }}
-                  accessibilityRole="button"
-                  disabled={isChoiceDisabled}
-                  key={choice.id}
-                  onPress={() => handleChoicePress(choice.id)}
-                  style={({ pressed }) => [
-                    styles.choice,
-                    isSelected && styles.choiceSelected,
-                    isStepComplete && isCorrectChoice && styles.choiceCorrect,
-                    isIncorrectChoice && styles.choiceIncorrect,
-                    isIncorrectChoice && styles.choiceDisabled,
-                    pressed && !isStepComplete && !isIncorrectChoice && styles.choicePressed,
-                  ]}>
-                  <Text style={styles.choiceText}>{choice.label}</Text>
-                  {isStepComplete && isCorrectChoice ? (
-                    <Text style={styles.choiceResultText}>정답!</Text>
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.feedback, isStepComplete && styles.feedbackSuccess]}>
-            {isLoaded ? visibleFeedbackMessage : '탐험 기록을 준비하고 있어요.'}
-          </Text>
-
-          {isStepComplete ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleContinue}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}>
-              <Text style={styles.primaryButtonText}>
-                {continueAction === 'reward' ? '보상 받기' : '다음 문제'}
-              </Text>
-            </Pressable>
-          ) : null}
-          {resultOverlay ? (
-            <>
-              <View style={styles.panelDimOverlay} />
-              <View
-                accessibilityLabel={`${resultOverlay.title} ${resultOverlay.message}`}
-                accessibilityLiveRegion="polite"
-                style={[
-                  styles.panelResultOverlay,
-                  resultOverlay.tone === 'correct'
-                    ? styles.resultOverlayCorrect
-                    : styles.resultOverlayRetry,
-                ]}>
-                {resultOverlay.tone === 'correct' ? (
-                  <MeeroDigPeekAnimation style={styles.resultOverlayAnimation} />
-                ) : (
-                  <MeeroThinkAgainAnimation style={styles.resultOverlayAnimation} />
-                )}
-                <Text style={styles.resultOverlayTitle}>{resultOverlay.title}</Text>
-                <Text style={styles.resultOverlayMessage}>{resultOverlay.message}</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={handleResultOverlayPress}
-                  style={({ pressed }) => [
-                    styles.resultOverlayAction,
-                    pressed && styles.buttonPressed,
-                  ]}>
-                  <Text style={styles.resultOverlayActionText}>{resultOverlay.actionLabel}</Text>
-                </Pressable>
-              </View>
-            </>
-          ) : null}
-        </View>
-      </View>
-    </SafeAreaView>
+        return (
+          <QuestProblemScene
+            scale={stage.scaleY}
+            scene={getQuestProblemScene(quest.id, quest.categoryId)}
+            style={getQuestStageRect(stage, illustratedChoiceSceneImageRect)}
+          />
+        );
+      }}
+      resultOverlay={resultOverlay}
+      sceneAccessibilityLabel={`${questTitle} 문제 일러스트`}
+      selectedChoiceId={selectedChoiceId}
+      stars={earnedStars}
+      step={step}
+      width={width}
+    />
   );
 }
 
@@ -787,6 +934,7 @@ function AppleCountQuestScreen({
   onSound,
   promptRect = appleCountPromptRect,
   questTitle,
+  renderSceneOverlay,
   resultOverlay,
   sceneAccessibilityLabel = '미어로가 사과 3개 달린 나무를 바라보는 장면',
   sceneImageRect = appleCountApplesImageRect,
@@ -816,6 +964,7 @@ function AppleCountQuestScreen({
   onSound?: () => void;
   promptRect?: QuestStageSourceRect;
   questTitle: string;
+  renderSceneOverlay?: (stage: QuestStageFillLayout) => ReactNode;
   resultOverlay: QuestResultOverlay | null;
   sceneAccessibilityLabel?: string;
   sceneImageRect?: QuestStageSourceRect;
@@ -864,6 +1013,7 @@ function AppleCountQuestScreen({
             source={sceneSource}
             style={[styles.appleCountApplesImage, getQuestStageRect(stage, sceneImageRect)]}
           />
+          {renderSceneOverlay?.(stage)}
           {step.choices.map((choice) => {
             const choiceRect = choiceRects[choice.id] ?? fallbackChoiceRect;
             const dotCount = choiceDots[choice.id] ?? getChoiceNumber(choice.label);
@@ -989,6 +1139,41 @@ function AppleCountQuestScreen({
   );
 }
 
+function renderFootprintSequenceOverlay(stage: QuestStageFillLayout) {
+  return footprintSequenceLabels.map(({ id, isMissing, label }) => {
+    const labelRect = footprintSequenceLabelRects[id];
+
+    return (
+      <View
+        key={id}
+        pointerEvents="none"
+        style={[styles.footprintSequenceLabel, getQuestStageRect(stage, labelRect)]}>
+        {isMissing ? (
+          <Text
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            style={[
+              styles.footprintSequenceMissingSlotText,
+              { fontSize: 56 * stage.scaleY, lineHeight: 62 * stage.scaleY },
+            ]}>
+            {label}
+          </Text>
+        ) : (
+          <Text
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            style={[
+              styles.footprintSequenceLabelText,
+              { fontSize: 54 * stage.scaleY, lineHeight: 60 * stage.scaleY },
+            ]}>
+            {label}
+          </Text>
+        )}
+      </View>
+    );
+  });
+}
+
 function AnimalSoundQuestScreen({
   backgroundSource,
   choiceRects = animalSoundChoiceRects,
@@ -1008,6 +1193,7 @@ function AnimalSoundQuestScreen({
   onResultOverlayPress,
   onSound,
   questTitle,
+  renderScene,
   resultOverlay,
   sceneAccessibilityLabel = '미어로가 언덕 뒤 동물 소리에 귀를 기울이는 장면',
   sceneImageRect = animalSoundSceneImageRect,
@@ -1035,6 +1221,7 @@ function AnimalSoundQuestScreen({
   onResultOverlayPress: () => void;
   onSound?: () => void;
   questTitle: string;
+  renderScene?: (stage: QuestStageFillLayout) => ReactNode;
   resultOverlay: QuestResultOverlay | null;
   sceneAccessibilityLabel?: string;
   sceneImageRect?: QuestStageSourceRect;
@@ -1077,13 +1264,17 @@ function AnimalSoundQuestScreen({
               {step.instructionText}
             </Text>
           </View>
-          <Image
-            accessibilityLabel={sceneAccessibilityLabel}
-            accessibilityIgnoresInvertColors
-            resizeMode="contain"
-            source={sceneSource}
-            style={[styles.animalSoundSceneImage, getQuestStageRect(stage, sceneImageRect)]}
-          />
+          {renderScene ? (
+            renderScene(stage)
+          ) : (
+            <Image
+              accessibilityLabel={sceneAccessibilityLabel}
+              accessibilityIgnoresInvertColors
+              resizeMode="contain"
+              source={sceneSource}
+              style={[styles.animalSoundSceneImage, getQuestStageRect(stage, sceneImageRect)]}
+            />
+          )}
           {step.choices.map((choice) => {
             const choiceRect = choiceRects[choice.id] ?? fallbackChoiceRect;
             const isSelected = selectedChoiceId === choice.id;
@@ -1885,6 +2076,83 @@ const carrotAdditionChoiceDots: Record<string, number> = {
   three: 3,
   two: 2,
 };
+const gemCountPromptRect = { height: 96, left: 233, top: 136, width: 900 };
+const gemCountSceneImageRect = { height: 360, left: 112, top: 250, width: 622 };
+const gemCountChoiceRects: Record<string, QuestStageSourceRect> = {
+  three: { height: 112, left: 850, top: 244, width: 252 },
+  four: { height: 112, left: 850, top: 376, width: 252 },
+  five: { height: 112, left: 850, top: 508, width: 252 },
+};
+const gemCountFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const gemCountChoiceDots: Record<string, number> = {
+  five: 5,
+  four: 4,
+  three: 3,
+};
+const smallNumberPromptRect = { height: 96, left: 233, top: 136, width: 900 };
+const smallNumberSceneImageRect = { height: 370, left: 72, top: 250, width: 640 };
+const smallNumberChoiceRects: Record<string, QuestStageSourceRect> = {
+  two: { height: 136, left: 850, top: 296, width: 252 },
+  five: { height: 136, left: 850, top: 456, width: 252 },
+};
+const smallNumberFallbackChoiceRect = { height: 136, left: 850, top: 376, width: 252 };
+const smallNumberChoiceDots: Record<string, number> = {
+  five: 5,
+  two: 2,
+};
+const stoneStackPromptRect = { height: 96, left: 233, top: 136, width: 900 };
+const stoneStackSceneImageRect = { height: 380, left: 112, top: 240, width: 622 };
+const stoneStackChoiceRects: Record<string, QuestStageSourceRect> = {
+  four: { height: 112, left: 850, top: 244, width: 252 },
+  five: { height: 112, left: 850, top: 376, width: 252 },
+  six: { height: 112, left: 850, top: 508, width: 252 },
+};
+const stoneStackFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const stoneStackChoiceDots: Record<string, number> = {
+  six: 6,
+  five: 5,
+  four: 4,
+};
+const shapeMatchPromptRect = { height: 96, left: 233, top: 136, width: 900 };
+const shapeMatchSceneImageRect = { height: 380, left: 92, top: 240, width: 660 };
+const shapeMatchChoiceRects: Record<string, QuestStageSourceRect> = {
+  circle: { height: 112, left: 850, top: 244, width: 252 },
+  triangle: { height: 112, left: 850, top: 376, width: 252 },
+  square: { height: 112, left: 850, top: 508, width: 252 },
+};
+const shapeMatchFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const shapeMatchChoiceDots: Record<string, number> = {
+  circle: 0,
+  square: 0,
+  triangle: 0,
+};
+const footprintSequencePromptRect = { height: 96, left: 233, top: 136, width: 900 };
+const footprintSequenceSceneImageRect = { height: 390, left: 94, top: 238, width: 694 };
+const footprintSequenceChoiceRects: Record<string, QuestStageSourceRect> = {
+  three: { height: 112, left: 850, top: 244, width: 252 },
+  four: { height: 112, left: 850, top: 376, width: 252 },
+  five: { height: 112, left: 850, top: 508, width: 252 },
+};
+const footprintSequenceFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const footprintSequenceChoiceDots: Record<string, number> = {
+  five: 0,
+  four: 0,
+  three: 0,
+};
+const footprintSequenceLabelRects: Record<string, QuestStageSourceRect> = {
+  one: { height: 72, left: 550, top: 372, width: 86 },
+  two: { height: 72, left: 470, top: 336, width: 86 },
+  three: { height: 72, left: 382, top: 392, width: 86 },
+  four: { height: 72, left: 265, top: 336, width: 86 },
+  slot: { height: 82, left: 196, top: 432, width: 96 },
+};
+const footprintSequenceLabels: { id: string; isMissing?: boolean; label: string }[] = [
+  { id: 'one', label: '1' },
+  { id: 'two', label: '2' },
+  { id: 'three', label: '3' },
+  { id: 'four', label: '4' },
+  { id: 'slot', label: '?', isMissing: true },
+];
 const animalSoundPromptRect = { height: 80, left: 233, top: 140, width: 900 };
 const animalSoundSceneImageRect = { height: 306, left: 108, top: 269, width: 700 };
 const animalSoundResultOverlayRect = { height: 365, left: 377, top: 223, width: 612 };
@@ -1976,6 +2244,62 @@ const sizeCompareChoiceRects: Record<string, QuestStageSourceRect> = {
   'hole-2': { height: 136, left: 850, top: 437, width: 252 },
 };
 const sizeCompareFallbackChoiceRect = { height: 136, left: 850, top: 318, width: 252 };
+const illustratedChoiceSceneImageRect = { height: 392, left: 116, top: 230, width: 660 };
+const illustratedChoiceTwoChoiceRects: QuestStageSourceRect[] = [
+  { height: 136, left: 850, top: 270, width: 252 },
+  { height: 136, left: 850, top: 437, width: 252 },
+];
+const illustratedChoiceThreeChoiceRects: QuestStageSourceRect[] = [
+  { height: 112, left: 850, top: 244, width: 252 },
+  { height: 112, left: 850, top: 376, width: 252 },
+  { height: 112, left: 850, top: 508, width: 252 },
+];
+const illustratedChoiceFallbackChoiceRect = { height: 112, left: 850, top: 376, width: 252 };
+const fallbackIllustratedBackgroundSources: Record<QuestCategoryId, number> = {
+  language: languageHillBackground,
+  math: mathCaveBackground,
+  safety: categorySafetyBackground,
+  social: socialPlaygroundBackground,
+};
+
+function getFallbackIllustratedBackgroundSource(categoryId: QuestCategoryId) {
+  return fallbackIllustratedBackgroundSources[categoryId];
+}
+
+function getIndexedChoiceRects(step: QuestStep) {
+  const predefinedRects =
+    step.choices.length === 2
+      ? illustratedChoiceTwoChoiceRects
+      : step.choices.length === 3
+        ? illustratedChoiceThreeChoiceRects
+        : null;
+
+  if (predefinedRects) {
+    return Object.fromEntries(
+      step.choices.map((choice, index) => [
+        choice.id,
+        predefinedRects[index] ?? illustratedChoiceFallbackChoiceRect,
+      ]),
+    );
+  }
+
+  const choiceHeight = step.choices.length <= 4 ? 96 : 82;
+  const choiceGap = step.choices.length <= 4 ? 16 : 10;
+  const totalHeight = step.choices.length * choiceHeight + (step.choices.length - 1) * choiceGap;
+  const top = 384 - totalHeight / 2;
+
+  return Object.fromEntries(
+    step.choices.map((choice, index) => [
+      choice.id,
+      {
+        height: choiceHeight,
+        left: 850,
+        top: top + index * (choiceHeight + choiceGap),
+        width: 252,
+      },
+    ]),
+  );
+}
 
 function getChoiceNumber(label: string) {
   const parsedNumber = Number(label.replace(/\D/g, ''));
@@ -2077,6 +2401,41 @@ const styles = StyleSheet.create({
   },
   appleCountApplesImage: {
     position: 'absolute',
+  },
+  footprintSequenceLabel: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    zIndex: 2,
+  },
+  footprintSequenceLabelText: {
+    color: '#FFF2C4',
+    fontWeight: '900',
+    includeFontPadding: false,
+    textAlign: 'center',
+    textShadowColor: 'rgba(45, 22, 8, 0.78)',
+    textShadowOffset: { height: 2, width: 0 },
+    textShadowRadius: 2,
+  },
+  footprintSequenceMissingSlot: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 249, 236, 0.76)',
+    borderColor: '#5B3924',
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    borderWidth: 3,
+    height: '82%',
+    justifyContent: 'center',
+    width: '86%',
+  },
+  footprintSequenceMissingSlotText: {
+    color: '#FFF2C4',
+    fontWeight: '900',
+    includeFontPadding: false,
+    textAlign: 'center',
+    textShadowColor: 'rgba(45, 22, 8, 0.78)',
+    textShadowOffset: { height: 2, width: 0 },
+    textShadowRadius: 2,
   },
   appleCountCheckBadge: {
     alignItems: 'center',

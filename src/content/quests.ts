@@ -1,5 +1,76 @@
-import type { Quest, QuestProgress } from '@/src/features/quests/questProgress';
+import type {
+  Quest,
+  QuestBackgroundAsset,
+  QuestChoice,
+  QuestProgress,
+  QuestRewardType,
+} from '@/src/features/quests/questProgress';
 import { DEFAULT_PROFILE_ID } from '@/src/features/quests/questProgress';
+
+interface ExtraQuestTemplate {
+  choices: QuestChoice[];
+  correctChoiceId: string;
+  hintText: string;
+  instructionText: string;
+  introduction: string;
+  successMessage: string;
+  title: string;
+}
+
+const extraRewardTypes: QuestRewardType[] = ['star', 'sticker', 'badge'];
+
+function createExtraCategoryQuests({
+  backgroundAsset,
+  categoryId,
+  templates,
+}: {
+  backgroundAsset?: QuestBackgroundAsset;
+  categoryId: Quest['categoryId'];
+  templates: ExtraQuestTemplate[];
+}): Quest[] {
+  return templates.map((template, index) => {
+    const level = index + 6;
+    const rewardType = extraRewardTypes[index % extraRewardTypes.length];
+
+    return {
+      id: `${categoryId}-${level}`,
+      categoryId,
+      title: template.title,
+      level,
+      order: level,
+      introduction: template.introduction,
+      reward: {
+        id: `${categoryId}-${rewardType}-${level}`,
+        title: `${template.title} ${getRewardTypeLabel(rewardType)}`,
+        type: rewardType,
+      },
+      ...(backgroundAsset ? { backgroundAsset } : {}),
+      steps: [
+        {
+          id: `${categoryId}-${level}-step-1`,
+          type: 'choice',
+          instructionText: template.instructionText,
+          choices: template.choices,
+          correctChoiceId: template.correctChoiceId,
+          hintText: template.hintText,
+          successMessage: template.successMessage,
+        },
+      ],
+    };
+  });
+}
+
+function getRewardTypeLabel(type: QuestRewardType) {
+  if (type === 'star') {
+    return '별';
+  }
+
+  if (type === 'sticker') {
+    return '스티커';
+  }
+
+  return '배지';
+}
 
 export const quests: Quest[] = [
   {
@@ -16,7 +87,7 @@ export const quests: Quest[] = [
       {
         id: 'math-1-step-1',
         type: 'choice',
-        instructionText: '미어로가 사과를 발견했어. 사과는 몇개일까?',
+        instructionText: '미어로가 사과나무 아래에서 사과 3개를 찾았어요. 미어로가 찾은 사과는 몇 개일까요?',
         choices: [
           { id: 'two', label: '2개' },
           { id: 'three', label: '3개' },
@@ -41,7 +112,7 @@ export const quests: Quest[] = [
       {
         id: 'math-2-step-1',
         type: 'choice',
-        instructionText: '미어로가 문을 통과하기 위하여 동그라미 버튼을 눌러야해요. 동그라미 버튼은 무엇인가요?',
+        instructionText: '미어로가 문 앞에서 1번 동그라미 버튼과 2번 네모 버튼을 보았어요. 문을 열 동그라미 버튼은 몇 번인가요?',
         choices: [
           { id: 'button-1', label: '1번' },
           { id: 'button-2', label: '2번' },
@@ -66,7 +137,7 @@ export const quests: Quest[] = [
       {
         id: 'math-3-step-1',
         type: 'choice',
-        instructionText: '미어로가 길을 건너고 있어요. 다음 길은 무슨 색 길일까요?',
+        instructionText: '미어로가 빨강, 파랑, 빨강, 파랑 길을 건너고 있어요. 다음에 밟을 길은 무슨 색일까요?',
         choices: [
           { id: 'red', label: '빨강' },
           { id: 'blue', label: '파랑' },
@@ -92,7 +163,7 @@ export const quests: Quest[] = [
       {
         id: 'math-4-step-1',
         type: 'choice',
-        instructionText: '졸린 미어로가 잠을 잘 큰 구멍을 찾고 있어요. 어떤 구멍이 클까요?',
+        instructionText: '졸린 미어로가 작은 구멍과 큰 구멍을 보았어요. 잠을 편하게 잘 큰 구멍은 몇 번인가요?',
         choices: [
           { id: 'hole-1', label: '1번' },
           { id: 'hole-2', label: '2번' },
@@ -117,7 +188,7 @@ export const quests: Quest[] = [
       {
         id: 'math-5-step-1',
         type: 'choice',
-        instructionText: '미어로가 당근 2개를 갖고 있었어요. 페나가 당근 1개를 주면 모두 몇 개일까요?',
+        instructionText: '미어로가 당근 2개를 들고 있는데 페나가 당근 1개를 건네줬어요. 미어로의 당근은 모두 몇 개가 되었나요?',
         choices: [
           { id: 'two', label: '2개' },
           { id: 'three', label: '3개' },
@@ -126,6 +197,384 @@ export const quests: Quest[] = [
         correctChoiceId: 'three',
         hintText: '미어로가 가진 당근 2개에 페나가 준 당근 1개를 더해봐요.',
         successMessage: '좋아, 당근은 모두 3개야!',
+      },
+    ],
+  },
+  {
+    id: 'math-6',
+    categoryId: 'math',
+    title: '반짝이는 보석을 세요',
+    level: 6,
+    order: 6,
+    introduction: '미어로가 동굴 바닥에서 반짝이는 보석을 찾았어요.',
+    reward: { id: 'math-star-6', title: '보석 별', type: 'star' },
+    backgroundAsset: 'math-cave-background',
+    visualLayout: 'gem-count',
+    steps: [
+      {
+        id: 'math-6-step-1',
+        type: 'choice',
+        instructionText: '미어로가 동굴에서 반짝이는 보석을 발견했어요. 미어로가 찾은 보석은 몇 개일까요?',
+        choices: [
+          { id: 'three', label: '3개' },
+          { id: 'four', label: '4개' },
+          { id: 'five', label: '5개' },
+        ],
+        correctChoiceId: 'four',
+        hintText: '보석을 하나씩 천천히 세어봐요.',
+        successMessage: '좋아, 보석은 모두 4개야!',
+      },
+    ],
+  },
+  {
+    id: 'math-7',
+    categoryId: 'math',
+    title: '작은 수를 찾아요',
+    level: 7,
+    order: 7,
+    introduction: '미어로가 숫자 버튼이 달린 동굴 문을 발견했어요.',
+    reward: { id: 'math-sticker-7', title: '작은 수 스티커', type: 'sticker' },
+    backgroundAsset: 'math-cave-background',
+    visualLayout: 'small-number',
+    steps: [
+      {
+        id: 'math-7-step-1',
+        type: 'choice',
+        instructionText: '미어로가 2와 5가 적힌 문 버튼을 보았어요. 더 작은 수의 버튼은 무엇인가요?',
+        choices: [
+          { id: 'two', label: '2' },
+          { id: 'five', label: '5' },
+        ],
+        correctChoiceId: 'two',
+        hintText: '수를 셀 때 더 먼저 나오는 숫자를 찾아봐요.',
+        successMessage: '맞아, 2가 5보다 작아!',
+      },
+    ],
+  },
+  {
+    id: 'math-8',
+    categoryId: 'math',
+    title: '하나 더하면 몇 개일까',
+    level: 8,
+    order: 8,
+    introduction: '미어로가 조약돌을 하나 더 쌓으려고 해요.',
+    reward: { id: 'math-badge-8', title: '하나 더하기 배지', type: 'badge' },
+    backgroundAsset: 'math-cave-background',
+    visualLayout: 'stone-stack-addition',
+    steps: [
+      {
+        id: 'math-8-step-1',
+        type: 'choice',
+        instructionText: '미어로가 조약돌 4개를 쌓고 하나를 더 올렸어요. 조약돌은 모두 몇 개가 되었나요?',
+        choices: [
+          { id: 'four', label: '4개' },
+          { id: 'five', label: '5개' },
+          { id: 'six', label: '6개' },
+        ],
+        correctChoiceId: 'five',
+        hintText: '쌓여 있는 조약돌 4개에 하나를 더 세어봐요.',
+        successMessage: '좋아, 4개에 1개를 더하면 5개야!',
+      },
+    ],
+  },
+  {
+    id: 'math-9',
+    categoryId: 'math',
+    title: '같은 모양을 골라요',
+    level: 9,
+    order: 9,
+    introduction: '동굴 문에 같은 모양을 맞추는 홈이 있어요.',
+    reward: { id: 'math-sticker-9', title: '모양 짝 스티커', type: 'sticker' },
+    backgroundAsset: 'math-cave-background',
+    visualLayout: 'shape-match',
+    steps: [
+      {
+        id: 'math-9-step-1',
+        type: 'choice',
+        instructionText: '미어로가 도형 조각을 들고 동굴 문 앞에 섰어요. 미어로가 들고 있는 도형은 무엇인가요?',
+        choices: [
+          { id: 'circle', label: '동그라미' },
+          { id: 'triangle', label: '세모' },
+          { id: 'square', label: '네모' },
+        ],
+        correctChoiceId: 'circle',
+        hintText: '둥글게 이어진 모양을 찾아봐요.',
+        successMessage: '맞아, 같은 모양은 동그라미야!',
+      },
+    ],
+  },
+  {
+    id: 'math-10',
+    categoryId: 'math',
+    title: '열 번째 발자국',
+    level: 10,
+    order: 10,
+    introduction: '미어로가 숫자가 이어진 발자국 길을 발견했어요.',
+    reward: { id: 'math-badge-10', title: '열 걸음 배지', type: 'badge' },
+    backgroundAsset: 'math-cave-background',
+    visualLayout: 'footprint-sequence',
+    steps: [
+      {
+        id: 'math-10-step-1',
+        type: 'choice',
+        instructionText: '미어로가 1, 2, 3, 4가 적힌 발자국을 따라갔어요. 빈 발자국에 이어질 숫자는 무엇인가요?',
+        choices: [
+          { id: 'three', label: '3' },
+          { id: 'four', label: '4' },
+          { id: 'five', label: '5' },
+        ],
+        correctChoiceId: 'five',
+        hintText: '4 다음 숫자를 떠올려봐요.',
+        successMessage: '멋져, 마지막 빈칸에는 5가 들어가!',
+      },
+    ],
+  },
+  {
+    id: 'math-11',
+    categoryId: 'math',
+    title: '긴 돌길을 찾아요',
+    level: 11,
+    order: 11,
+    introduction: '미어로 앞에 길이가 다른 돌길 두 개가 있어요.',
+    reward: { id: 'math-star-11', title: '긴 길 별', type: 'star' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-11-step-1',
+        type: 'choice',
+        instructionText: '미어로 앞에 짧은 돌길과 긴 돌길이 놓였어요. 미어로가 더 오래 걸을 길은 무엇인가요?',
+        choices: [
+          { id: 'short', label: '짧은 길' },
+          { id: 'long', label: '긴 길' },
+        ],
+        correctChoiceId: 'long',
+        hintText: '끝까지 더 멀리 이어지는 길을 찾아봐요.',
+        successMessage: '맞아, 더 긴 돌길을 잘 찾았어!',
+      },
+    ],
+  },
+  {
+    id: 'math-12',
+    categoryId: 'math',
+    title: '하나 빼면 몇 개일까',
+    level: 12,
+    order: 12,
+    introduction: '미어로가 조약돌을 하나 주머니에 넣었어요.',
+    reward: { id: 'math-sticker-12', title: '하나 빼기 스티커', type: 'sticker' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-12-step-1',
+        type: 'choice',
+        instructionText: '미어로가 조약돌 5개 중 1개를 주머니에 넣었어요. 바닥에 남은 조약돌은 몇 개일까요?',
+        choices: [
+          { id: 'three', label: '3개' },
+          { id: 'four', label: '4개' },
+          { id: 'five', label: '5개' },
+        ],
+        correctChoiceId: 'four',
+        hintText: '5에서 하나 전 숫자를 떠올려봐요.',
+        successMessage: '좋아, 5개에서 1개를 빼면 4개야!',
+      },
+    ],
+  },
+  {
+    id: 'math-13',
+    categoryId: 'math',
+    title: '같은 수를 찾아요',
+    level: 13,
+    order: 13,
+    introduction: '동굴 벽에 같은 숫자를 맞추는 문양이 보여요.',
+    reward: { id: 'math-badge-13', title: '같은 수 배지', type: 'badge' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-13-step-1',
+        type: 'choice',
+        instructionText: '미어로가 숫자가 새겨진 문양을 보았어요. 같은 숫자 돌은 무엇인가요?',
+        choices: [
+          { id: 'six', label: '6' },
+          { id: 'nine', label: '9' },
+          { id: 'ten', label: '10' },
+        ],
+        correctChoiceId: 'six',
+        hintText: '모양이 똑같은 숫자를 찾아봐요.',
+        successMessage: '맞아, 6과 같은 수는 6이야!',
+      },
+    ],
+  },
+  {
+    id: 'math-14',
+    categoryId: 'math',
+    title: '두 묶음을 더해요',
+    level: 14,
+    order: 14,
+    introduction: '미어로가 보석 묶음 두 개를 나란히 놓았어요.',
+    reward: { id: 'math-star-14', title: '두 묶음 별', type: 'star' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-14-step-1',
+        type: 'choice',
+        instructionText: '미어로가 보석 3개 묶음과 2개 묶음을 합쳤어요. 보석은 모두 몇 개가 되었나요?',
+        choices: [
+          { id: 'four', label: '4개' },
+          { id: 'five', label: '5개' },
+          { id: 'six', label: '6개' },
+        ],
+        correctChoiceId: 'five',
+        hintText: '3 다음에 2개를 더 세어봐요.',
+        successMessage: '좋아, 3개와 2개를 합치면 5개야!',
+      },
+    ],
+  },
+  {
+    id: 'math-15',
+    categoryId: 'math',
+    title: '가장 큰 수를 골라요',
+    level: 15,
+    order: 15,
+    introduction: '숫자가 새겨진 돌멩이 세 개가 반짝여요.',
+    reward: { id: 'math-sticker-15', title: '큰 수 스티커', type: 'sticker' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-15-step-1',
+        type: 'choice',
+        instructionText: '미어로가 3, 7, 5가 적힌 돌을 보았어요. 가장 큰 숫자 돌은 무엇인가요?',
+        choices: [
+          { id: 'three', label: '3' },
+          { id: 'seven', label: '7' },
+          { id: 'five', label: '5' },
+        ],
+        correctChoiceId: 'seven',
+        hintText: '수를 세었을 때 더 나중에 나오는 숫자를 찾아봐요.',
+        successMessage: '맞아, 가장 큰 수는 7이야!',
+      },
+    ],
+  },
+  {
+    id: 'math-16',
+    categoryId: 'math',
+    title: '순서대로 놓아요',
+    level: 16,
+    order: 16,
+    introduction: '미어로가 숫자 돌멩이를 차례대로 놓고 있어요.',
+    reward: { id: 'math-badge-16', title: '순서 배지', type: 'badge' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-16-step-1',
+        type: 'choice',
+        instructionText: '미어로가 4, 5가 적힌 숫자 돌을 차례대로 놓았어요. 다음에 놓을 숫자는 무엇인가요?',
+        choices: [
+          { id: 'six', label: '6' },
+          { id: 'seven', label: '7' },
+          { id: 'three', label: '3' },
+        ],
+        correctChoiceId: 'six',
+        hintText: '4, 5를 말한 다음 이어서 세어봐요.',
+        successMessage: '좋아, 4, 5 다음은 6이야!',
+      },
+    ],
+  },
+  {
+    id: 'math-17',
+    categoryId: 'math',
+    title: '반으로 나눠요',
+    level: 17,
+    order: 17,
+    introduction: '미어로와 페나가 조약돌을 똑같이 나누려고 해요.',
+    reward: { id: 'math-star-17', title: '나누기 별', type: 'star' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-17-step-1',
+        type: 'choice',
+        instructionText: '미어로와 페나가 조약돌 4개를 똑같이 나누려고 해요. 한 명이 몇 개씩 가지면 될까요?',
+        choices: [
+          { id: 'one', label: '1개' },
+          { id: 'two', label: '2개' },
+          { id: 'four', label: '4개' },
+        ],
+        correctChoiceId: 'two',
+        hintText: '미어로에게 하나, 페나에게 하나씩 번갈아 나눠봐요.',
+        successMessage: '맞아, 한 명이 2개씩 가지면 똑같아!',
+      },
+    ],
+  },
+  {
+    id: 'math-18',
+    categoryId: 'math',
+    title: '비어 있는 수를 찾아요',
+    level: 18,
+    order: 18,
+    introduction: '숫자 길 중간에 빈 자리가 생겼어요.',
+    reward: { id: 'math-sticker-18', title: '빈자리 스티커', type: 'sticker' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-18-step-1',
+        type: 'choice',
+        instructionText: '미어로가 숫자 길을 발견했어요. 빈칸에 들어갈 숫자는 무엇인가요?',
+        choices: [
+          { id: 'six', label: '6' },
+          { id: 'nine', label: '9' },
+          { id: 'eleven', label: '11' },
+        ],
+        correctChoiceId: 'nine',
+        hintText: '7부터 10까지 차례대로 세어봐요.',
+        successMessage: '멋져, 빈칸에는 9가 들어가!',
+      },
+    ],
+  },
+  {
+    id: 'math-19',
+    categoryId: 'math',
+    title: '두 개 더하면',
+    level: 19,
+    order: 19,
+    introduction: '미어로가 보석을 두 개 더 발견했어요.',
+    reward: { id: 'math-badge-19', title: '두 개 더하기 배지', type: 'badge' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-19-step-1',
+        type: 'choice',
+        instructionText: '미어로가 보석 6개를 갖고 있다가 2개를 더 찾았어요. 보석은 모두 몇 개가 되었나요?',
+        choices: [
+          { id: 'seven', label: '7개' },
+          { id: 'eight', label: '8개' },
+          { id: 'nine', label: '9개' },
+        ],
+        correctChoiceId: 'eight',
+        hintText: '6 다음에 2번 더 세어봐요.',
+        successMessage: '좋아, 6개에 2개를 더하면 8개야!',
+      },
+    ],
+  },
+  {
+    id: 'math-20',
+    categoryId: 'math',
+    title: '스무 번째 발자국',
+    level: 20,
+    order: 20,
+    introduction: '미어로가 수학 동굴의 스무 번째 발자국에 도착했어요.',
+    reward: { id: 'math-badge-20', title: '스무 걸음 배지', type: 'badge' },
+    backgroundAsset: 'math-cave-background',
+    steps: [
+      {
+        id: 'math-20-step-1',
+        type: 'choice',
+        instructionText: '미어로가 숫자 10에서 두 걸음을 더 세어 도착했어요. 도착한 숫자는 무엇인가요?',
+        choices: [
+          { id: 'fifteen', label: '15' },
+          { id: 'twenty', label: '20' },
+          { id: 'twelve', label: '12' },
+        ],
+        correctChoiceId: 'twenty',
+        hintText: '10에서 11, 12처럼 차례대로 10번 더 세어봐요.',
+        successMessage: '대단해, 스무 번째 발자국은 20이야!',
       },
     ],
   },
@@ -143,7 +592,7 @@ export const quests: Quest[] = [
       {
         id: 'language-1-step-1',
         type: 'choice',
-        instructionText: '언덕 뒤에서 동물 소리가 들려요. 어떤 동물 소리일까요?',
+        instructionText: '미어로가 언덕 뒤에서 멍멍 소리를 들었어요. 어떤 동물 소리일까요?',
         choices: [
           { id: 'dog', label: '강아지' },
           { id: 'cat', label: '고양이' },
@@ -169,7 +618,7 @@ export const quests: Quest[] = [
       {
         id: 'language-2-step-1',
         type: 'choice',
-        instructionText: '미어로가 배가고파서 무언가를 먹고있어요. 무엇을 먹고 있을까요?',
+        instructionText: '미어로가 노랗고 길쭉한 과일을 먹고 있어요. 미어로가 먹는 것은 무엇인가요?',
         choices: [
           { id: 'banana', label: '바나나' },
           { id: 'bread', label: '빵' },
@@ -195,7 +644,7 @@ export const quests: Quest[] = [
       {
         id: 'language-3-step-1',
         type: 'choice',
-        instructionText: '미어로가 씨앗을 심고 무엇을 하고 있나요?',
+        instructionText: '미어로가 씨앗을 심고 물뿌리개를 들었어요. 미어로는 무엇을 하고 있나요?',
         choices: [
           { id: 'water', label: '물을 줘요' },
           { id: 'sleep', label: '잠을 자요' },
@@ -221,7 +670,7 @@ export const quests: Quest[] = [
       {
         id: 'language-4-step-1',
         type: 'choice',
-        instructionText: '활짝 웃는 얼굴은 어떤 기분일까요?',
+        instructionText: '미어로가 활짝 웃고 있어요. 미어로의 기분은 어떨까요?',
         choices: [
           { id: 'happy', label: '기뻐요' },
           { id: 'angry', label: '화나요' },
@@ -247,7 +696,7 @@ export const quests: Quest[] = [
       {
         id: 'language-5-step-1',
         type: 'choice',
-        instructionText: '친구가 선물을 주면 어떤 말을 하면 좋을까요?',
+        instructionText: '페나가 미어로에게 선물을 건네줬어요. 미어로는 어떤 말을 하면 좋을까요?',
         choices: [
           { id: 'thanks', label: '고마워' },
           { id: 'no', label: '싫어' },
@@ -259,6 +708,207 @@ export const quests: Quest[] = [
       },
     ],
   },
+  ...createExtraCategoryQuests({
+    categoryId: 'language',
+    backgroundAsset: 'language-hill-background',
+    templates: [
+      {
+        title: '반대말을 찾아요',
+        introduction: '서로 반대되는 말을 골라봐요.',
+        instructionText: '미어로가 큰 바위와 작은 조약돌을 보았어요. 작은 조약돌을 보고 뭐라고 말할까요?',
+        choices: [
+          { id: 'small', label: '작다' },
+          { id: 'round', label: '둥글다' },
+          { id: 'fast', label: '빠르다' },
+        ],
+        correctChoiceId: 'small',
+        hintText: '큰 것과 작은 것을 떠올려봐요.',
+        successMessage: '맞아, 크다의 반대말은 작다야!',
+      },
+      {
+        title: '같은 소리로 시작해요',
+        introduction: '처음 소리가 비슷한 말을 들어봐요.',
+        instructionText: '미어로가 바나나를 말하다가 같은 첫소리 말을 찾고 있어요. 바 소리로 시작하는 말은 무엇인가요?',
+        choices: [
+          { id: 'bag', label: '가방' },
+          { id: 'bread', label: '빵' },
+          { id: 'wind', label: '바람' },
+        ],
+        correctChoiceId: 'wind',
+        hintText: '바, 바 하고 시작하는 말을 찾아요.',
+        successMessage: '좋아, 바람도 바 소리로 시작해!',
+      },
+      {
+        title: '행동 말을 골라요',
+        introduction: '움직임을 나타내는 말을 찾아요.',
+        instructionText: '미어로가 폴짝폴짝 움직이고 있어요. 미어로가 하는 행동은 무엇인가요?',
+        choices: [
+          { id: 'jump', label: '뛰어요' },
+          { id: 'sleep', label: '자요' },
+          { id: 'eat', label: '먹어요' },
+        ],
+        correctChoiceId: 'jump',
+        hintText: '두 발이 땅에서 떨어지는 움직임이에요.',
+        successMessage: '맞아, 폴짝폴짝 뛰어요!',
+      },
+      {
+        title: '느낌 말을 찾아요',
+        introduction: '상황에 맞는 느낌 말을 골라요.',
+        instructionText: '미어로가 새 장난감을 받고 웃고 있어요. 미어로의 마음은 어떨까요?',
+        choices: [
+          { id: 'happy', label: '기뻐요' },
+          { id: 'cold', label: '추워요' },
+          { id: 'quiet', label: '조용해요' },
+        ],
+        correctChoiceId: 'happy',
+        hintText: '웃을 때 자주 느끼는 마음이에요.',
+        successMessage: '기쁜 마음을 잘 찾았어!',
+      },
+      {
+        title: '동물 이름을 들어요',
+        introduction: '설명을 듣고 동물 이름을 골라요.',
+        instructionText: '미어로가 긴 귀로 깡충깡충 뛰는 동물을 만났어요. 이 동물은 무엇인가요?',
+        choices: [
+          { id: 'rabbit', label: '토끼' },
+          { id: 'fish', label: '물고기' },
+          { id: 'bird', label: '새' },
+        ],
+        correctChoiceId: 'rabbit',
+        hintText: '긴 귀와 깡충깡충을 떠올려요.',
+        successMessage: '맞아, 토끼를 잘 골랐어!',
+      },
+      {
+        title: '물건 이름을 말해요',
+        introduction: '쓰임새를 듣고 물건 이름을 찾아요.',
+        instructionText: '비가 오자 미어로가 머리 위에 쓸 물건을 찾고 있어요. 무엇을 쓰면 좋을까요?',
+        choices: [
+          { id: 'umbrella', label: '우산' },
+          { id: 'spoon', label: '숟가락' },
+          { id: 'shoe', label: '신발' },
+        ],
+        correctChoiceId: 'umbrella',
+        hintText: '빗방울을 막아주는 물건이에요.',
+        successMessage: '좋아, 비 오는 날에는 우산을 써요!',
+      },
+      {
+        title: '순서 말을 골라요',
+        introduction: '이야기 순서를 말로 이어봐요.',
+        instructionText: '미어로가 손을 깨끗이 씻었어요. 젖은 손은 다음에 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'dry', label: '수건으로 닦아요' },
+          { id: 'mud', label: '흙을 묻혀요' },
+          { id: 'hide', label: '숨겨요' },
+        ],
+        correctChoiceId: 'dry',
+        hintText: '젖은 손을 보송보송하게 해요.',
+        successMessage: '맞아, 손을 닦으면 좋아!',
+      },
+      {
+        title: '예쁜 말을 골라요',
+        introduction: '친구에게 하는 다정한 말을 배워요.',
+        instructionText: '미어로가 친구의 그림을 보았어요. 친구에게 어떤 말을 하면 좋을까요?',
+        choices: [
+          { id: 'nice', label: '멋지다' },
+          { id: 'bad', label: '싫어' },
+          { id: 'go', label: '가버려' },
+        ],
+        correctChoiceId: 'nice',
+        hintText: '친구의 마음이 따뜻해지는 말을 찾아요.',
+        successMessage: '다정한 말을 잘 골랐어!',
+      },
+      {
+        title: '장소 말을 찾아요',
+        introduction: '어디에서 하는 일인지 들어봐요.',
+        instructionText: '미어로가 책을 빌리고 조용히 읽는 곳에 갔어요. 그곳은 어디인가요?',
+        choices: [
+          { id: 'library', label: '도서관' },
+          { id: 'pool', label: '수영장' },
+          { id: 'kitchen', label: '부엌' },
+        ],
+        correctChoiceId: 'library',
+        hintText: '책이 많이 있는 조용한 곳이에요.',
+        successMessage: '맞아, 도서관이야!',
+      },
+      {
+        title: '소리를 흉내내요',
+        introduction: '생활 속 소리 표현을 골라요.',
+        instructionText: '미어로가 째깍째깍 움직이는 시계를 보았어요. 시계 소리는 무엇인가요?',
+        choices: [
+          { id: 'tick', label: '째깍째깍' },
+          { id: 'splash', label: '첨벙첨벙' },
+          { id: 'crunch', label: '아삭아삭' },
+        ],
+        correctChoiceId: 'tick',
+        hintText: '시계 바늘이 움직이는 소리를 떠올려요.',
+        successMessage: '좋아, 시계는 째깍째깍!',
+      },
+      {
+        title: '색깔 말을 골라요',
+        introduction: '설명에 맞는 색깔 말을 찾아요.',
+        instructionText: '미어로가 맑은 하늘을 올려다봤어요. 하늘처럼 맑은 색은 무엇인가요?',
+        choices: [
+          { id: 'blue', label: '파랑' },
+          { id: 'black', label: '검정' },
+          { id: 'brown', label: '갈색' },
+        ],
+        correctChoiceId: 'blue',
+        hintText: '맑은 날 하늘 색을 떠올려봐요.',
+        successMessage: '맞아, 하늘처럼 파랑이야!',
+      },
+      {
+        title: '문장 끝 말을 찾아요',
+        introduction: '말을 자연스럽게 끝내는 표현을 골라요.',
+        instructionText: '미어로가 친구에게 부탁하려고 해요. 부탁 끝에 어떤 말을 붙이면 좋을까요?',
+        choices: [
+          { id: 'please', label: '해줄래?' },
+          { id: 'mine', label: '내 거야!' },
+          { id: 'never', label: '절대 안 돼!' },
+        ],
+        correctChoiceId: 'please',
+        hintText: '부탁하는 부드러운 말을 찾아요.',
+        successMessage: '부탁하는 말을 잘 골랐어!',
+      },
+      {
+        title: '누구의 말일까요',
+        introduction: '상황에 어울리는 말하는 사람을 찾아요.',
+        instructionText: '미어로가 넘어진 아이를 보았어요. 누가 도와주면 좋을까요?',
+        choices: [
+          { id: 'teacher', label: '선생님' },
+          { id: 'cloud', label: '구름' },
+          { id: 'chair', label: '의자' },
+        ],
+        correctChoiceId: 'teacher',
+        hintText: '도움을 줄 수 있는 사람을 찾아요.',
+        successMessage: '맞아, 선생님께 도움을 받을 수 있어!',
+      },
+      {
+        title: '비슷한 말을 찾아요',
+        introduction: '뜻이 비슷한 말을 골라요.',
+        instructionText: '미어로가 아주 빨리 달리는 친구를 보았어요. 빠르다와 비슷한 말은 무엇인가요?',
+        choices: [
+          { id: 'quick', label: '재빠르다' },
+          { id: 'heavy', label: '무겁다' },
+          { id: 'soft', label: '부드럽다' },
+        ],
+        correctChoiceId: 'quick',
+        hintText: '빨리 움직이는 느낌의 말을 찾아요.',
+        successMessage: '좋아, 재빠르다는 빠르다와 비슷해!',
+      },
+      {
+        title: '스무 번째 말풍선',
+        introduction: '언어 언덕의 마지막 말풍선을 열어봐요.',
+        instructionText: '미어로가 친구와 헤어지려고 해요. 헤어질 때 하는 인사는 무엇인가요?',
+        choices: [
+          { id: 'bye', label: '잘 가' },
+          { id: 'hungry', label: '배고파' },
+          { id: 'hot', label: '뜨거워' },
+        ],
+        correctChoiceId: 'bye',
+        hintText: '헤어질 때 웃으며 하는 말을 떠올려요.',
+        successMessage: '멋져, 잘 가는 헤어질 때 하는 인사야!',
+      },
+    ],
+  }),
   {
     id: 'social-1',
     categoryId: 'social',
@@ -273,7 +923,7 @@ export const quests: Quest[] = [
       {
         id: 'social-1-step-1',
         type: 'choice',
-        instructionText: '친구가 장난감을 빌리고 싶대요. 어떻게 말하면 좋을까요?',
+        instructionText: '페나가 미어로의 장난감을 빌리고 싶어 해요. 미어로는 어떻게 말하면 좋을까요?',
         choices: [
           { id: 'share', label: '같이 쓰자' },
           { id: 'push', label: '밀쳐요' },
@@ -298,7 +948,7 @@ export const quests: Quest[] = [
       {
         id: 'social-2-step-1',
         type: 'choice',
-        instructionText: '미어로가 페나의 짐을 들어줬어요. 페나는 어떤 말을 하면 좋을까요?',
+        instructionText: '미어로가 페나의 짐을 들어줬어요. 페나는 미어로에게 어떤 말을 하면 좋을까요?',
         choices: [
           { id: 'thanks', label: '고마워' },
           { id: 'angry', label: '화났어' },
@@ -324,7 +974,7 @@ export const quests: Quest[] = [
       {
         id: 'social-3-step-1',
         type: 'choice',
-        instructionText: '페나가 미끄럼틀을 타려고 해요. 뒤에서 기다리는 미어로는 어떻게 하면 좋을까요?',
+        instructionText: '페나가 미끄럼틀을 타려고 하고 미어로가 뒤에서 기다리고 있어요. 미어로는 어떻게 하면 좋을까요?',
         choices: [
           { id: 'wait', label: '기다려요' },
           { id: 'push', label: '밀어요' },
@@ -348,7 +998,7 @@ export const quests: Quest[] = [
       {
         id: 'social-4-step-1',
         type: 'choice',
-        instructionText: '실수로 친구 블록을 무너뜨렸어요. 어떤 말을 할까요?',
+        instructionText: '미어로가 실수로 친구의 블록을 무너뜨렸어요. 미어로는 어떤 말을 하면 좋을까요?',
         choices: [
           { id: 'sorry', label: '미안해' },
           { id: 'laugh', label: '웃어요' },
@@ -372,7 +1022,7 @@ export const quests: Quest[] = [
       {
         id: 'social-5-step-1',
         type: 'choice',
-        instructionText: '친구가 슬퍼 보여요. 어떤 행동이 좋을까요?',
+        instructionText: '미어로가 슬퍼 보이는 친구를 보았어요. 미어로는 어떤 행동을 하면 좋을까요?',
         choices: [
           { id: 'comfort', label: '괜찮아? 하고 물어요' },
           { id: 'tease', label: '놀려요' },
@@ -384,6 +1034,207 @@ export const quests: Quest[] = [
       },
     ],
   },
+  ...createExtraCategoryQuests({
+    categoryId: 'social',
+    backgroundAsset: 'social-playground-background',
+    templates: [
+      {
+        title: '친구 표정을 살펴요',
+        introduction: '친구의 표정을 보고 마음을 알아차려요.',
+        instructionText: '미어로가 눈물을 글썽이는 친구를 보았어요. 친구의 마음은 어떨까요?',
+        choices: [
+          { id: 'sad', label: '슬퍼요' },
+          { id: 'proud', label: '자랑스러워요' },
+          { id: 'sleepy', label: '졸려요' },
+        ],
+        correctChoiceId: 'sad',
+        hintText: '눈물이 날 때 느끼는 마음을 떠올려요.',
+        successMessage: '친구의 슬픈 마음을 잘 알아차렸어!',
+      },
+      {
+        title: '같이 놀자고 말해요',
+        introduction: '친구에게 함께 노는 말을 건네요.',
+        instructionText: '미어로가 친구와 블록을 같이 만들고 싶어요. 미어로는 어떤 말을 하면 좋을까요?',
+        choices: [
+          { id: 'invite', label: '같이 만들자' },
+          { id: 'take', label: '내가 다 할래' },
+          { id: 'ignore', label: '모른 척해요' },
+        ],
+        correctChoiceId: 'invite',
+        hintText: '함께 하자고 부르는 말을 찾아요.',
+        successMessage: '친구를 잘 초대했어!',
+      },
+      {
+        title: '화가 날 때 쉬어요',
+        introduction: '화가 났을 때 안전하게 진정하는 방법을 골라요.',
+        instructionText: '미어로가 화가 나서 소리치고 싶어졌어요. 먼저 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'breathe', label: '숨을 천천히 쉬어요' },
+          { id: 'hit', label: '친구를 때려요' },
+          { id: 'throw', label: '장난감을 던져요' },
+        ],
+        correctChoiceId: 'breathe',
+        hintText: '몸과 마음이 차분해지는 행동을 찾아요.',
+        successMessage: '좋아, 천천히 숨 쉬면 마음이 가라앉아!',
+      },
+      {
+        title: '도움을 부탁해요',
+        introduction: '어려울 때 도움을 요청하는 말을 배워요.',
+        instructionText: '미어로가 블록을 너무 높이 쌓아서 혼자 올리기 어려워요. 어떤 말을 하면 좋을까요?',
+        choices: [
+          { id: 'help', label: '도와줄래?' },
+          { id: 'cry', label: '울기만 해요' },
+          { id: 'break', label: '부숴요' },
+        ],
+        correctChoiceId: 'help',
+        hintText: '필요한 것을 말로 부탁해요.',
+        successMessage: '도움을 부탁하는 말을 잘 골랐어!',
+      },
+      {
+        title: '친구 말을 들어요',
+        introduction: '친구가 말할 때 기다리는 태도를 배워요.',
+        instructionText: '친구가 미어로에게 이야기하고 있어요. 미어로는 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'listen', label: '귀 기울여 들어요' },
+          { id: 'interrupt', label: '말을 끊어요' },
+          { id: 'run-away', label: '도망가요' },
+        ],
+        correctChoiceId: 'listen',
+        hintText: '친구가 말할 시간을 지켜줘요.',
+        successMessage: '친구 이야기를 잘 들어줬어!',
+      },
+      {
+        title: '번갈아 써요',
+        introduction: '하나뿐인 물건을 번갈아 쓰는 방법을 골라요.',
+        instructionText: '미어로와 친구가 색연필 하나를 함께 쓰고 싶어요. 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'turns', label: '번갈아 써요' },
+          { id: 'grab', label: '빼앗아요' },
+          { id: 'hide', label: '숨겨요' },
+        ],
+        correctChoiceId: 'turns',
+        hintText: '서로 한 번씩 쓰는 방법이에요.',
+        successMessage: '번갈아 쓰는 약속을 잘 골랐어!',
+      },
+      {
+        title: '칭찬을 전해요',
+        introduction: '친구가 잘했을 때 따뜻하게 말해요.',
+        instructionText: '친구가 퍼즐을 완성하자 미어로가 축하해주려 해요. 어떤 말이 좋을까요?',
+        choices: [
+          { id: 'praise', label: '정말 잘했어' },
+          { id: 'tease', label: '별로야' },
+          { id: 'mine', label: '내 거야' },
+        ],
+        correctChoiceId: 'praise',
+        hintText: '친구가 기분 좋아지는 말을 찾아요.',
+        successMessage: '따뜻한 칭찬을 잘 전했어!',
+      },
+      {
+        title: '함께 정리해요',
+        introduction: '놀이가 끝난 뒤 함께 정리하는 행동을 배워요.',
+        instructionText: '미어로가 놀이가 끝난 뒤 흩어진 장난감을 보았어요. 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'clean', label: '함께 정리해요' },
+          { id: 'leave', label: '그냥 나가요' },
+          { id: 'kick', label: '발로 차요' },
+        ],
+        correctChoiceId: 'clean',
+        hintText: '다 같이 쓰는 물건을 제자리에 놓아요.',
+        successMessage: '함께 정리하는 마음이 멋져!',
+      },
+      {
+        title: '새 친구를 맞이해요',
+        introduction: '처음 만난 친구에게 건네는 말을 골라요.',
+        instructionText: '새 친구가 놀이터에 오자 미어로가 인사하려고 해요. 어떤 말이 좋을까요?',
+        choices: [
+          { id: 'welcome', label: '안녕, 같이 놀자' },
+          { id: 'go-away', label: '오지 마' },
+          { id: 'secret', label: '비밀이야' },
+        ],
+        correctChoiceId: 'welcome',
+        hintText: '친구가 편안해지는 인사를 찾아요.',
+        successMessage: '새 친구를 따뜻하게 맞이했어!',
+      },
+      {
+        title: '양보를 해봐요',
+        introduction: '친구가 먼저 필요할 때 양보하는 행동을 배워요.',
+        instructionText: '미어로 앞 친구가 급하게 물을 마시고 싶어 해요. 미어로는 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'yield', label: '먼저 마시게 해요' },
+          { id: 'block', label: '막아요' },
+          { id: 'laugh', label: '웃어요' },
+        ],
+        correctChoiceId: 'yield',
+        hintText: '친구의 필요를 먼저 생각해봐요.',
+        successMessage: '친구를 배려하는 선택을 했어!',
+      },
+      {
+        title: '내 마음을 말해요',
+        introduction: '싫거나 불편한 마음을 말로 표현해요.',
+        instructionText: '친구가 미어로의 그림을 가져가서 미어로가 불편해요. 미어로는 어떻게 말하면 좋을까요?',
+        choices: [
+          { id: 'say-feeling', label: '돌려주면 좋겠어' },
+          { id: 'hit', label: '때려요' },
+          { id: 'rip', label: '찢어요' },
+        ],
+        correctChoiceId: 'say-feeling',
+        hintText: '내 마음과 부탁을 말로 전해요.',
+        successMessage: '내 마음을 말로 잘 표현했어!',
+      },
+      {
+        title: '규칙을 지켜요',
+        introduction: '함께 정한 놀이 규칙을 지키는 선택을 해요.',
+        instructionText: '미어로가 게임을 하고 있는데 아직 자기 차례가 아니에요. 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'wait-turn', label: '차례를 기다려요' },
+          { id: 'cheat', label: '몰래 해요' },
+          { id: 'quit', label: '화내요' },
+        ],
+        correctChoiceId: 'wait-turn',
+        hintText: '모두가 즐겁게 놀 수 있는 행동을 찾아요.',
+        successMessage: '놀이 규칙을 잘 지켰어!',
+      },
+      {
+        title: '속상한 친구를 위로해요',
+        introduction: '속상한 친구에게 할 수 있는 말을 골라요.',
+        instructionText: '친구의 탑이 무너지자 미어로가 위로하려고 해요. 어떤 말이 좋을까요?',
+        choices: [
+          { id: 'comfort', label: '괜찮아, 다시 해보자' },
+          { id: 'mock', label: '못하네' },
+          { id: 'leave', label: '난 갈래' },
+        ],
+        correctChoiceId: 'comfort',
+        hintText: '친구가 다시 힘낼 수 있는 말을 찾아요.',
+        successMessage: '친구를 따뜻하게 위로했어!',
+      },
+      {
+        title: '기다릴 때 할 일',
+        introduction: '기다리는 동안 차분히 할 수 있는 일을 골라요.',
+        instructionText: '미어로가 줄을 서서 기다리고 있어요. 어떻게 기다리면 좋을까요?',
+        choices: [
+          { id: 'stand', label: '차례대로 서요' },
+          { id: 'push', label: '앞사람을 밀어요' },
+          { id: 'shout', label: '소리쳐요' },
+        ],
+        correctChoiceId: 'stand',
+        hintText: '내 자리에서 차분히 기다려요.',
+        successMessage: '차분하게 기다리는 방법을 골랐어!',
+      },
+      {
+        title: '스무 번째 마음 약속',
+        introduction: '마음 놀이터의 마지막 약속을 골라요.',
+        instructionText: '미어로가 친구와 다툰 뒤 다시 사이좋게 지내고 싶어요. 어떤 말이 좋을까요?',
+        choices: [
+          { id: 'make-up', label: '우리 화해하자' },
+          { id: 'never', label: '다시는 안 놀아' },
+          { id: 'blame', label: '네 탓이야' },
+        ],
+        correctChoiceId: 'make-up',
+        hintText: '다시 마음을 이어주는 말을 찾아요.',
+        successMessage: '멋져, 화해하는 마음을 잘 골랐어!',
+      },
+    ],
+  }),
   {
     id: 'safety-1',
     categoryId: 'safety',
@@ -396,7 +1247,7 @@ export const quests: Quest[] = [
       {
         id: 'safety-1-step-1',
         type: 'choice',
-        instructionText: '빨간불일 때는 어떻게 해야 할까요?',
+        instructionText: '미어로가 횡단보도에서 빨간불을 보았어요. 미어로는 어떻게 해야 할까요?',
         choices: [
           { id: 'stop', label: '멈춰요' },
           { id: 'run', label: '뛰어가요' },
@@ -419,7 +1270,7 @@ export const quests: Quest[] = [
       {
         id: 'safety-2-step-1',
         type: 'choice',
-        instructionText: '김이 나는 냄비를 보면 어떻게 해야 할까요?',
+        instructionText: '미어로가 김이 나는 냄비를 보았어요. 미어로는 어떻게 해야 할까요?',
         choices: [
           { id: 'ask-adult', label: '어른에게 말해요' },
           { id: 'touch', label: '만져봐요' },
@@ -443,7 +1294,7 @@ export const quests: Quest[] = [
       {
         id: 'safety-3-step-1',
         type: 'choice',
-        instructionText: '모르는 사람이 같이 가자고 해요. 어떻게 할까요?',
+        instructionText: '모르는 사람이 미어로에게 같이 가자고 해요. 미어로는 어떻게 해야 할까요?',
         choices: [
           { id: 'tell-adult', label: '믿는 어른에게 말해요' },
           { id: 'follow', label: '따라가요' },
@@ -467,7 +1318,7 @@ export const quests: Quest[] = [
       {
         id: 'safety-4-step-1',
         type: 'choice',
-        instructionText: '불이 나면 먼저 무엇을 해야 할까요?',
+        instructionText: '미어로가 불이 난 것을 보았어요. 미어로가 먼저 해야 할 일은 무엇인가요?',
         choices: [
           { id: 'exit', label: '밖으로 나가요' },
           { id: 'hide', label: '숨어요' },
@@ -491,7 +1342,7 @@ export const quests: Quest[] = [
       {
         id: 'safety-5-step-1',
         type: 'choice',
-        instructionText: '모르는 사람이 전화번호를 물어봐요. 어떻게 할까요?',
+        instructionText: '모르는 사람이 미어로에게 전화번호를 물어봐요. 미어로는 어떻게 해야 할까요?',
         choices: [
           { id: 'ask-guardian', label: '보호자에게 물어봐요' },
           { id: 'tell', label: '바로 말해요' },
@@ -503,6 +1354,206 @@ export const quests: Quest[] = [
       },
     ],
   },
+  ...createExtraCategoryQuests({
+    categoryId: 'safety',
+    templates: [
+      {
+        title: '차도 가까이는 조심해요',
+        introduction: '차가 다니는 길 가까이에서 안전하게 행동해요.',
+        instructionText: '미어로의 공이 차도로 굴러갔어요. 미어로는 어떻게 해야 할까요?',
+        choices: [
+          { id: 'ask-adult', label: '어른에게 말해요' },
+          { id: 'run-road', label: '바로 뛰어가요' },
+          { id: 'close-eyes', label: '눈을 감아요' },
+        ],
+        correctChoiceId: 'ask-adult',
+        hintText: '차가 다니는 곳에는 혼자 들어가지 않아요.',
+        successMessage: '안전하게 어른에게 알렸어!',
+      },
+      {
+        title: '계단에서는 천천히',
+        introduction: '계단을 오르내릴 때 안전한 행동을 골라요.',
+        instructionText: '미어로가 계단을 내려가려고 해요. 어떻게 내려가면 안전할까요?',
+        choices: [
+          { id: 'hold-rail', label: '손잡이를 잡아요' },
+          { id: 'jump', label: '뛰어내려요' },
+          { id: 'push', label: '친구를 밀어요' },
+        ],
+        correctChoiceId: 'hold-rail',
+        hintText: '몸을 지탱해주는 것을 잡아요.',
+        successMessage: '계단에서 안전하게 움직였어!',
+      },
+      {
+        title: '물가에서는 함께 있어요',
+        introduction: '물놀이할 때 지켜야 할 약속을 배워요.',
+        instructionText: '미어로가 물가에서 놀고 싶어 해요. 먼저 어떻게 해야 할까요?',
+        choices: [
+          { id: 'with-adult', label: '어른과 함께 가요' },
+          { id: 'alone', label: '혼자 들어가요' },
+          { id: 'deep', label: '깊은 곳으로 가요' },
+        ],
+        correctChoiceId: 'with-adult',
+        hintText: '물가에서는 꼭 어른과 함께해요.',
+        successMessage: '물가 안전 약속을 잘 지켰어!',
+      },
+      {
+        title: '전기 콘센트를 만지지 않아요',
+        introduction: '전기 주변에서 조심하는 방법을 골라요.',
+        instructionText: '미어로가 콘센트 구멍을 보았어요. 미어로는 어떻게 해야 할까요?',
+        choices: [
+          { id: 'leave', label: '만지지 않아요' },
+          { id: 'poke', label: '손가락을 넣어요' },
+          { id: 'water', label: '물을 뿌려요' },
+        ],
+        correctChoiceId: 'leave',
+        hintText: '전기는 위험할 수 있어요.',
+        successMessage: '전기 주변을 안전하게 지나갔어!',
+      },
+      {
+        title: '약은 어른과 함께',
+        introduction: '약을 안전하게 먹는 방법을 배워요.',
+        instructionText: '미어로가 작은 알약을 발견했어요. 미어로는 어떻게 해야 할까요?',
+        choices: [
+          { id: 'ask-guardian', label: '보호자에게 물어봐요' },
+          { id: 'eat', label: '혼자 먹어요' },
+          { id: 'share', label: '친구에게 줘요' },
+        ],
+        correctChoiceId: 'ask-guardian',
+        hintText: '약은 꼭 어른이 알려줄 때 먹어요.',
+        successMessage: '약을 안전하게 다루는 방법을 골랐어!',
+      },
+      {
+        title: '날카로운 물건은 조심해요',
+        introduction: '가위나 칼 같은 물건을 조심하는 방법을 골라요.',
+        instructionText: '미어로가 날카로운 가위를 발견했어요. 미어로는 어떻게 해야 할까요?',
+        choices: [
+          { id: 'ask-help', label: '어른에게 부탁해요' },
+          { id: 'run', label: '들고 뛰어요' },
+          { id: 'wave', label: '흔들어요' },
+        ],
+        correctChoiceId: 'ask-help',
+        hintText: '날카로운 물건은 어른과 함께 써요.',
+        successMessage: '조심해야 할 물건을 잘 알아차렸어!',
+      },
+      {
+        title: '길을 잃으면 멈춰요',
+        introduction: '보호자가 보이지 않을 때 할 일을 배워요.',
+        instructionText: '미어로가 보호자를 찾지 못하고 있어요. 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'stay', label: '그 자리에서 기다려요' },
+          { id: 'wander', label: '혼자 멀리 가요' },
+          { id: 'follow', label: '아무나 따라가요' },
+        ],
+        correctChoiceId: 'stay',
+        hintText: '보호자가 찾기 쉽게 멀리 가지 않아요.',
+        successMessage: '길을 잃었을 때 안전한 선택을 했어!',
+      },
+      {
+        title: '놀이터 기구를 바르게 써요',
+        introduction: '놀이기구를 안전하게 타는 방법을 골라요.',
+        instructionText: '미어로가 그네를 타려고 해요. 어떤 행동이 안전할까요?',
+        choices: [
+          { id: 'sit', label: '앉아서 잡고 타요' },
+          { id: 'stand', label: '서서 타요' },
+          { id: 'jump-off', label: '뛰어내려요' },
+        ],
+        correctChoiceId: 'sit',
+        hintText: '몸을 안정되게 하고 손으로 잡아요.',
+        successMessage: '놀이터 기구를 안전하게 탔어!',
+      },
+      {
+        title: '작은 물건을 입에 넣지 않아요',
+        introduction: '작은 장난감을 안전하게 다루는 방법을 배워요.',
+        instructionText: '미어로가 작은 구슬을 발견했어요. 어떻게 해야 할까요?',
+        choices: [
+          { id: 'no-mouth', label: '입에 넣지 않아요' },
+          { id: 'mouth', label: '입에 넣어요' },
+          { id: 'nose', label: '코에 넣어요' },
+        ],
+        correctChoiceId: 'no-mouth',
+        hintText: '작은 물건은 삼키면 위험해요.',
+        successMessage: '작은 물건을 안전하게 다뤘어!',
+      },
+      {
+        title: '문을 닫을 때 손 조심',
+        introduction: '문 주변에서 손을 다치지 않게 조심해요.',
+        instructionText: '미어로 앞에서 문이 닫히고 있어요. 손은 어디에 두면 좋을까요?',
+        choices: [
+          { id: 'away', label: '문틈에서 빼요' },
+          { id: 'between', label: '문틈에 넣어요' },
+          { id: 'push-hard', label: '세게 밀어요' },
+        ],
+        correctChoiceId: 'away',
+        hintText: '문틈은 손이 끼일 수 있어요.',
+        successMessage: '손을 안전하게 지켰어!',
+      },
+      {
+        title: '반려동물도 조심히',
+        introduction: '동물을 만날 때 안전하게 행동해요.',
+        instructionText: '미어로가 처음 보는 강아지를 만났어요. 어떻게 해야 할까요?',
+        choices: [
+          { id: 'ask-owner', label: '주인에게 물어봐요' },
+          { id: 'grab', label: '바로 안아요' },
+          { id: 'shout', label: '소리쳐요' },
+        ],
+        correctChoiceId: 'ask-owner',
+        hintText: '동물이 놀라지 않게 먼저 물어봐요.',
+        successMessage: '동물을 만날 때도 안전하게 행동했어!',
+      },
+      {
+        title: '음식은 천천히 먹어요',
+        introduction: '먹을 때 안전한 습관을 골라요.',
+        instructionText: '미어로가 간식을 먹고 있어요. 어떻게 먹으면 좋을까요?',
+        choices: [
+          { id: 'slow', label: '천천히 씹어요' },
+          { id: 'run-eat', label: '뛰면서 먹어요' },
+          { id: 'big', label: '한꺼번에 넣어요' },
+        ],
+        correctChoiceId: 'slow',
+        hintText: '목에 걸리지 않게 천천히 먹어요.',
+        successMessage: '음식을 안전하게 먹는 방법을 골랐어!',
+      },
+      {
+        title: '비 오는 날 미끄럼 조심',
+        introduction: '젖은 바닥에서 조심하는 방법을 배워요.',
+        instructionText: '미어로가 젖은 바닥을 지나가야 해요. 어떻게 걸으면 좋을까요?',
+        choices: [
+          { id: 'walk-slow', label: '천천히 걸어요' },
+          { id: 'run-fast', label: '빨리 뛰어요' },
+          { id: 'slide', label: '미끄러져요' },
+        ],
+        correctChoiceId: 'walk-slow',
+        hintText: '젖은 바닥은 미끄러울 수 있어요.',
+        successMessage: '미끄럼을 조심했어!',
+      },
+      {
+        title: '큰 소리가 나면 알려요',
+        introduction: '놀라운 상황에서 도움을 요청하는 방법을 골라요.',
+        instructionText: '큰 소리가 나서 미어로가 무서워졌어요. 어떻게 하면 좋을까요?',
+        choices: [
+          { id: 'tell-adult', label: '가까운 어른에게 말해요' },
+          { id: 'hide-alone', label: '혼자 숨어요' },
+          { id: 'run-out', label: '아무 데나 뛰어요' },
+        ],
+        correctChoiceId: 'tell-adult',
+        hintText: '무서울 때는 믿을 수 있는 어른에게 알려요.',
+        successMessage: '도움이 필요할 때 잘 알렸어!',
+      },
+      {
+        title: '스무 번째 안전 약속',
+        introduction: '안전 사막의 마지막 약속을 골라요.',
+        instructionText: '미어로가 위험해 보이는 상황을 발견했어요. 가장 먼저 무엇을 할까요?',
+        choices: [
+          { id: 'stop-tell', label: '멈추고 어른에게 말해요' },
+          { id: 'try-alone', label: '혼자 해봐요' },
+          { id: 'ignore', label: '그냥 지나가요' },
+        ],
+        correctChoiceId: 'stop-tell',
+        hintText: '위험할 땐 멈추고 도움을 요청해요.',
+        successMessage: '멋져, 안전 약속을 끝까지 잘 지켰어!',
+      },
+    ],
+  }),
 ];
 
 export const sampleProgress: QuestProgress[] = [
