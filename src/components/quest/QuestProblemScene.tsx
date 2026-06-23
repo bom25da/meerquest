@@ -36,8 +36,6 @@ export function QuestProblemScene({ scale, scene, style }: QuestProblemSceneProp
             ]}>
             {renderSceneItemVisual(sceneItem, scale)}
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={2}
               style={[
                 styles.itemLabel,
                 { fontSize: 22 * scale, lineHeight: 27 * scale },
@@ -46,8 +44,6 @@ export function QuestProblemScene({ scale, scene, style }: QuestProblemSceneProp
             </Text>
             {sceneItem.detail ? (
               <Text
-                adjustsFontSizeToFit
-                numberOfLines={1}
                 style={[styles.itemDetail, { fontSize: 14 * scale, lineHeight: 18 * scale }]}>
                 {sceneItem.detail}
               </Text>
@@ -123,8 +119,6 @@ function renderSceneItemVisual(sceneItem: QuestProblemSceneItem, scale: number) 
               { height: 42 * scale, minWidth: 42 * scale },
             ]}>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
               style={[styles.sequenceValue, { fontSize: 22 * scale, lineHeight: 26 * scale }]}>
               {value}
             </Text>
@@ -145,8 +139,6 @@ function renderSceneItemVisual(sceneItem: QuestProblemSceneItem, scale: number) 
         { height: 76 * scale, width: 96 * scale },
       ]}>
       <Text
-        adjustsFontSizeToFit
-        numberOfLines={1}
         style={[styles.objectVisualText, { fontSize: 24 * scale, lineHeight: 29 * scale }]}>
         {getObjectVisualText(sceneItem)}
       </Text>
@@ -263,10 +255,12 @@ const styles = StyleSheet.create({
   },
   itemDetail: {
     color: colors.muted,
+    flexShrink: 1,
     fontWeight: '800',
     includeFontPadding: false,
     marginTop: 2,
     textAlign: 'center',
+    width: '100%',
   },
   itemGrid: {
     alignContent: 'center',
@@ -280,9 +274,11 @@ const styles = StyleSheet.create({
   },
   itemLabel: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   languageScene: {
     backgroundColor: '#DFF6EC',
@@ -301,9 +297,11 @@ const styles = StyleSheet.create({
   },
   objectVisualText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   pathLine: {
     backgroundColor: '#8D8F88',
@@ -383,9 +381,11 @@ const styles = StyleSheet.create({
   },
   sequenceValue: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   socialScene: {
     backgroundColor: '#F7E3F4',

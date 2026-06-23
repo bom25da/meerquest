@@ -42,7 +42,7 @@ describe('quest button assets', () => {
     );
     expect(source).toContain("assets/images/quests/ui/quest-title-plaque.png");
     expect(source).toContain('questTitle');
-    expect(source).toContain('adjustsFontSizeToFit');
+    expect(source).not.toContain('adjustsFontSizeToFit');
     expect(source).not.toContain("assets/images/quests/apple-count/ui-progress.png");
   });
 

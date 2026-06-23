@@ -126,8 +126,6 @@ function QuestTopHud({
         <Image resizeMode="stretch" source={questTitlePlaque} style={styles.assetImage} />
         <View style={styles.questTitleTextBox}>
           <Text
-            adjustsFontSizeToFit
-            numberOfLines={1}
             style={[styles.questTitleText, { fontSize: 29 * layout.scaleY }]}>
             {questTitle}
           </Text>
@@ -151,14 +149,10 @@ function QuestScoreHud({ layout, stars }: { layout: QuestStageFillLayout; stars:
       accessibilityLabel={`별 ${stars}개`}
       style={[styles.scoreHud, getQuestStageRect(layout, questTopHudRects.score)]}>
       <Text
-        adjustsFontSizeToFit
-        numberOfLines={1}
         style={[styles.scoreStar, { fontSize: 34 * layout.scaleY, lineHeight: 38 * layout.scaleY }]}>
         ★
       </Text>
       <Text
-        adjustsFontSizeToFit
-        numberOfLines={1}
         style={[styles.scoreValue, { fontSize: 30 * layout.scaleY, lineHeight: 36 * layout.scaleY }]}>
         {stars}
       </Text>
@@ -277,12 +271,14 @@ const styles = StyleSheet.create({
   },
   questTitleText: {
     color: '#4A2A12',
+    flexShrink: 1,
     fontWeight: '900',
     letterSpacing: 0,
     textAlign: 'center',
     textShadowColor: 'rgba(255, 255, 255, 0.85)',
     textShadowOffset: { height: 1, width: 0 },
     textShadowRadius: 2,
+    width: '100%',
   },
   questTitleTextBox: {
     alignItems: 'center',

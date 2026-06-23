@@ -1,8 +1,7 @@
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/src/components/AppText';
-import { MeerkatMascot, type MascotMood } from '@/src/components/MeerkatMascot';
 import type { TtsBootstrapPhase } from '@/src/features/speech/TTSBootstrapGate';
 import { colors } from '@/src/theme/colors';
 
@@ -13,22 +12,15 @@ interface ModelDownloadScreenProps {
   phase: TtsBootstrapPhase;
 }
 
-const phaseMascotMood: Record<TtsBootstrapPhase, MascotMood> = {
-  checking: 'thinking',
-  downloading: 'greeting',
-  verifying: 'hint',
-  preparing: 'thinking',
-  ready: 'celebrate',
-  failed: 'hint',
-};
+const speakingReadyBackground = require('../../../assets/images/speech/meero-speaking-ready-background-v1.png');
 
-const phaseMascotLabel: Record<TtsBootstrapPhase, string> = {
-  checking: '살펴보자',
-  downloading: '슝슝!',
-  verifying: '꼼꼼히',
-  preparing: '말 준비!',
-  ready: '준비됐어!',
-  failed: '다시!',
+const phaseStatusLabel: Record<TtsBootstrapPhase, string> = {
+  checking: '목소리 확인',
+  downloading: '목소리 준비',
+  verifying: '보물 확인',
+  preparing: '말 준비',
+  ready: '준비 완료',
+  failed: '다시 준비',
 };
 
 export function ModelDownloadScreen({
@@ -44,24 +36,27 @@ export function ModelDownloadScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View
-        style={[
-          styles.screen,
-          isCompact && styles.compactScreen,
-          isNarrow && styles.narrowScreen,
-        ]}>
-        <MeerkatMascot mood={phaseMascotMood[phase]} label={phaseMascotLabel[phase]} />
-
+      <ImageBackground
+        accessibilityIgnoresInvertColors
+        resizeMode="cover"
+        source={speakingReadyBackground}
+        style={styles.background}
+        imageStyle={styles.backgroundImage}>
+        <View style={styles.scrim} />
         <View
           style={[
             styles.status,
             isCompact && styles.compactStatus,
             isNarrow && styles.narrowStatus,
           ]}>
+          <View style={styles.phaseBadge}>
+            <Text style={styles.phaseBadgeText}>
+              {phaseStatusLabel[phase]}
+            </Text>
+          </View>
+
           <Text
             accessibilityLiveRegion="polite"
-            adjustsFontSizeToFit
-            numberOfLines={2}
             style={[styles.message, isCompact && styles.compactMessage]}>
             {message}
           </Text>
@@ -76,8 +71,6 @@ export function ModelDownloadScreen({
               <View style={[styles.progressFill, { width: `${safePercent}%` }]} />
             </View>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
               style={styles.percentText}>
               {safePercent}%
             </Text>
@@ -89,65 +82,103 @@ export function ModelDownloadScreen({
               accessibilityRole="button"
               onPress={onRetry}
               style={({ pressed }) => [styles.retryButton, pressed && styles.retryButtonPressed]}>
-              <Text adjustsFontSizeToFit numberOfLines={1} style={styles.retryText}>
+              <Text style={styles.retryText}>
                 다시 준비하기
               </Text>
             </Pressable>
           ) : null}
         </View>
-      </View>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: colors.background,
+    backgroundColor: '#D98F2F',
     flex: 1,
   },
-  screen: {
-    alignItems: 'center',
+  background: {
     flex: 1,
-    flexDirection: 'row',
-    gap: 30,
     justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 18,
+    paddingHorizontal: 44,
+    paddingVertical: 32,
   },
-  compactScreen: {
-    gap: 18,
+  backgroundImage: {
+    transform: [{ scale: 1.01 }],
+  },
+  scrim: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(62, 35, 16, 0.08)',
+  },
+  phaseBadge: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: '#FFF2C9',
+    borderColor: '#F7B94E',
+    borderRadius: 999,
+    borderWidth: 3,
+    justifyContent: 'center',
+    minHeight: 42,
+    minWidth: 150,
     paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingVertical: 7,
   },
-  narrowScreen: {
-    flexDirection: 'column',
+  phaseBadgeText: {
+    color: '#8A4C18',
+    flexShrink: 1,
+    fontSize: 18,
+    fontWeight: '900',
+    includeFontPadding: false,
+    letterSpacing: 0,
+    lineHeight: 22,
+    textAlign: 'center',
+    width: '100%',
   },
   status: {
     alignItems: 'center',
-    gap: 18,
-    maxWidth: 420,
-    minWidth: 320,
+    alignSelf: 'flex-end',
+    backgroundColor: 'rgba(255, 249, 231, 0.94)',
+    borderColor: '#FFFFFF',
+    borderRadius: 28,
+    borderWidth: 4,
+    gap: 16,
+    maxWidth: 480,
+    minWidth: 360,
+    paddingHorizontal: 30,
+    paddingVertical: 26,
+    shadowColor: '#5B351A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
   },
   compactStatus: {
-    gap: 12,
-    maxWidth: 360,
-    minWidth: 280,
+    gap: 10,
+    maxWidth: 410,
+    minWidth: 320,
+    paddingHorizontal: 22,
+    paddingVertical: 18,
   },
   narrowStatus: {
+    alignSelf: 'center',
     maxWidth: 420,
     minWidth: 0,
     width: '100%',
   },
   message: {
-    color: colors.ink,
-    fontSize: 26,
+    color: '#4E3218',
+    flexShrink: 1,
+    fontSize: 30,
     fontWeight: '900',
-    lineHeight: 34,
+    includeFontPadding: false,
+    letterSpacing: 0,
+    lineHeight: 37,
     textAlign: 'center',
+    width: '100%',
   },
   compactMessage: {
-    fontSize: 22,
-    lineHeight: 29,
+    fontSize: 24,
+    lineHeight: 31,
   },
   progressWrap: {
     alignItems: 'center',
@@ -155,30 +186,35 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   progressTrack: {
-    backgroundColor: colors.surface,
-    borderColor: colors.ink,
-    borderRadius: 8,
+    backgroundColor: '#FFE9AC',
+    borderColor: '#7B4A1B',
+    borderRadius: 999,
     borderWidth: 3,
-    height: 30,
+    height: 32,
     overflow: 'hidden',
     width: '100%',
   },
   progressFill: {
-    backgroundColor: colors.sky,
+    backgroundColor: '#58BFC7',
+    borderRadius: 999,
     height: '100%',
   },
   percentText: {
-    color: colors.muted,
+    color: '#7C5524',
+    flexShrink: 1,
     fontSize: 18,
     fontWeight: '900',
+    includeFontPadding: false,
+    lineHeight: 23,
     minHeight: 24,
     textAlign: 'center',
+    width: '100%',
   },
   retryButton: {
     alignItems: 'center',
     backgroundColor: colors.orange,
-    borderColor: colors.ink,
-    borderRadius: 8,
+    borderColor: '#FFFFFF',
+    borderRadius: 999,
     borderWidth: 3,
     justifyContent: 'center',
     minHeight: 54,
@@ -190,9 +226,13 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   retryText: {
-    color: colors.ink,
+    color: '#4E3218',
+    flexShrink: 1,
     fontSize: 18,
     fontWeight: '900',
+    includeFontPadding: false,
+    lineHeight: 23,
     textAlign: 'center',
+    width: '100%',
   },
 });

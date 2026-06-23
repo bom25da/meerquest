@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
   DEFAULT_PROFILE_ID,
+  recordQuestCompletion,
   recordQuestAttempt,
   type QuestProgress,
 } from './questProgress';
@@ -10,7 +12,7 @@ import { getQuestProgressStorage, loadQuestProgress, saveQuestProgress } from '.
 export function useQuestProgress(profileId = DEFAULT_PROFILE_ID) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [progress, setProgress] = useState<QuestProgress[]>([]);
-  const storage = useMemo(() => getQuestProgressStorage(), []);
+  const storage = useMemo(() => getQuestProgressStorage(() => AsyncStorage), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -54,7 +56,27 @@ export function useQuestProgress(profileId = DEFAULT_PROFILE_ID) {
     [profileId, progress, storage],
   );
 
+  const completeQuest = useCallback(
+    async (questId: string) => {
+      const now = new Date().toISOString();
+      const nextProgress = recordQuestCompletion(progress, {
+        now,
+        profileId,
+        questId,
+      });
+
+      setProgress(nextProgress);
+      await saveQuestProgress(storage, nextProgress);
+
+      return nextProgress.find(
+        (item) => item.profileId === profileId && item.questId === questId,
+      );
+    },
+    [profileId, progress, storage],
+  );
+
   return {
+    completeQuest,
     isLoaded,
     progress,
     profileId,

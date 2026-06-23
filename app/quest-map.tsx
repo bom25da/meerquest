@@ -44,7 +44,31 @@ const visibleStepCount = 20;
 const questMapCompactHeight = 1920;
 const questMapRegularHeight = 2400;
 
-const nodeLayouts = [
+type QuestMapNodeLayout = {
+  left: number;
+  rotation: string;
+  top: number;
+};
+
+type QuestMapImageAnchor = {
+  rotation: string;
+  sourceX: number;
+  sourceY: number;
+};
+
+type QuestMapBackgroundDimensions = {
+  height: number;
+  width: number;
+};
+
+const questMapBackgroundDimensions: Record<QuestMapThemeBackgroundKey, QuestMapBackgroundDimensions> = {
+  'language-hill': { height: 1820, width: 864 },
+  'math-cave': { height: 1821, width: 864 },
+  'safety-desert': { height: 1821, width: 864 },
+  'social-playground': { height: 1821, width: 864 },
+};
+
+const nodeLayouts: readonly QuestMapNodeLayout[] = [
   { left: 0.56, rotation: '-3deg', top: 0.888 },
   { left: 0.49, rotation: '2deg', top: 0.844 },
   { left: 0.44, rotation: '-1deg', top: 0.801 },
@@ -65,6 +89,52 @@ const nodeLayouts = [
   { left: 0.58, rotation: '3deg', top: 0.123 },
   { left: 0.645, rotation: '-1deg', top: 0.081 },
   { left: 0.62, rotation: '4deg', top: 0.042 },
+] as const;
+
+const languageHillPathAnchors: readonly QuestMapImageAnchor[] = [
+  { rotation: '-3deg', sourceX: 0.55, sourceY: 0.82308 },
+  { rotation: '2deg', sourceX: 0.5, sourceY: 0.78681 },
+  { rotation: '-1deg', sourceX: 0.49, sourceY: 0.75055 },
+  { rotation: '4deg', sourceX: 0.54, sourceY: 0.71264 },
+  { rotation: '-2deg', sourceX: 0.57, sourceY: 0.67088 },
+  { rotation: '3deg', sourceX: 0.5, sourceY: 0.63626 },
+  { rotation: '-4deg', sourceX: 0.48, sourceY: 0.5967 },
+  { rotation: '2deg', sourceX: 0.45, sourceY: 0.55989 },
+  { rotation: '-2deg', sourceX: 0.5, sourceY: 0.52143 },
+  { rotation: '3deg', sourceX: 0.47, sourceY: 0.48462 },
+  { rotation: '-4deg', sourceX: 0.49, sourceY: 0.44396 },
+  { rotation: '2deg', sourceX: 0.52, sourceY: 0.40879 },
+  { rotation: '-1deg', sourceX: 0.48, sourceY: 0.36978 },
+  { rotation: '4deg', sourceX: 0.39, sourceY: 0.33187 },
+  { rotation: '-3deg', sourceX: 0.45, sourceY: 0.29231 },
+  { rotation: '2deg', sourceX: 0.62, sourceY: 0.25714 },
+  { rotation: '-2deg', sourceX: 0.68, sourceY: 0.21923 },
+  { rotation: '3deg', sourceX: 0.6, sourceY: 0.18516 },
+  { rotation: '-1deg', sourceX: 0.59, sourceY: 0.15 },
+  { rotation: '4deg', sourceX: 0.56, sourceY: 0.11758 },
+] as const;
+
+const socialPlaygroundPathAnchors: readonly QuestMapImageAnchor[] = [
+  { rotation: '-3deg', sourceX: 0.47, sourceY: 0.82308 },
+  { rotation: '2deg', sourceX: 0.51, sourceY: 0.78681 },
+  { rotation: '-1deg', sourceX: 0.51, sourceY: 0.75055 },
+  { rotation: '4deg', sourceX: 0.48, sourceY: 0.71264 },
+  { rotation: '-2deg', sourceX: 0.5, sourceY: 0.67088 },
+  { rotation: '3deg', sourceX: 0.535, sourceY: 0.63626 },
+  { rotation: '-4deg', sourceX: 0.49, sourceY: 0.5967 },
+  { rotation: '2deg', sourceX: 0.475, sourceY: 0.55989 },
+  { rotation: '-2deg', sourceX: 0.52, sourceY: 0.52143 },
+  { rotation: '3deg', sourceX: 0.526, sourceY: 0.48462 },
+  { rotation: '-4deg', sourceX: 0.51, sourceY: 0.44396 },
+  { rotation: '2deg', sourceX: 0.432, sourceY: 0.40879 },
+  { rotation: '-1deg', sourceX: 0.437, sourceY: 0.36978 },
+  { rotation: '4deg', sourceX: 0.502, sourceY: 0.33187 },
+  { rotation: '-3deg', sourceX: 0.558, sourceY: 0.29231 },
+  { rotation: '2deg', sourceX: 0.539, sourceY: 0.25714 },
+  { rotation: '-2deg', sourceX: 0.572, sourceY: 0.21923 },
+  { rotation: '3deg', sourceX: 0.472, sourceY: 0.18516 },
+  { rotation: '-1deg', sourceX: 0.551, sourceY: 0.15 },
+  { rotation: '4deg', sourceX: 0.608, sourceY: 0.11758 },
 ] as const;
 
 export default function QuestMapScreen() {
@@ -96,6 +166,8 @@ export default function QuestMapScreen() {
     visibleWindow.steps.findIndex((step) => step.questId === visibleWindow.focusStep?.questId),
   );
   const focusedScrollOffset = getFocusedStepScrollOffset({
+    backgroundKey: mapTheme.backgroundKey,
+    canvasWidth: width,
     layoutIndex: focusedVisibleIndex,
     mapHeight,
     viewportHeight: height,
@@ -146,6 +218,7 @@ export default function QuestMapScreen() {
               accessibilityLabel={`${mapTheme.title} 단계 지도`}
               canvasHeight={mapHeight}
               canvasWidth={width}
+              backgroundKey={mapTheme.backgroundKey}
               focusQuestId={visibleWindow.focusStep?.questId}
               isLoaded={isLoaded}
               onOpenQuest={(quest) => router.push(`/quest-play?questId=${quest.id}` as Href)}
@@ -214,6 +287,7 @@ export default function QuestMapScreen() {
 
 function VisibleStepPath({
   accessibilityLabel,
+  backgroundKey,
   canvasHeight,
   canvasWidth,
   focusQuestId,
@@ -222,6 +296,7 @@ function VisibleStepPath({
   steps,
 }: {
   accessibilityLabel: string;
+  backgroundKey: QuestMapThemeBackgroundKey;
   canvasHeight: number;
   canvasWidth: number;
   focusQuestId?: string;
@@ -232,11 +307,12 @@ function VisibleStepPath({
   return (
     <View accessibilityLabel={accessibilityLabel} style={styles.stepPathLayer}>
       {steps.map((step, index) => {
-        const layout = nodeLayouts[index] ?? nodeLayouts[nodeLayouts.length - 1];
-        const nodePosition = {
-          left: canvasWidth * layout.left,
-          top: canvasHeight * layout.top,
-        };
+        const nodePosition = getNodePosition({
+          backgroundKey,
+          canvasHeight,
+          canvasWidth,
+          index,
+        });
 
         return (
           <QuestCaveStepButton
@@ -244,9 +320,9 @@ function VisibleStepPath({
             isLoaded={isLoaded}
             key={step.questId}
             onOpenQuest={onOpenQuest}
-            rotation={layout.rotation}
+            rotation={nodePosition.rotation}
             step={step}
-            style={nodePosition}
+            style={{ left: nodePosition.left, top: nodePosition.top }}
           />
         );
       })}
@@ -406,18 +482,100 @@ function getCounterRotation(rotation: string) {
   return rotation.startsWith('-') ? rotation.slice(1) : `-${rotation}`;
 }
 
+function getNodePosition({
+  backgroundKey,
+  canvasHeight,
+  canvasWidth,
+  index,
+}: {
+  backgroundKey: QuestMapThemeBackgroundKey;
+  canvasHeight: number;
+  canvasWidth: number;
+  index: number;
+}) {
+  if (backgroundKey === 'language-hill') {
+    const anchor =
+      languageHillPathAnchors[index] ?? languageHillPathAnchors[languageHillPathAnchors.length - 1];
+
+    return getImageAnchoredNodePosition({
+      anchor,
+      backgroundKey,
+      canvasHeight,
+      canvasWidth,
+    });
+  }
+
+  if (backgroundKey === 'social-playground') {
+    const anchor =
+      socialPlaygroundPathAnchors[index] ??
+      socialPlaygroundPathAnchors[socialPlaygroundPathAnchors.length - 1];
+
+    return getImageAnchoredNodePosition({
+      anchor,
+      backgroundKey,
+      canvasHeight,
+      canvasWidth,
+    });
+  }
+
+  const layout = nodeLayouts[index] ?? nodeLayouts[nodeLayouts.length - 1];
+
+  return {
+    left: canvasWidth * layout.left,
+    rotation: layout.rotation,
+    top: canvasHeight * layout.top,
+  };
+}
+
+function getImageAnchoredNodePosition({
+  anchor,
+  backgroundKey,
+  canvasHeight,
+  canvasWidth,
+}: {
+  anchor: QuestMapImageAnchor;
+  backgroundKey: QuestMapThemeBackgroundKey;
+  canvasHeight: number;
+  canvasWidth: number;
+}) {
+  const sourceDimensions = questMapBackgroundDimensions[backgroundKey];
+  const scale = Math.max(
+    canvasWidth / sourceDimensions.width,
+    canvasHeight / sourceDimensions.height,
+  );
+  const renderedWidth = sourceDimensions.width * scale;
+  const renderedHeight = sourceDimensions.height * scale;
+  const offsetX = (canvasWidth - renderedWidth) / 2;
+  const offsetY = (canvasHeight - renderedHeight) / 2;
+
+  return {
+    left: offsetX + anchor.sourceX * renderedWidth,
+    rotation: anchor.rotation,
+    top: offsetY + anchor.sourceY * renderedHeight,
+  };
+}
+
 function getFocusedStepScrollOffset({
+  backgroundKey,
+  canvasWidth,
   layoutIndex,
   mapHeight,
   viewportHeight,
 }: {
+  backgroundKey: QuestMapThemeBackgroundKey;
+  canvasWidth: number;
   layoutIndex: number;
   mapHeight: number;
   viewportHeight: number;
 }) {
-  const layout = nodeLayouts[Math.min(Math.max(layoutIndex, 0), nodeLayouts.length - 1)];
+  const nodePosition = getNodePosition({
+    backgroundKey,
+    canvasHeight: mapHeight,
+    canvasWidth,
+    index: Math.min(Math.max(layoutIndex, 0), nodeLayouts.length - 1),
+  });
   const maxScrollOffset = Math.max(0, mapHeight - viewportHeight);
-  const targetOffset = mapHeight * layout.top - viewportHeight * 0.62;
+  const targetOffset = nodePosition.top - viewportHeight * 0.62;
 
   return Math.min(maxScrollOffset, Math.max(0, targetOffset));
 }

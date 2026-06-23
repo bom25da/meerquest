@@ -92,6 +92,12 @@ interface RecordQuestAttemptInput {
   questId: string;
 }
 
+interface RecordQuestCompletionInput {
+  now: string;
+  profileId?: string;
+  questId: string;
+}
+
 const byOrder = (a: Quest, b: Quest) => a.order - b.order || a.level - b.level;
 
 const getCategoryQuests = (categoryId: QuestCategoryId, quests: Quest[]) =>
@@ -205,6 +211,33 @@ export function recordQuestAttempt(
     questId,
     status: answeredCorrectly ? 'completed' : 'inProgress',
     ...(answeredCorrectly ? { completedAt: now } : {}),
+  };
+
+  const otherProgress = progress.filter(
+    (item) => item.profileId !== profileId || item.questId !== questId,
+  );
+
+  return [...otherProgress, nextRecord];
+}
+
+export function recordQuestCompletion(
+  progress: QuestProgress[],
+  { now, profileId = DEFAULT_PROFILE_ID, questId }: RecordQuestCompletionInput,
+) {
+  const existing = getProgress(questId, progress, profileId);
+
+  if (existing?.status === 'completed') {
+    return progress;
+  }
+
+  const nextRecord: QuestProgress = {
+    ...existing,
+    attempts: existing?.attempts ?? 0,
+    completedAt: existing?.completedAt ?? now,
+    lastPlayedAt: now,
+    profileId,
+    questId,
+    status: 'completed',
   };
 
   const otherProgress = progress.filter(

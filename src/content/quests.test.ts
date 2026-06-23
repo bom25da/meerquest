@@ -248,6 +248,22 @@ describe('quest content', () => {
     expect(mathQuest?.steps[0].hintText).toBe('4 다음 숫자를 떠올려봐요.');
   });
 
+  it('uses twelve as the answer for the twentieth math quest two-step count', () => {
+    const mathQuest = quests.find((quest) => quest.id === 'math-20');
+
+    expect(mathQuest?.steps[0].instructionText).toBe(
+      '미어로가 숫자 10에서 두 걸음을 더 세어 도착했어요. 도착한 숫자는 무엇인가요?',
+    );
+    expect(mathQuest?.steps[0].choices.map((choice) => choice.label)).toEqual([
+      '15',
+      '20',
+      '12',
+    ]);
+    expect(mathQuest?.steps[0].correctChoiceId).toBe('twelve');
+    expect(mathQuest?.steps[0].hintText).toBe('10 다음에 11, 12처럼 두 번 더 세어봐요.');
+    expect(mathQuest?.steps[0].successMessage).toBe('맞아, 10에서 두 걸음 더 가면 12야!');
+  });
+
   it('uses an animal sound story prompt for the first language hill quest', () => {
     const languageQuest = quests.find((quest) => quest.id === 'language-1');
 

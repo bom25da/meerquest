@@ -998,8 +998,6 @@ function AppleCountQuestScreen({
           />
           <View style={[styles.appleCountPrompt, getQuestStageRect(stage, promptRect)]}>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={2}
               style={[
                 styles.appleCountPromptText,
                 { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -1041,8 +1039,6 @@ function AppleCountQuestScreen({
                   pressed && !isStepComplete && !showIncorrect && styles.appleCountChoicePressed,
                 ]}>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.appleCountChoiceLabelText,
                     { fontSize: 58 * stage.scaleY, lineHeight: 66 * stage.scaleY },
@@ -1064,8 +1060,6 @@ function AppleCountQuestScreen({
                 {showCorrect ? (
                   <View style={styles.appleCountCheckBadge}>
                     <Text
-                      adjustsFontSizeToFit
-                      numberOfLines={1}
                       style={[
                         styles.appleCountCheckText,
                         { fontSize: 28 * stage.scaleY, lineHeight: 32 * stage.scaleY },
@@ -1096,8 +1090,6 @@ function AppleCountQuestScreen({
                   <MeeroThinkAgainAnimation style={styles.appleCountResultOverlayAnimation} />
                 )}
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.appleCountResultOverlayTitle,
                     { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -1105,8 +1097,6 @@ function AppleCountQuestScreen({
                   {resultOverlay.title}
                 </Text>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={2}
                   style={[
                     styles.appleCountResultOverlayMessage,
                     { fontSize: 22 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -1121,8 +1111,6 @@ function AppleCountQuestScreen({
                     pressed && styles.buttonPressed,
                   ]}>
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
                     style={[
                       styles.appleCountResultOverlayActionText,
                       { fontSize: 24 * stage.scaleY, lineHeight: 30 * stage.scaleY },
@@ -1150,8 +1138,6 @@ function renderFootprintSequenceOverlay(stage: QuestStageFillLayout) {
         style={[styles.footprintSequenceLabel, getQuestStageRect(stage, labelRect)]}>
         {isMissing ? (
           <Text
-            adjustsFontSizeToFit
-            numberOfLines={1}
             style={[
               styles.footprintSequenceMissingSlotText,
               { fontSize: 56 * stage.scaleY, lineHeight: 62 * stage.scaleY },
@@ -1160,8 +1146,6 @@ function renderFootprintSequenceOverlay(stage: QuestStageFillLayout) {
           </Text>
         ) : (
           <Text
-            adjustsFontSizeToFit
-            numberOfLines={1}
             style={[
               styles.footprintSequenceLabelText,
               { fontSize: 54 * stage.scaleY, lineHeight: 60 * stage.scaleY },
@@ -1255,8 +1239,6 @@ function AnimalSoundQuestScreen({
           />
           <View style={[styles.appleCountPrompt, getQuestStageRect(stage, animalSoundPromptRect)]}>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={2}
               style={[
                 styles.appleCountPromptText,
                 { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -1301,8 +1283,6 @@ function AnimalSoundQuestScreen({
                   pressed && !isStepComplete && !showIncorrect && styles.appleCountChoicePressed,
                 ]}>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.animalSoundChoiceLabelText,
                     { fontSize: 42 * stage.scaleY, lineHeight: 50 * stage.scaleY },
@@ -1312,8 +1292,6 @@ function AnimalSoundQuestScreen({
                 {showCorrect ? (
                   <View style={styles.animalSoundCheckBadge}>
                     <Text
-                      adjustsFontSizeToFit
-                      numberOfLines={1}
                       style={[
                         styles.appleCountCheckText,
                         { fontSize: 23 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -1346,8 +1324,6 @@ function AnimalSoundQuestScreen({
                   <MeeroThinkAgainAnimation style={styles.appleCountResultOverlayAnimation} />
                 )}
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.appleCountResultOverlayTitle,
                     { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -1355,8 +1331,6 @@ function AnimalSoundQuestScreen({
                   {resultOverlay.title}
                 </Text>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={2}
                   style={[
                     styles.appleCountResultOverlayMessage,
                     { fontSize: 22 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -1371,8 +1345,6 @@ function AnimalSoundQuestScreen({
                     pressed && styles.buttonPressed,
                   ]}>
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
                     style={[
                       styles.appleCountResultOverlayActionText,
                       { fontSize: 24 * stage.scaleY, lineHeight: 30 * stage.scaleY },
@@ -1458,8 +1430,6 @@ function ShapeFindQuestScreen({
           />
           <View style={[styles.appleCountPrompt, getQuestStageRect(stage, shapeFindPromptRect)]}>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={2}
               style={[
                 styles.appleCountPromptText,
                 { fontSize: 25 * stage.scaleY, lineHeight: 31 * stage.scaleY },
@@ -1487,8 +1457,6 @@ function ShapeFindQuestScreen({
                   getQuestStageCircleRect(stage, labelRect),
                 ]}>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.shapeFindDoorNumberText,
                     { fontSize: 26 * stage.scaleY, lineHeight: 32 * stage.scaleY },
@@ -1524,8 +1492,6 @@ function ShapeFindQuestScreen({
                   pressed && !isStepComplete && !showIncorrect && styles.appleCountChoicePressed,
                 ]}>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.shapeFindChoiceLabelText,
                     { fontSize: 34 * stage.scaleY, lineHeight: 40 * stage.scaleY },
@@ -1535,8 +1501,6 @@ function ShapeFindQuestScreen({
                 {showCorrect ? (
                   <View style={styles.shapeFindCheckBadge}>
                     <Text
-                      adjustsFontSizeToFit
-                      numberOfLines={1}
                       style={[
                         styles.appleCountCheckText,
                         { fontSize: 24 * stage.scaleY, lineHeight: 29 * stage.scaleY },
@@ -1569,8 +1533,6 @@ function ShapeFindQuestScreen({
                   <MeeroThinkAgainAnimation style={styles.appleCountResultOverlayAnimation} />
                 )}
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.appleCountResultOverlayTitle,
                     { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -1578,8 +1540,6 @@ function ShapeFindQuestScreen({
                   {resultOverlay.title}
                 </Text>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={2}
                   style={[
                     styles.appleCountResultOverlayMessage,
                     { fontSize: 22 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -1594,8 +1554,6 @@ function ShapeFindQuestScreen({
                     pressed && styles.buttonPressed,
                   ]}>
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
                     style={[
                       styles.appleCountResultOverlayActionText,
                       { fontSize: 24 * stage.scaleY, lineHeight: 30 * stage.scaleY },
@@ -1681,8 +1639,6 @@ function PatternPathQuestScreen({
           />
           <View style={[styles.appleCountPrompt, getQuestStageRect(stage, patternPathPromptRect)]}>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
               style={[
                 styles.appleCountPromptText,
                 { fontSize: 31 * stage.scaleY, lineHeight: 38 * stage.scaleY },
@@ -1735,8 +1691,6 @@ function PatternPathQuestScreen({
                   ]}
                 />
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.patternPathChoiceLabelText,
                     { fontSize: 34 * stage.scaleY, lineHeight: 40 * stage.scaleY },
@@ -1746,8 +1700,6 @@ function PatternPathQuestScreen({
                 {showCorrect ? (
                   <View style={styles.patternPathCheckBadge}>
                     <Text
-                      adjustsFontSizeToFit
-                      numberOfLines={1}
                       style={[
                         styles.appleCountCheckText,
                         { fontSize: 23 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -1780,8 +1732,6 @@ function PatternPathQuestScreen({
                   <MeeroThinkAgainAnimation style={styles.appleCountResultOverlayAnimation} />
                 )}
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.appleCountResultOverlayTitle,
                     { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -1789,8 +1739,6 @@ function PatternPathQuestScreen({
                   {resultOverlay.title}
                 </Text>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={2}
                   style={[
                     styles.appleCountResultOverlayMessage,
                     { fontSize: 22 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -1805,8 +1753,6 @@ function PatternPathQuestScreen({
                     pressed && styles.buttonPressed,
                   ]}>
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
                     style={[
                       styles.appleCountResultOverlayActionText,
                       { fontSize: 24 * stage.scaleY, lineHeight: 30 * stage.scaleY },
@@ -1892,8 +1838,6 @@ function SizeCompareQuestScreen({
           />
           <View style={[styles.appleCountPrompt, getQuestStageRect(stage, sizeComparePromptRect)]}>
             <Text
-              adjustsFontSizeToFit
-              numberOfLines={1}
               style={[
                 styles.appleCountPromptText,
                 { fontSize: 31 * stage.scaleY, lineHeight: 38 * stage.scaleY },
@@ -1920,8 +1864,6 @@ function SizeCompareQuestScreen({
                   getQuestStageCircleRect(stage, labelRect),
                 ]}>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.sizeCompareHoleNumberText,
                     { fontSize: 28 * stage.scaleY, lineHeight: 34 * stage.scaleY },
@@ -1961,8 +1903,6 @@ function SizeCompareQuestScreen({
                     pressed && !isStepComplete && !showIncorrect && styles.appleCountChoicePressed,
                   ]}>
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
                     style={[
                       styles.sizeCompareChoiceLabelText,
                       { fontSize: 34 * stage.scaleY, lineHeight: 40 * stage.scaleY },
@@ -1972,8 +1912,6 @@ function SizeCompareQuestScreen({
                   {showCorrect ? (
                     <View style={styles.sizeCompareCheckBadge}>
                       <Text
-                        adjustsFontSizeToFit
-                        numberOfLines={1}
                         style={[
                           styles.appleCountCheckText,
                           { fontSize: 23 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -2007,8 +1945,6 @@ function SizeCompareQuestScreen({
                   <MeeroThinkAgainAnimation style={styles.appleCountResultOverlayAnimation} />
                 )}
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
                   style={[
                     styles.appleCountResultOverlayTitle,
                     { fontSize: 30 * stage.scaleY, lineHeight: 36 * stage.scaleY },
@@ -2016,8 +1952,6 @@ function SizeCompareQuestScreen({
                   {resultOverlay.title}
                 </Text>
                 <Text
-                  adjustsFontSizeToFit
-                  numberOfLines={2}
                   style={[
                     styles.appleCountResultOverlayMessage,
                     { fontSize: 22 * stage.scaleY, lineHeight: 28 * stage.scaleY },
@@ -2032,8 +1966,6 @@ function SizeCompareQuestScreen({
                     pressed && styles.buttonPressed,
                   ]}>
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={1}
                     style={[
                       styles.appleCountResultOverlayActionText,
                       { fontSize: 24 * stage.scaleY, lineHeight: 30 * stage.scaleY },
@@ -2051,7 +1983,7 @@ function SizeCompareQuestScreen({
 }
 
 const questContentBackdropRect = { height: 504, left: 52, top: 124, width: 1261 };
-const appleCountPromptRect = { height: 70, left: 403, top: 145, width: 560 };
+const appleCountPromptRect = { height: 108, left: 403, top: 107, width: 560 };
 const appleCountApplesImageRect = { height: 298, left: 205, top: 272, width: 498 };
 const appleCountResultOverlayRect = { height: 365, left: 377, top: 223, width: 612 };
 const appleCountChoiceRects: Record<string, QuestStageSourceRect> = {
@@ -2153,7 +2085,7 @@ const footprintSequenceLabels: { id: string; isMissing?: boolean; label: string 
   { id: 'four', label: '4' },
   { id: 'slot', label: '?', isMissing: true },
 ];
-const animalSoundPromptRect = { height: 80, left: 233, top: 140, width: 900 };
+const animalSoundPromptRect = { height: 96, left: 233, top: 132, width: 900 };
 const animalSoundSceneImageRect = { height: 306, left: 108, top: 269, width: 700 };
 const animalSoundResultOverlayRect = { height: 365, left: 377, top: 223, width: 612 };
 const animalSoundChoiceRects: Record<string, QuestStageSourceRect> = {
@@ -2222,7 +2154,7 @@ const shapeFindChoiceRects: Record<string, QuestStageSourceRect> = {
   'button-2': { height: 136, left: 850, top: 437, width: 252 },
 };
 const shapeFindFallbackChoiceRect = { height: 136, left: 850, top: 318, width: 252 };
-const patternPathPromptRect = { height: 70, left: 303, top: 145, width: 760 };
+const patternPathPromptRect = { height: 106, left: 303, top: 112, width: 760 };
 const patternPathStonesRect = { height: 258, left: 303, top: 224, width: 760 };
 const patternPathResultOverlayRect = { height: 365, left: 377, top: 223, width: 612 };
 const patternPathChoiceRects: Record<string, QuestStageSourceRect> = {
@@ -2231,7 +2163,7 @@ const patternPathChoiceRects: Record<string, QuestStageSourceRect> = {
   yellow: { height: 132, left: 852, top: 492, width: 220 },
 };
 const patternPathFallbackChoiceRect = { height: 132, left: 573, top: 492, width: 220 };
-const sizeComparePromptRect = { height: 70, left: 233, top: 145, width: 900 };
+const sizeComparePromptRect = { height: 102, left: 233, top: 122, width: 900 };
 const sizeCompareSceneRect = { height: 240, left: 108, top: 302, width: 650 };
 const sizeCompareResultOverlayRect = { height: 365, left: 377, top: 223, width: 612 };
 const sizeCompareHoleLabelRects: Record<string, QuestStageSourceRect> = {
@@ -2392,9 +2324,11 @@ const styles = StyleSheet.create({
   },
   animalSoundChoiceLabelText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   animalSoundSceneImage: {
     position: 'absolute',
@@ -2535,9 +2469,11 @@ const styles = StyleSheet.create({
   },
   appleCountResultOverlayActionText: {
     color: colors.white,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   appleCountResultOverlayAnimation: {
     height: 156,
@@ -2546,15 +2482,19 @@ const styles = StyleSheet.create({
   },
   appleCountResultOverlayMessage: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '800',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   appleCountResultOverlayTitle: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   shapeFindCheckBadge: {
     alignItems: 'center',
@@ -2585,9 +2525,11 @@ const styles = StyleSheet.create({
   },
   shapeFindChoiceLabelText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   shapeFindDoorImage: {
     position: 'absolute',
@@ -2639,6 +2581,7 @@ const styles = StyleSheet.create({
   },
   patternPathChoiceLabelText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
@@ -2697,9 +2640,11 @@ const styles = StyleSheet.create({
   },
   sizeCompareChoiceLabelText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   sizeCompareChoiceLayer: {
     bottom: 0,
@@ -2718,9 +2663,11 @@ const styles = StyleSheet.create({
   },
   appleCountChoiceLabelText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   appleCountPrompt: {
     alignItems: 'center',
@@ -2734,9 +2681,11 @@ const styles = StyleSheet.create({
   },
   appleCountPromptText: {
     color: colors.ink,
+    flexShrink: 1,
     fontWeight: '900',
     includeFontPadding: false,
     textAlign: 'center',
+    width: '100%',
   },
   questContentBackdrop: {
     backgroundColor: 'rgba(255, 255, 255, 0.72)',
@@ -2857,8 +2806,10 @@ const styles = StyleSheet.create({
   choiceText: {
     color: colors.ink,
     fontSize: 19,
+    flexShrink: 1,
     fontWeight: '900',
     textAlign: 'center',
+    width: '100%',
   },
   choiceResultText: {
     color: colors.green,
@@ -2909,8 +2860,10 @@ const styles = StyleSheet.create({
   resultOverlayActionText: {
     color: colors.white,
     fontSize: 18,
+    flexShrink: 1,
     fontWeight: '900',
     textAlign: 'center',
+    width: '100%',
   },
   resultOverlayAnimation: {
     height: 144,
@@ -2924,9 +2877,11 @@ const styles = StyleSheet.create({
   resultOverlayMessage: {
     color: colors.ink,
     fontSize: 17,
+    flexShrink: 1,
     fontWeight: '800',
     lineHeight: 23,
     textAlign: 'center',
+    width: '100%',
   },
   resultOverlayRetry: {
     backgroundColor: 'rgba(255, 243, 214, 0.97)',
@@ -2935,7 +2890,9 @@ const styles = StyleSheet.create({
   resultOverlayTitle: {
     color: colors.ink,
     fontSize: 24,
+    flexShrink: 1,
     fontWeight: '900',
     textAlign: 'center',
+    width: '100%',
   },
 });

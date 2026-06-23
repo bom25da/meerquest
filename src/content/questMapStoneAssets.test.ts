@@ -155,6 +155,44 @@ describe('quest map stone assets', () => {
     expect(layouts[0].left).toBeLessThanOrEqual(0.58);
   });
 
+  it('keeps language hill stones centered on the illustrated path', () => {
+    const source = readFileSync(resolve(__dirname, '../../app/quest-map.tsx'), 'utf8');
+    const languageLayouts = extractImageAnchorLayouts(source, 'languageHillPathAnchors');
+
+    expect(languageLayouts).toHaveLength(20);
+    expect(source).toContain("backgroundKey === 'language-hill'");
+    expect(source).toContain('getImageAnchoredNodePosition');
+    expect(source).toContain('backgroundKey={mapTheme.backgroundKey}');
+
+    const leftValues = languageLayouts.map((layout) => layout.left);
+    expect(Math.min(...leftValues)).toBeGreaterThanOrEqual(0.39);
+    expect(Math.max(...leftValues)).toBeLessThanOrEqual(0.68);
+    expect(languageLayouts[3].left).toBeCloseTo(0.54, 3);
+    expect(languageLayouts[12].left).toBeGreaterThanOrEqual(0.46);
+    expect(languageLayouts[0].top).toBeGreaterThan(languageLayouts[languageLayouts.length - 1].top);
+
+    for (let index = 1; index < languageLayouts.length; index += 1) {
+      expect(languageLayouts[index - 1].top).toBeGreaterThan(languageLayouts[index].top);
+    }
+  });
+
+  it('keeps social playground stones on the illustrated path', () => {
+    const source = readFileSync(resolve(__dirname, '../../app/quest-map.tsx'), 'utf8');
+    const socialLayouts = extractImageAnchorLayouts(source, 'socialPlaygroundPathAnchors');
+
+    expect(socialLayouts).toHaveLength(20);
+    expect(source).toContain("backgroundKey === 'social-playground'");
+
+    const leftValues = socialLayouts.map((layout) => layout.left);
+    expect(Math.min(...leftValues)).toBeGreaterThanOrEqual(0.43);
+    expect(Math.max(...leftValues)).toBeLessThanOrEqual(0.61);
+    expect(socialLayouts[0].top).toBeGreaterThan(socialLayouts[socialLayouts.length - 1].top);
+
+    for (let index = 1; index < socialLayouts.length; index += 1) {
+      expect(socialLayouts[index - 1].top).toBeGreaterThan(socialLayouts[index].top);
+    }
+  });
+
   it('spaces the visible stone trail far enough apart to scroll through comfortably', () => {
     const source = readFileSync(resolve(__dirname, '../../app/quest-map.tsx'), 'utf8');
     const layouts = [
@@ -180,4 +218,22 @@ describe('quest map stone assets', () => {
 
 function existsInWorkspace(relativePath: string) {
   return existsSync(resolve(__dirname, '../../', relativePath));
+}
+
+function extractImageAnchorLayouts(source: string, arrayName: string) {
+  const marker = `const ${arrayName}: readonly QuestMapImageAnchor[] = [`;
+  const arrayStart = source.indexOf(marker);
+  expect(arrayStart).toBeGreaterThanOrEqual(0);
+
+  const bodyStart = arrayStart + marker.length;
+  const bodyEnd = source.indexOf('] as const;', bodyStart);
+  expect(bodyEnd).toBeGreaterThan(bodyStart);
+  const arrayBody = source.slice(bodyStart, bodyEnd);
+
+  return [
+    ...arrayBody.matchAll(/\{ rotation: '[^']+', sourceX: ([\d.]+), sourceY: ([\d.]+) \}/g),
+  ].map((match) => ({
+    left: Number(match[1]),
+    top: Number(match[2]),
+  }));
 }

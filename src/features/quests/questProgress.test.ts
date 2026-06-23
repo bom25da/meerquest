@@ -7,6 +7,7 @@ import {
   getNextQuest,
   getReviewRecommendation,
   getUnlockedQuests,
+  recordQuestCompletion,
   recordQuestAttempt,
   type Quest,
   type QuestProgress,
@@ -245,5 +246,56 @@ describe('quest progression', () => {
         status: 'completed',
       },
     ]);
+  });
+
+  it('records a reward claim as completed without adding another attempt', () => {
+    const progress: QuestProgress[] = [
+      {
+        attempts: 2,
+        lastPlayedAt: '2026-06-06T00:00:00.000Z',
+        profileId: DEFAULT_PROFILE_ID,
+        questId: 'math-1',
+        status: 'inProgress',
+      },
+    ];
+
+    const nextProgress = recordQuestCompletion(progress, {
+      now: '2026-06-06T00:05:00.000Z',
+      profileId: DEFAULT_PROFILE_ID,
+      questId: 'math-1',
+    });
+
+    expect(nextProgress).toEqual([
+      {
+        attempts: 2,
+        completedAt: '2026-06-06T00:05:00.000Z',
+        lastPlayedAt: '2026-06-06T00:05:00.000Z',
+        profileId: DEFAULT_PROFILE_ID,
+        questId: 'math-1',
+        status: 'completed',
+      },
+    ]);
+    expect(getEarnedStarCount({ quests, progress: nextProgress })).toBe(1);
+  });
+
+  it('keeps reward completion idempotent when the quest is already complete', () => {
+    const progress: QuestProgress[] = [
+      {
+        attempts: 3,
+        completedAt: '2026-06-06T00:05:00.000Z',
+        lastPlayedAt: '2026-06-06T00:05:00.000Z',
+        profileId: DEFAULT_PROFILE_ID,
+        questId: 'math-1',
+        status: 'completed',
+      },
+    ];
+
+    const nextProgress = recordQuestCompletion(progress, {
+      now: '2026-06-06T00:10:00.000Z',
+      profileId: DEFAULT_PROFILE_ID,
+      questId: 'math-1',
+    });
+
+    expect(nextProgress).toEqual(progress);
   });
 });

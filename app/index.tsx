@@ -1,6 +1,6 @@
 import type { Href } from "expo-router";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { ImageSourcePropType } from "react-native";
 import {
   Image,
@@ -34,7 +34,10 @@ import {
   homeRegionCardStyle,
   homeSectionHeader,
 } from "@/src/content/home";
+import { quests } from "@/src/content/quests";
 import { bundledSpeechService } from "@/src/features/audio/bundledSpeech";
+import { getEarnedStarCount } from "@/src/features/quests/questProgress";
+import { useQuestProgress } from "@/src/features/quests/useQuestProgress";
 import { colors } from "@/src/theme/colors";
 
 const meerquestWordmark = require("../assets/images/brand/meerquest-wordmark.png");
@@ -79,6 +82,7 @@ export default function HomeScreen() {
     height < homeLandscapeLayout.compactHeightBreakpoint;
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { profileProgress } = useQuestProgress();
   const containerWidth = Math.min(width, homeLandscapeLayout.maxContentWidth);
   const containerHorizontalPadding = isCompact
     ? homeLandscapeLayout.screenPadding.compact
@@ -94,6 +98,25 @@ export default function HomeScreen() {
   const heroCtaLayout = isCompact
     ? homeHero.cta.layout.compact
     : homeHero.cta.layout.regular;
+  const totalEarnedStars = getEarnedStarCount({
+    quests,
+    progress: profileProgress,
+  });
+  const regionsWithProgress = useMemo(
+    () =>
+      homeLearningRegions.map((region) => ({
+        ...region,
+        stars: Math.min(
+          3,
+          getEarnedStarCount({
+            quests: quests.filter((quest) => quest.categoryId === region.id),
+            progress: profileProgress,
+          }),
+        ),
+      })),
+    [profileProgress],
+  );
+
   useFocusEffect(
     useCallback(() => {
       void bundledSpeechService.play(homeChildExploreVoice);
@@ -163,7 +186,7 @@ export default function HomeScreen() {
                     isCompact && styles.compactPointText,
                   ]}
                 >
-                  25
+                  {totalEarnedStars}
                 </Text>
               </View>
             </View>
@@ -197,8 +220,6 @@ export default function HomeScreen() {
                     style={styles.speechBubbleImage}
                   />
                   <Text
-                    adjustsFontSizeToFit
-                    numberOfLines={2}
                     style={[
                       styles.speechText,
                       isCompact && styles.compactSpeechText,
@@ -239,7 +260,7 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.regionGrid}>
-                {homeLearningRegions.map((region) => (
+                {regionsWithProgress.map((region) => (
                   <RegionCard
                     background={regionBackgrounds[region.background]}
                     key={region.id}
@@ -1097,6 +1118,7 @@ const styles = StyleSheet.create({
   },
   speechText: {
     color: colors.ink,
+    flexShrink: 1,
     fontSize: 22,
     fontWeight: "900",
     left: "12%",

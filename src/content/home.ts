@@ -273,7 +273,7 @@ export const homeLearningRegions: HomeLearningRegion[] = [
   {
     id: "math",
     title: "수학동굴",
-    stars: 3,
+    stars: 0,
     locked: false,
     tone: "orange",
     art: "category-math-cave",
@@ -283,7 +283,7 @@ export const homeLearningRegions: HomeLearningRegion[] = [
   {
     id: "language",
     title: "언어언덕",
-    stars: 2,
+    stars: 0,
     locked: false,
     tone: "blue",
     art: "category-language-hill",
@@ -293,7 +293,7 @@ export const homeLearningRegions: HomeLearningRegion[] = [
   {
     id: "social",
     title: "마음놀이터",
-    stars: 1,
+    stars: 0,
     locked: false,
     tone: "green",
     art: "category-social-playground",
@@ -304,7 +304,7 @@ export const homeLearningRegions: HomeLearningRegion[] = [
     id: "safety",
     title: "안전사막",
     stars: 0,
-    locked: true,
+    locked: false,
     tone: "yellow",
     art: "category-safety-desert",
     background: "category-safety-background",

@@ -155,7 +155,7 @@ describe('home screen content', () => {
       {
         id: 'math',
         title: '수학동굴',
-        stars: 3,
+        stars: 0,
         locked: false,
         art: 'category-math-cave',
         background: 'category-math-background',
@@ -164,7 +164,7 @@ describe('home screen content', () => {
       {
         id: 'language',
         title: '언어언덕',
-        stars: 2,
+        stars: 0,
         locked: false,
         art: 'category-language-hill',
         background: 'category-language-background',
@@ -173,7 +173,7 @@ describe('home screen content', () => {
       {
         id: 'social',
         title: '마음놀이터',
-        stars: 1,
+        stars: 0,
         locked: false,
         art: 'category-social-playground',
         background: 'category-social-background',
@@ -183,12 +183,21 @@ describe('home screen content', () => {
         id: 'safety',
         title: '안전사막',
         stars: 0,
-        locked: true,
+        locked: false,
         art: 'category-safety-desert',
         background: 'category-safety-background',
         route: '/quest-map?categoryId=safety',
       },
     ]);
+  });
+
+  it('derives home star totals from saved quest progress instead of static placeholders', () => {
+    const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
+
+    expect(homeScreenSource).toContain('useQuestProgress');
+    expect(homeScreenSource).toContain('getEarnedStarCount');
+    expect(homeScreenSource).toContain('regionsWithProgress');
+    expect(homeScreenSource).not.toContain('\n                  25\n');
   });
 
   it('defines the bottom toolbar navigation order and active home tab', () => {
