@@ -14,18 +14,6 @@ const nextQuestIcon = require('../assets/images/quests/buttons/quest-button-next
 const questMapIcon = require('../assets/images/quests/buttons/quest-button-map-v1.png');
 const homeIcon = require('../assets/images/quests/buttons/quest-button-home.png');
 
-function getRewardMark(type: (typeof quests)[number]['reward']['type']) {
-  if (type === 'badge') {
-    return '◆';
-  }
-
-  if (type === 'sticker') {
-    return '✦';
-  }
-
-  return '★';
-}
-
 export default function RewardScreen() {
   const { questId } = useLocalSearchParams<{ questId?: string }>();
   const router = useRouter();
@@ -69,22 +57,33 @@ export default function RewardScreen() {
                 {nextQuest ? `다음 탐험: ${nextQuest.title}` : '오늘 열린 퀘스트를 모두 완료했어요.'}
               </Text>
             </View>
-
-            <View
-              accessibilityLabel={`획득한 보상 ${quest.reward.title}`}
-              accessibilityRole="summary"
-              style={styles.rewardBadge}>
-              <View style={styles.rewardSeal}>
-                <Text style={styles.rewardMark}>{getRewardMark(quest.reward.type)}</Text>
-              </View>
-              <View style={styles.rewardCopy}>
-                <Text style={styles.rewardLabel}>새 보상</Text>
-                <Text style={styles.rewardText}>{quest.reward.title}</Text>
-              </View>
-            </View>
           </View>
 
           <View style={styles.linkRow}>
+            <Pressable
+              accessibilityLabel="홈으로 이동하기"
+              accessibilityRole="button"
+              onPress={() => router.push('/')}
+              style={({ pressed }) => [styles.iconOnlyButton, pressed && styles.buttonPressed]}>
+              <Image
+                accessibilityIgnoresInvertColors
+                resizeMode="contain"
+                source={homeIcon}
+                style={styles.homeIcon}
+              />
+            </Pressable>
+            <Pressable
+              accessibilityLabel="퀘스트맵으로 이동하기"
+              accessibilityRole="button"
+              onPress={() => router.push('/quest-map')}
+              style={({ pressed }) => [styles.iconOnlyButton, pressed && styles.buttonPressed]}>
+              <Image
+                accessibilityIgnoresInvertColors
+                resizeMode="contain"
+                source={questMapIcon}
+                style={styles.questMapIcon}
+              />
+            </Pressable>
             {nextQuest ? (
               <Pressable
                 accessibilityLabel={`${nextQuest.title} 다음 퀘스트 시작하기`}
@@ -99,30 +98,6 @@ export default function RewardScreen() {
                 />
               </Pressable>
             ) : null}
-            <Pressable
-              accessibilityLabel="퀘스트맵으로 이동하기"
-              accessibilityRole="button"
-              onPress={() => router.push('/quest-map')}
-              style={({ pressed }) => [styles.iconOnlyButton, pressed && styles.buttonPressed]}>
-              <Image
-                accessibilityIgnoresInvertColors
-                resizeMode="contain"
-                source={questMapIcon}
-                style={styles.questMapIcon}
-              />
-            </Pressable>
-            <Pressable
-              accessibilityLabel="홈으로 이동하기"
-              accessibilityRole="button"
-              onPress={() => router.push('/')}
-              style={({ pressed }) => [styles.iconOnlyButton, pressed && styles.buttonPressed]}>
-              <Image
-                accessibilityIgnoresInvertColors
-                resizeMode="contain"
-                source={homeIcon}
-                style={styles.homeIcon}
-              />
-            </Pressable>
           </View>
         </View>
       </SafeAreaView>
@@ -207,63 +182,13 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     marginTop: 10,
   },
-  rewardBadge: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 229, 165, 0.94)',
-    borderColor: colors.yellow,
-    borderRadius: 8,
-    borderWidth: 3,
-    flexDirection: 'row',
-    gap: 14,
-    marginTop: 18,
-    minHeight: 104,
-    minWidth: 312,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    shadowColor: colors.ink,
-    shadowOffset: { height: 7, width: 0 },
-    shadowOpacity: 0.14,
-    shadowRadius: 12,
-  },
-  rewardSeal: {
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderColor: colors.orange,
-    borderRadius: 36,
-    borderWidth: 4,
-    height: 72,
-    justifyContent: 'center',
-    width: 72,
-  },
-  rewardMark: {
-    color: colors.orange,
-    fontSize: 35,
-    fontWeight: '900',
-  },
-  rewardCopy: {
-    flexShrink: 1,
-    justifyContent: 'center',
-  },
-  rewardLabel: {
-    color: colors.muted,
-    fontSize: 17,
-    fontWeight: '900',
-    lineHeight: 22,
-  },
-  rewardText: {
-    color: colors.ink,
-    fontSize: 25,
-    fontWeight: '900',
-    lineHeight: 31,
-  },
   linkRow: {
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 18,
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end',
   },
   buttonPressed: {
     opacity: 0.82,

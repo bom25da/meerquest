@@ -18,12 +18,15 @@ import {
   getQuestMapCategories,
   getQuestMapRegionSummary,
   getQuestMapVisibleStepWindow,
+  type QuestMapRegionSummary,
   type QuestMapRegionStep,
   type QuestMapStepStatus,
+  type QuestMapVisibleStepWindow,
 } from '@/src/content/questMap';
 import { questMapBlankStoneSource } from '@/src/content/questMapStoneAssets';
 import {
   getQuestMapTheme,
+  type QuestMapTheme,
   type QuestMapThemeBackgroundKey,
 } from '@/src/content/questMapTheme';
 import { quests } from '@/src/content/quests';
@@ -145,38 +148,54 @@ export default function QuestMapScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId?: string | string[] }>();
   const { isLoaded, profileProgress } = useQuestProgress();
   const selectedCategories = getQuestMapCategories(categoryId);
-  const activeCategory =
-    selectedCategories.length === 1
-      ? selectedCategories[0]
-      : selectedCategories.find((category) => category.id === 'math') ?? selectedCategories[0];
-  const mapTheme = getQuestMapTheme(activeCategory.id);
-  const summary = getQuestMapRegionSummary({
-    categoryId: activeCategory.id,
-    progress: profileProgress,
-    quests,
-  });
-  const visibleWindow = getQuestMapVisibleStepWindow(summary.steps, {
-    focusQuestId: summary.currentQuest?.id,
-    visibleCount: visibleStepCount,
-  });
   const isCompact = width < 760 || height < 520;
   const mapHeight = Math.max(height, isCompact ? questMapCompactHeight : questMapRegularHeight);
-  const focusedVisibleIndex = Math.max(
-    0,
-    visibleWindow.steps.findIndex((step) => step.questId === visibleWindow.focusStep?.questId),
-  );
-  const focusedScrollOffset = getFocusedStepScrollOffset({
-    backgroundKey: mapTheme.backgroundKey,
-    canvasWidth: width,
-    layoutIndex: focusedVisibleIndex,
-    mapHeight,
-    viewportHeight: height,
+  const selectedCategoryKey = selectedCategories.map((category) => category.id).join('|');
+  const isFullQuestMap = selectedCategories.length > 1;
+  const displayCategories = isFullQuestMap ? [...selectedCategories].reverse() : selectedCategories;
+  const mapSections = displayCategories.map((category, sectionIndex) => {
+    const mapTheme = getQuestMapTheme(category.id);
+    const summary = getQuestMapRegionSummary({
+      categoryId: category.id,
+      progress: profileProgress,
+      quests,
+    });
+    const visibleWindow = getQuestMapVisibleStepWindow(summary.steps, {
+      focusQuestId: summary.currentQuest?.id,
+      visibleCount: visibleStepCount,
+    });
+    const focusedVisibleIndex = Math.max(
+      0,
+      visibleWindow.steps.findIndex((step) => step.questId === visibleWindow.focusStep?.questId),
+    );
+    const sectionScrollOffset = sectionIndex * mapHeight;
+    const focusedStepScrollOffset = getFocusedStepScrollOffset({
+      backgroundKey: mapTheme.backgroundKey,
+      canvasWidth: width,
+      layoutIndex: focusedVisibleIndex,
+      mapHeight,
+      viewportHeight: height,
+    });
+    const progressRatio =
+      summary.totalCount > 1
+        ? Math.min(1, Math.max(0, visibleWindow.focusIndex / (summary.totalCount - 1)))
+        : 0;
+    const indicatorTop = `${Math.round(14 + progressRatio * 68)}%` as `${number}%`;
+
+    return {
+      category,
+      focusedScrollOffset: sectionScrollOffset + focusedStepScrollOffset,
+      indicatorTop,
+      mapTheme,
+      summary,
+      visibleWindow,
+    };
   });
-  const progressRatio =
-    summary.totalCount > 1
-      ? Math.min(1, Math.max(0, visibleWindow.focusIndex / (summary.totalCount - 1)))
-      : 0;
-  const indicatorTop = `${Math.round(14 + progressRatio * 68)}%` as `${number}%`;
+  const activeSection =
+    mapSections.find((section) => section.category.id === selectedCategories[0]?.id) ??
+    mapSections[0];
+  const totalMapHeight = mapHeight * Math.max(1, mapSections.length);
+  const focusedScrollOffset = activeSection?.focusedScrollOffset ?? 0;
   const handleBackPress = () => {
     if (router.canGoBack()) {
       router.back();
@@ -192,39 +211,38 @@ export default function QuestMapScreen() {
     }, 0);
 
     return () => clearTimeout(timeout);
-  }, [activeCategory.id, focusedScrollOffset]);
+  }, [focusedScrollOffset, selectedCategoryKey]);
 
   return (
-    <SafeAreaView edges={[]} style={[styles.safeArea, { backgroundColor: mapTheme.safeAreaColor }]}>
+    <SafeAreaView
+      edges={[]}
+      style={[
+        styles.safeArea,
+        { backgroundColor: activeSection?.mapTheme.safeAreaColor ?? colors.background },
+      ]}>
       <StatusBar hidden />
       <View style={styles.screen}>
         <ScrollView
           ref={scrollViewRef}
           contentContainerStyle={[
             styles.scrollContent,
-            { height: mapHeight, paddingBottom: Math.max(insets.bottom, 12) + 24 },
+            { height: totalMapHeight, paddingBottom: Math.max(insets.bottom, 12) + 24 },
           ]}
           showsVerticalScrollIndicator={false}
           style={styles.scrollView}>
-          <View style={[styles.caveCanvas, { height: mapHeight }]}>
-            <Image
-              accessibilityIgnoresInvertColors
-              resizeMode="cover"
-              source={questMapBackgroundSources[mapTheme.backgroundKey]}
-              style={[styles.caveTile, { height: mapHeight, width }]}
-            />
-            <View style={[styles.caveVignette, { backgroundColor: mapTheme.vignetteColor }]} />
-            <VisibleStepPath
-              accessibilityLabel={`${mapTheme.title} 단계 지도`}
+          {mapSections.map((section) => (
+            <QuestMapRegionCanvas
               canvasHeight={mapHeight}
               canvasWidth={width}
-              backgroundKey={mapTheme.backgroundKey}
-              focusQuestId={visibleWindow.focusStep?.questId}
               isLoaded={isLoaded}
+              key={section.category.id}
+              mapTheme={section.mapTheme}
               onOpenQuest={(quest) => router.push(`/quest-play?questId=${quest.id}` as Href)}
-              steps={visibleWindow.steps}
+              showEmbeddedHud={isFullQuestMap}
+              summary={section.summary}
+              visibleWindow={section.visibleWindow}
             />
-          </View>
+          ))}
         </ScrollView>
 
         <View pointerEvents="box-none" style={[styles.backLayer, { top: Math.max(insets.top, 8) }]}>
@@ -245,43 +263,116 @@ export default function QuestMapScreen() {
           </Pressable>
         </View>
 
-        <View pointerEvents="box-none" style={[styles.hudLayer, { top: Math.max(insets.top, 8) }]}>
-          <View style={styles.topHud}>
-            <View style={[styles.guideBadge, { borderColor: mapTheme.accentColor }]}>
+        {!isFullQuestMap && activeSection ? (
+          <View pointerEvents="box-none" style={[styles.hudLayer, { top: Math.max(insets.top, 8) }]}>
+            <QuestMapHud mapTheme={activeSection.mapTheme} summary={activeSection.summary} />
+          </View>
+        ) : null}
+
+        {!isFullQuestMap && activeSection ? (
+          <View pointerEvents="none" style={styles.ropeIndicator}>
+            <View style={[styles.ropeLine, { backgroundColor: activeSection.mapTheme.ropeColor }]} />
+            <View
+              style={[
+                styles.ropeKnotTop,
+                { backgroundColor: activeSection.mapTheme.ropeKnotColor },
+              ]}
+            />
+            <View
+              style={[
+                styles.ropeKnotBottom,
+                { backgroundColor: activeSection.mapTheme.ropeKnotColor },
+              ]}
+            />
+            <View style={[styles.ropeMeeroMarker, { top: activeSection.indicatorTop }]}>
               <Image
                 accessibilityIgnoresInvertColors
                 resizeMode="contain"
                 source={meeroCharacter}
-                style={styles.guideImage}
+                style={styles.ropeMeeroImage}
               />
             </View>
-            <View style={styles.hudCopy}>
-              <Text style={[styles.hudEyebrow, { color: mapTheme.hudMutedColor }]}>
-                {mapTheme.title}
-              </Text>
-              <Text style={styles.hudValue}>
-                {summary.completedCount} / {summary.totalCount}
-              </Text>
-            </View>
           </View>
-        </View>
-
-        <View pointerEvents="none" style={styles.ropeIndicator}>
-          <View style={[styles.ropeLine, { backgroundColor: mapTheme.ropeColor }]} />
-          <View style={[styles.ropeKnotTop, { backgroundColor: mapTheme.ropeKnotColor }]} />
-          <View style={[styles.ropeKnotBottom, { backgroundColor: mapTheme.ropeKnotColor }]} />
-          <View style={[styles.ropeMeeroMarker, { top: indicatorTop }]}>
-            <Image
-              accessibilityIgnoresInvertColors
-              resizeMode="contain"
-              source={meeroCharacter}
-              style={styles.ropeMeeroImage}
-            />
-          </View>
-        </View>
+        ) : null}
 
       </View>
     </SafeAreaView>
+  );
+}
+
+function QuestMapRegionCanvas({
+  canvasHeight,
+  canvasWidth,
+  isLoaded,
+  mapTheme,
+  onOpenQuest,
+  showEmbeddedHud,
+  summary,
+  visibleWindow,
+}: {
+  canvasHeight: number;
+  canvasWidth: number;
+  isLoaded: boolean;
+  mapTheme: QuestMapTheme;
+  onOpenQuest: (quest: Quest) => void;
+  showEmbeddedHud: boolean;
+  summary: QuestMapRegionSummary;
+  visibleWindow: QuestMapVisibleStepWindow;
+}) {
+  return (
+    <View style={[styles.caveCanvas, { height: canvasHeight }]}>
+      <Image
+        accessibilityIgnoresInvertColors
+        resizeMode="cover"
+        source={questMapBackgroundSources[mapTheme.backgroundKey]}
+        style={[styles.caveTile, { height: canvasHeight, width: canvasWidth }]}
+      />
+      <View style={[styles.caveVignette, { backgroundColor: mapTheme.vignetteColor }]} />
+      <VisibleStepPath
+        accessibilityLabel={`${mapTheme.title} 단계 지도`}
+        backgroundKey={mapTheme.backgroundKey}
+        canvasHeight={canvasHeight}
+        canvasWidth={canvasWidth}
+        focusQuestId={visibleWindow.focusStep?.questId}
+        isLoaded={isLoaded}
+        onOpenQuest={onOpenQuest}
+        steps={visibleWindow.steps}
+      />
+      {showEmbeddedHud ? (
+        <View pointerEvents="box-none" style={styles.embeddedHudLayer}>
+          <QuestMapHud mapTheme={mapTheme} summary={summary} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function QuestMapHud({
+  mapTheme,
+  summary,
+}: {
+  mapTheme: QuestMapTheme;
+  summary: QuestMapRegionSummary;
+}) {
+  return (
+    <View style={styles.topHud}>
+      <View style={[styles.guideBadge, { borderColor: mapTheme.accentColor }]}>
+        <Image
+          accessibilityIgnoresInvertColors
+          resizeMode="contain"
+          source={meeroCharacter}
+          style={styles.guideImage}
+        />
+      </View>
+      <View style={styles.hudCopy}>
+        <Text style={[styles.hudEyebrow, { color: mapTheme.hudMutedColor }]}>
+          {mapTheme.title}
+        </Text>
+        <Text style={styles.hudValue}>
+          {summary.completedCount} / {summary.totalCount}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -712,6 +803,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
     lineHeight: 33,
     textAlign: 'left',
+  },
+  embeddedHudLayer: {
+    left: 92,
+    position: 'absolute',
+    right: 74,
+    top: 24,
+    zIndex: 40,
   },
   guideBadge: {
     alignItems: 'center',

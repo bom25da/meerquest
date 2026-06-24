@@ -197,7 +197,18 @@ describe('home screen content', () => {
     expect(homeScreenSource).toContain('useQuestProgress');
     expect(homeScreenSource).toContain('getEarnedStarCount');
     expect(homeScreenSource).toContain('regionsWithProgress');
+    expect(homeScreenSource).not.toContain('Math.min(\n          3,');
     expect(homeScreenSource).not.toContain('\n                  25\n');
+  });
+
+  it('shows each region reward as one star icon with a numeric count', () => {
+    const homeScreenSource = readFileSync(resolve(process.cwd(), 'app/index.tsx'), 'utf8');
+
+    expect(homeScreenSource).toContain('<StarCountBadge count={region.stars} />');
+    expect(homeScreenSource).toContain('accessibilityLabel={`획득한 별 ${count}개`}');
+    expect(homeScreenSource).toContain('{count}');
+    expect(homeScreenSource).not.toContain('<StarRating count={region.stars} />');
+    expect(homeScreenSource).not.toContain('[0, 1, 2].map');
   });
 
   it('defines the bottom toolbar navigation order and active home tab', () => {

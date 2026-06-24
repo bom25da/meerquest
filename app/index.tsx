@@ -106,13 +106,10 @@ export default function HomeScreen() {
     () =>
       homeLearningRegions.map((region) => ({
         ...region,
-        stars: Math.min(
-          3,
-          getEarnedStarCount({
-            quests: quests.filter((quest) => quest.categoryId === region.id),
-            progress: profileProgress,
-          }),
-        ),
+        stars: getEarnedStarCount({
+          quests: quests.filter((quest) => quest.categoryId === region.id),
+          progress: profileProgress,
+        }),
       })),
     [profileProgress],
   );
@@ -330,26 +327,21 @@ function RegionCard({
         >
           {region.title}
         </Text>
-        {region.locked ? <LockBadge /> : <StarRating count={region.stars} />}
+        {region.locked ? <LockBadge /> : <StarCountBadge count={region.stars} />}
       </View>
     </Pressable>
   );
 }
 
-function StarRating({ count }: { count: number }) {
+function StarCountBadge({ count }: { count: number }) {
   return (
-    <View style={styles.starRating}>
-      {[0, 1, 2].map((index) => (
-        <Text
-          key={index}
-          style={[
-            styles.ratingStar,
-            index < count ? styles.ratingStarActive : styles.ratingStarIdle,
-          ]}
-        >
-          ★
-        </Text>
-      ))}
+    <View
+      accessible
+      accessibilityLabel={`획득한 별 ${count}개`}
+      style={styles.starCountBadge}
+    >
+      <Text style={styles.starCountIcon}>★</Text>
+      <Text style={styles.starCountText}>{count}</Text>
     </View>
   );
 }
@@ -995,21 +987,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     lineHeight: 27,
   },
-  ratingStar: {
-    fontSize: 28,
-    fontWeight: "900",
-    lineHeight: 31,
-    marginHorizontal: 2,
-    textShadowColor: "rgba(96, 67, 24, 0.24)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 2,
-  },
-  ratingStarActive: {
-    color: "#FFD333",
-  },
-  ratingStarIdle: {
-    color: "#CFD2CE",
-  },
   regionCard: {
     alignItems: "center",
     backgroundColor: colors.white,
@@ -1129,11 +1106,39 @@ const styles = StyleSheet.create({
     width: "76%",
     zIndex: 1,
   },
-  starRating: {
+  starCountBadge: {
     alignItems: "center",
+    backgroundColor: "rgba(255, 253, 247, 0.92)",
+    borderColor: colors.white,
+    borderRadius: 999,
+    borderWidth: 3,
     flexDirection: "row",
+    gap: 5,
     justifyContent: "center",
-    minHeight: 40,
+    minHeight: 38,
+    minWidth: 74,
+    paddingHorizontal: 12,
+    shadowColor: "rgba(96, 67, 24, 0.28)",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+  },
+  starCountIcon: {
+    color: "#FFD333",
+    fontSize: 26,
+    fontWeight: "900",
+    includeFontPadding: false,
+    lineHeight: 30,
+    textShadowColor: "rgba(96, 67, 24, 0.24)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 2,
+  },
+  starCountText: {
+    color: colors.ink,
+    fontSize: 23,
+    fontWeight: "900",
+    includeFontPadding: false,
+    lineHeight: 28,
   },
   startButton: {
     alignItems: "center",

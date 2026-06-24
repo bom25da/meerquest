@@ -33,7 +33,7 @@ describe('quest map themes', () => {
   it('uses the selected category theme in the quest map screen', () => {
     const source = readFileSync(resolve(__dirname, '../../app/quest-map.tsx'), 'utf8');
 
-    expect(source).toContain('getQuestMapTheme(activeCategory.id)');
+    expect(source).toContain('getQuestMapTheme(category.id)');
     expect(source).toContain('questMapBackgroundSources[mapTheme.backgroundKey]');
     expect(source).toContain('language-hill-empty-ground-v1.png');
     expect(source).toContain('social-playground-empty-ground-v1.png');
@@ -42,6 +42,18 @@ describe('quest map themes', () => {
     expect(source).not.toContain('category-social-background.png');
     expect(source).not.toContain('category-safety-background.png');
     expect(source).not.toContain('<Text style={styles.hudEyebrow}>신비한 수학 동굴</Text>');
+  });
+
+  it('renders the full quest map when no category is selected', () => {
+    const source = readFileSync(resolve(__dirname, '../../app/quest-map.tsx'), 'utf8');
+
+    expect(source).toContain('const displayCategories = isFullQuestMap ? [...selectedCategories].reverse() : selectedCategories');
+    expect(source).toContain('const mapSections = displayCategories.map((category, sectionIndex)');
+    expect(source).toContain('mapSections.map((section)');
+    expect(source).toContain('QuestMapRegionCanvas');
+    expect(source).toContain('sectionScrollOffset + focusedStepScrollOffset');
+    expect(source).toContain('section.category.id === selectedCategories[0]?.id');
+    expect(source).not.toContain("selectedCategories.find((category) => category.id === 'math')");
   });
 
   it('keeps a visible back control on the quest map screen', () => {
