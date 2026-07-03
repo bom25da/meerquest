@@ -89,9 +89,9 @@ export const questProblemScenes: Record<string, QuestProblemScene> = {
     item('more', 'count', '새 보석 2개', { count: 2 }),
     item('total', 'count', '모두 8개', { count: 8, role: 'answer' }),
   ]),
-  'math-20': scene('math', '10에서 두 걸음을 더 세어 20에 도착하는 발자국 길', 'sequence', [
-    item('start', 'sequence', '10에서 두 걸음', { values: ['10', '두 걸음', '20'] }),
-    item('goal', 'object', '20번째 발자국', { role: 'answer' }),
+  'math-20': scene('math', '10에서 두 걸음을 더 세는 빈 발자국 길', 'sequence', [
+    item('start', 'sequence', '10에서 두 걸음', { values: ['10', '11', '?'] }),
+    item('goal', 'object', '도착한 수', { role: 'answer' }),
   ]),
 
   'language-6': scene('language', '큰 바위와 작은 조약돌을 보고 작다를 말하는 장면', 'compare', [

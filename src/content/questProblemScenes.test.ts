@@ -32,4 +32,24 @@ describe('quest problem scenes', () => {
       expect(existsSync(resolve(process.cwd(), assetFile))).toBe(true);
     }
   });
+
+  it('keeps the twentieth math scene from exposing the old or correct destination answer', () => {
+    const scene = getQuestProblemScene('math-20', 'math');
+    const visibleSceneText = [
+      scene.summary,
+      ...scene.items.flatMap((sceneItem) => [
+        sceneItem.label,
+        sceneItem.detail ?? '',
+        ...(sceneItem.values ?? []),
+      ]),
+    ].join(' ');
+
+    expect(visibleSceneText).not.toContain('20');
+    expect(visibleSceneText).not.toContain('12');
+    expect(scene.items.find((sceneItem) => sceneItem.id === 'start')?.values).toEqual([
+      '10',
+      '11',
+      '?',
+    ]);
+  });
 });
